@@ -1,19 +1,18 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using TSM.Data;
 using TSM.Data.Models;
 using TSM.Data.Models.ManageViewModels;
+using TSM.DataAccess;
 using TSM.Models;
 using TSM.Models.ManageViewModels;
 using TSM.Services;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 
 namespace TSM.Controllers
 {
@@ -27,6 +26,8 @@ namespace TSM.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
+        private readonly LeaveManager _leaveManager;
+        private readonly IMapper _mapper;
 
         public ManageController(
           UserManager<ApplicationUser> userManager,
@@ -35,7 +36,9 @@ namespace TSM.Controllers
           IEmailSender emailSender,
           ISmsSender smsSender,
           ILoggerFactory loggerFactory,
-          ApplicationDbContext context)
+          ApplicationDbContext context,
+          LeaveManager leaveManager,
+          IMapper mapper)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -44,8 +47,9 @@ namespace TSM.Controllers
             _smsSender = smsSender;
             _logger = loggerFactory.CreateLogger<ManageController>();
             _context = context;
+            _leaveManager = leaveManager;
+            _mapper = mapper;
         }
-
 
         //
         // GET: /Manage/Index
@@ -81,87 +85,31 @@ namespace TSM.Controllers
         [HttpGet]
         public async Task<ActionResult> GetTimeSheet()
         {
-            var leavevm = await _context.Leaves
-                .Include(item => item.User)
-                .Include(item => item.LeaveType)
-                .ToListAsync();
-
-            var vm = new List<LeaveVM>();
-            foreach (var item in leavevm)
+            var ViewContext = new LeaveWrapper
             {
-                var Temp = new LeaveVM();
-                Temp.UserName = item.User.UserName;
-                Temp.FromDate = item.FromDate.ToString("dd/MM/yyyy");
-                Temp.ToDate = item.ToDate.ToString("dd/MM/yyyy");
-                Temp.WorkShift = item.WorkShift;
-                Temp.LeaveType = item.LeaveType.LeaveName;
-                Temp.SubmitedDate = item.SubmittedDate.ToString("dd/MM/yyyy");
-                Temp.State = item.State;
-                vm.Add(Temp);
-            }
-
-            var LeaveContext = new LeaveWrapper
-            {
-                LeaveVM = vm
+                LeaveVM = await _leaveManager.GetLeaves()
             };
 
-            return View(LeaveContext);
+            return View(ViewContext);
         }
-
-        //public string LeaveID { get; set; }
-
-        //public string UserName { get; set; }
-
-        //public string FromDate { get; set; }
-
-        //public string ToDate { get; set; }
-
-        //public string WorkShift { get; set; }
-
-        //public string LeaveType { get; set; }
-
-        //public string Note { get; set; }
-        //public IActionResult LeaveVM(Leave GetTimeSheet)
-        //{
-        //	var vm = new LeaveVM();
-        //	vm.FromDate = GetTimeSheet.FromDate.ToString();
-        //	vm.ToDate = GetTimeSheet.ToDate.ToString();
-        //	vm.UserName = GetTimeSheet.User.UserName;
-        //	vm.LeaveID = GetTimeSheet.LeaveTypeID;
-        //	vm.LeaveType = GetTimeSheet.LeaveType.ToString();
-        //	vm.WorkShift = GetTimeSheet.WorkShift.ToString();
-        //	return View();
-        //}
+ 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LeaveSubmit(LeaveWrapper _submit)
         {
-            var submit = _submit.LeaveFormVM;
             if (ModelState.IsValid)
             {
-                var userid = (await GetCurrentUserAsync()).Id;
-                _context.Leaves.Add(new Leave
-                {
-                    ApplicationUserID = userid,
-                    FromDate = submit.FromDate,
-                    ToDate = submit.ToDate,
-                    SubmittedDate = DateTime.Now,
-                    WorkShift = (Leave.eWorkShift)submit.WorkShift,
-                    LeaveTypeID = submit.LeaveTypeID,
-                    Note = submit.Note,
-                    State = Leave.eState.OnQueue,
-                    ApproverID = null,
-                    ApprovedDate = DateTime.Today
-                });
-                _context.SaveChanges();
+                var UserID = (await GetCurrentUserAsync()).Id;
+                var Submit = _mapper.Map<LeaveFormVM, Leave>(_submit.LeaveFormVM);
 
-                return RedirectToAction(nameof(GetTimeSheet), new { Message = "Thành công" });
+                var Retsult = await _leaveManager.SubmitLeave(Submit, UserID);
+                var Mess = Retsult == true ? "Success" : "Fail";
+
+                return RedirectToAction(nameof(GetTimeSheet), new { Message = Mess });
             }
 
-            return RedirectToAction(nameof(GetTimeSheet), new { Message = "Thất bại" });
+            return RedirectToAction(nameof(GetTimeSheet), new { Message = "Validation Fail" });
         }
-
-
 
         private Task<ApplicationUser> GetCurrentUserAsync()
         {

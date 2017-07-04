@@ -3,6 +3,6 @@
     public class LeaveTypeVM
     {
         public string ID { get; set; }
-        public string Name { get; set; }
+        public string LeaveName { get; set; }
     }
 }

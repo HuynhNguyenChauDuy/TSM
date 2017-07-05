@@ -97,8 +97,12 @@ namespace TSM.Controllers
 
             return View(ViewContext);
         }
- 
-        [HttpPost]
+		public IActionResult LoadTable()
+		{
+			return View();
+		}
+
+		[HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LeaveSubmit(LeaveWrapper _submit)
         {
@@ -115,6 +119,7 @@ namespace TSM.Controllers
 
             return RedirectToAction(nameof(GetTimeSheet), new { Message = "Validation Fail" });
         }
+		
 
         private Task<ApplicationUser> GetCurrentUserAsync()
         {

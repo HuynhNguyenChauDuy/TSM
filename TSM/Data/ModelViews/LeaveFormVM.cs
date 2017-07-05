@@ -35,12 +35,8 @@ namespace TSM.Data.Models.ManageViewModels
     {
         public LeaveFormVMValidator()
         {
-            RuleFor(reg => reg.FromDate)
-                .GreaterThanOrEqualTo(DateTime.Today);
-
-            // doesn't work
-           // RuleFor(reg => reg.FromDate)
-           //      .GreaterThanOrEqualTo(reg2 => reg2.FromDate);
+            //RuleFor(reg => reg.FromDate)
+            //    .GreaterThanOrEqualTo(DateTime.Today);
         }
     }
 

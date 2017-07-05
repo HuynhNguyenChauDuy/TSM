@@ -1,0 +1,11 @@
+diff a/.gitignore b/.gitignore	(rejected hunks)
+@@ -285,4 +285,6 @@
+ *.btp.cs
+ *.btm.cs
+ *.odx.cs
+-*.xsd.cs
+\ No newline at end of file
++*.xsd.cs
++
++# Test
+\ No newline at end of file

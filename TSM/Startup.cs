@@ -85,7 +85,7 @@ namespace TSM
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Account}/{action=LogIn}/{id?}");
+                    template: "{controller=Manage}/{action=EMPTYPAGE}/{id?}");
             });
         }
     }

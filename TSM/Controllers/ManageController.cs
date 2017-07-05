@@ -77,6 +77,11 @@ namespace TSM.Controllers
             return View(model);
         }
 
+		[HttpGet]
+		public IActionResult EMPTYPAGE()
+		{
+			return View();
+		}
         // Get: /Manage/TimeSheetManager
         [HttpGet]
         public async Task<ActionResult> GetTimeSheet()

@@ -11,6 +11,13 @@
   <PropertyGroup>
     <UserSecretsId>aspnet-TSM-addcbc0b-0a8d-4c81-9536-97a8d768bcd4</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="wwwroot\AdminLTE-master\**" />
+    <Content Remove="wwwroot\AdminLTE-master\**" />
+    <EmbeddedResource Remove="wwwroot\AdminLTE-master\**" />
+    <None Remove="wwwroot\AdminLTE-master\**" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation.AspNetCore" Version="7.1.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.0.0" />

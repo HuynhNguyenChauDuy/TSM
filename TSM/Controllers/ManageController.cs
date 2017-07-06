@@ -97,8 +97,18 @@ namespace TSM.Controllers
 
             return View(ViewContext);
         }
- 
-        [HttpPost]
+		
+		public async Task<IActionResult> LoadTable()
+		{
+			var ViewContext = new LeaveWrapper
+			{
+				LeaveVM = await _leaveManager.GetLeaves()
+			};
+
+			return View(ViewContext);
+		}
+
+		[HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LeaveSubmit(LeaveWrapper _submit)
         {
@@ -115,6 +125,7 @@ namespace TSM.Controllers
 
             return RedirectToAction(nameof(GetTimeSheet), new { Message = "Validation Fail" });
         }
+		
 
         private Task<ApplicationUser> GetCurrentUserAsync()
         {

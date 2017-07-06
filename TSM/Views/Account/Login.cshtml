@@ -26,7 +26,7 @@
         <div class="login-box-body">
             <div asp-validation-summary="All" class="text-danger"></div>
 
-            <form asp-controller="Account" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post">
+            <form asp-controller="Account" asp-action="Login" asp-route-returnurl="@ViewData[" ReturnUrl"]" method="post">
                 <div class="form-group has-feedback">
                     <input asp-for="Email" class="form-control" placeholder="Email">
                     <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
@@ -39,7 +39,7 @@
                     <div class="col-xs-8">
                         <div class="checkbox icheck">
                             <label asp-for="RememberMe">
-                                <input asp-for="RememberMe"> @Html.DisplayNameFor(m => m.RememberMe)
+                                @Html.CheckBoxFor(item => item.RememberMe) @Html.DisplayNameFor(item => item.RememberMe)
                             </label>
                         </div>
                     </div>

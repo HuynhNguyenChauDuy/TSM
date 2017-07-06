@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -8,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TSM.Data;
 using TSM.Data.Models;
-using TSM.Data.Models.ManageViewModels;
+using TSM.Data.ModelViews;
 using TSM.Models;
 
 namespace TSM.DataAccess

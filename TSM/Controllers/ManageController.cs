@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TSM.Data;
 using TSM.Data.Models;
-using TSM.Data.Models.ManageViewModels;
+using TSM.Data.ModelViews;
 using TSM.DataAccess;
 using TSM.Models;
 using TSM.Models.ManageViewModels;

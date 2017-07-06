@@ -1,4 +1,4 @@
-﻿namespace TSM.Data.Models.ManageViewModels
+﻿namespace TSM.Data.ModelViews
 {
     public class LeaveTypeVM
     {

@@ -34,6 +34,42 @@
 }
 
 <!-- Content Header (Page header) -->
+@*<style>
+	.col-lg-8 {
+		margin-left : -94px;
+		margin-top : 25px;
+	}
+	.form-group .col-lg-3 control-label {
+		margin-left : -16px 
+	}
+	
+	.form-control datepicker {
+		margin-left: 18px;
+		margin-top:2px;
+
+	}
+	.col-lg-3 control-label {
+		margin-left: -16px;
+	}
+	#selectbasic {
+		margin-top: 30px;
+		margin-left: -92px;
+	}
+	div.form-group {
+		margin-left: -48px ;
+	}
+	.col-md-8 input.form-control {
+		margin-top: 28px;
+		margin-left: -90px;
+	}
+	.col-md-8 textarea {
+		margin-top: 30px;
+		margin-left: -87px;
+	}
+	
+	
+		
+</style>*@
 <section class="content-header">
 	<h1>
 		TIMEHSHEET MANAGER
@@ -113,12 +149,77 @@
 			<div class="modal-content">
 				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">Close</button>
-					<h4 class="modal-title" id="myModalLabel">Leave of absence form</h4>
+					<h4 class="modal-title" id="myModalLabel"><strong>Leave of absence form</strong></h4>
 				</div>
-				<form id="SubmitLeaveForm" method="post" asp-controller="Manage" asp-action="LeaveSubmit" class="form-horizontal" role="form">
+				<form role="form" id="SubmitLeaveForm" method="post" asp-controller="Manage" asp-action="LeaveSubmit">
+					<div class="box-body">
+						<div class="form-group">
+							<label label asp-for="LeaveFormVM.FromDate"></label>
+							<input type="text" asp-for="LeaveFormVM.FromDate" class="form-control datepicker">
+							<span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
+						</div>
 
+						<div class="form-group">
+							<label asp-for="LeaveFormVM.ToDate"></label>
+							<input type="text" asp-for="LeaveFormVM.ToDate" class="form-control datepicker">
+							<span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
+						</div>
+
+						<div class="form-group">
+							<label asp-for="LeaveFormVM.WorkShift"></label>
+							<div>
+								<select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control">
+									<option value="0">AM</option>
+									<option value="1">PM</option>
+									<option value="2">All day</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label asp-for="LeaveFormVM.LeaveTypeID" ></label>
+							<div >
+								<select asp-for="LeaveFormVM.LeaveTypeID" id="selectbasic" class="form-control">
+									@{
+										foreach (var type in await _leaveManager.GetLeaveTypeAsync())
+										{
+											<option value="@type.ID">@type.LeaveName</option>
+										}
+									}
+								</select>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label>CC</label>
+							<div>
+								<input type="text" class="form-control">
+								<span class="text-danger" />
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label asp-for="LeaveFormVM.Note"></label>
+							<div >
+								<textarea asp-for="LeaveFormVM.Note" class="form-control" value="" type="text"></textarea>
+								<span asp-validation-for="LeaveFormVM.Note" class="text-danger" />
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label></label>
+							<div>
+								<input class="btn btn-primary" value="Submit" type="submit" />
+							</div>
+						</div>
+						</div>
+				</form>
+				@*<form id="SubmitLeaveForm" method="post" asp-controller="Manage" asp-action="LeaveSubmit" class="form-horizontal" role="form">
 					<div class="form-group">
-						<label asp-for="LeaveFormVM.FromDate" class="col-lg-3 control-label"></label>
+						
+							<label asp-for="LeaveFormVM.FromDate" class="col-lg-3 control-label"></label>
+						
+						
 						<div class="col-lg-8">
 							<input type="text" asp-for="LeaveFormVM.FromDate" class="form-control datepicker">
 							<span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
@@ -179,7 +280,7 @@
 							<input class="btn btn-primary" value="Submit" type="submit" />
 						</div>
 					</div>
-				</form>
+				</form>*@
 			</div>
 		</div>
 	</div>

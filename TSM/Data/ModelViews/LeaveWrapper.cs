@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TSM.Data.Models.ManageViewModels
+namespace TSM.Data.ModelViews
 {
     public class LeaveWrapper
     {

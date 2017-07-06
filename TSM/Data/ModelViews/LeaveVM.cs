@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using TSM.Data.Models;
 
-namespace TSM.Data.Models.ManageViewModels
+namespace TSM.Data.ModelViews
 {
     public class LeaveVM
     {

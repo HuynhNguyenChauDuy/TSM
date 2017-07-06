@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using System.Collections.Generic;
 using TSM.Data.Models;
-using TSM.Data.Models.ManageViewModels;
+using TSM.Data.ModelViews;
 
 namespace TSM.Data
 {

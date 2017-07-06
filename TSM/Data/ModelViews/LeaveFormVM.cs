@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.ComponentModel.DataAnnotations;
-namespace TSM.Data.Models.ManageViewModels
+namespace TSM.Data.ModelViews
 {
     public class LeaveFormVM
     {

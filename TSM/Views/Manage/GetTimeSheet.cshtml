@@ -8,16 +8,29 @@
 @inject LeaveManager _leaveManager
 
 @{
-	ViewData["Title"] = "TimeSheet Manager";
-	Layout = "~/Views/Shared/CustomLayout.cshtml";
+    ViewData["Title"] = "TimeSheet Manager";
+    Layout = "~/Views/Shared/CustomLayout.cshtml";
 }
 @section Customcss{
     <link href="~/DatePicker/css/bootstrap-datepicker.css" rel="stylesheet" />
+    <link href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css" rel="stylesheet"/>
+
+    <style>
+        .table {
+            text-align:center
+        }
+        .horizontal {
+            display: inline;
+            border-left: 2px solid;
+            padding-left: 0.3em;
+        }
+    </style>
 }
 
 @section jvscript{
     <script src="~/DatePicker/js/bootstrap-datepicker.js"></script>
     <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
     <script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"></script>
     <script>
         var curDate = new Date();
@@ -31,53 +44,155 @@
             });
         });
     </script>
+
+    <script>
+        $(document).ready(function () {
+            $('#MainTable').DataTable({
+                'paging': true,
+                'lengthChange': true,
+                'searching': true,
+                'ordering': true,
+                'info': false,
+                'autoWidth': true
+            });
+        });
+    </script>
 }
 
 <!-- Content Header (Page header) -->
-@*<style>
-	.col-lg-8 {
-		margin-left : -94px;
-		margin-top : 25px;
-	}
-	.form-group .col-lg-3 control-label {
-		margin-left : -16px 
-	}
-	
-	.form-control datepicker {
-		margin-left: 18px;
-		margin-top:2px;
 
-	}
-	.col-lg-3 control-label {
-		margin-left: -16px;
-	}
-	#selectbasic {
-		margin-top: 30px;
-		margin-left: -92px;
-	}
-	div.form-group {
-		margin-left: -48px ;
-	}
-	.col-md-8 input.form-control {
-		margin-top: 28px;
-		margin-left: -90px;
-	}
-	.col-md-8 textarea {
-		margin-top: 30px;
-		margin-left: -87px;
-	}
-	
-	
-		
-</style>*@
 <section class="content-header">
-	<h1>
-		TIMEHSHEET MANAGER
-		<button data-toggle="modal" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-sm btn-primary btn-create">New Submit</button>
-	</h1>
+    <h1>
+        TIMESHEET MANAGER
+        <button data-toggle="modal" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary">+ New Request</button>
+    </h1>
 </section>
 <!-- Main content -->
 <section class="content">
+
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">Leave Of Absent</h3>
+                </div>
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <table  id="MainTable" class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>User Name</th>
+                                <th>Leave Type</th>
+                                <th>Work Shift</th>
+                                <th>From Date</th>
+                                <th>To Date</th>
+                                <th>State</th>
+                                <th>Actions</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int i = 1;
+                                foreach (var item in Model.LeaveVM)
+                                {
+                                    <tr>
+                                        <td>@i.ToString()</td>
+                                        <td>@item.UserName</td>
+                                       
+                                        <td>@item.LeaveType</td>
+                                        <td>@item.WorkShift </td>
+                                        <td>@item.FromDate</td>
+                                        <td>@item.ToDate</td>
+                                        @if (item.State == TSM.Data.Models.Leave.eState.OnQueue)
+                                        {
+                                            <td><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
+                                            <td>
+                                                <a href="#" class="Button btn-success ion-checkmark-round">Approve&nbsp;</a>
+                                                <label class="horizontal"/>
+                                                <a href="#"  class="Button btn-danger ion-close-round">&nbsp;Reject&nbsp;</a>
+                                            </td>
+                                            <td><input type="checkbox" name="checkbox" id="checkbox"></td>
+
+                                        }
+                                        else if (item.State == TSM.Data.Models.Leave.eState.Approved)
+                                        { 
+                                            <td><label class="label label-success">&nbsp;Approved&nbsp;</label></td>
+                                            <td></td>
+                                            <td></td>
+                                        }
+                                        else
+                                        {
+                                            <td><label class="label label-danger">&nbsp;Rejected&nbsp;</label></td>
+                                            <td></td>
+                                            <td></td>
+                                        }
+                                    </tr>
+                                    i++;
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- /.box-body -->
+        </div>
+        <!-- /.box -->
+    </div>
+    <!-- /.col -->
+
+    <!-- /.row -->
+    <!--popup form-->
+    <div class="modal fade" id="SubmitLeaveFormMD" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">Close</button>
+                    <h4 class="modal-title" id="myModalLabel">Leave of absence form</h4>
+                </div>
+                <form id="SubmitLeaveForm" method="post" asp-controller="Manage" asp-action="LeaveSubmit" class="form-horizontal" role="form">
+
+                    <div class="form-group">
+                        <label asp-for="LeaveFormVM.FromDate" class="col-lg-3 control-label"></label>
+                        <div class="col-lg-8">
+                            <input type="text" asp-for="LeaveFormVM.FromDate" class="form-control datepicker">
+                            <span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="LeaveFormVM.ToDate" class="col-lg-3 control-label"></label>
+                        <div class="col-lg-8">
+                            <input type="text" asp-for="LeaveFormVM.ToDate" class="form-control datepicker">
+                            <span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="LeaveFormVM.WorkShift" class="col-lg-3 control-label"></label>
+                        <div class="col-md-8">
+                            <select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control">
+                                <option value="0">AM</option>
+                                <option value="1">PM</option>
+                                <option value="2">All day</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="LeaveFormVM.LeaveTypeID" class="col-lg-3 control-label"></label>
+                        <div class="col-md-8">
+                            <select asp-for="LeaveFormVM.LeaveTypeID" id="selectbasic" class="form-control">
+                                @{
+                                    foreach (var type in await _leaveManager.GetLeaveTypeAsync())
+                                    {
+                                        <option value="@type.ID">@type.LeaveName</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+=======
 	<div class="row">
 		<div class="col-xs-12">
 
@@ -214,74 +329,8 @@
 						</div>
 						</div>
 				</form>
-				@*<form id="SubmitLeaveForm" method="post" asp-controller="Manage" asp-action="LeaveSubmit" class="form-horizontal" role="form">
-					<div class="form-group">
-						
-							<label asp-for="LeaveFormVM.FromDate" class="col-lg-3 control-label"></label>
-						
-						
-						<div class="col-lg-8">
-							<input type="text" asp-for="LeaveFormVM.FromDate" class="form-control datepicker">
-							<span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
-						</div>
-					</div>
-
-					<div class="form-group">
-						<label asp-for="LeaveFormVM.ToDate" class="col-lg-3 control-label"></label>
-						<div class="col-lg-8">
-							<input type="text" asp-for="LeaveFormVM.ToDate" class="form-control datepicker">
-							<span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
-						</div>
-					</div>
-
-					<div class="form-group">
-						<label asp-for="LeaveFormVM.WorkShift" class="col-lg-3 control-label"></label>
-						<div class="col-md-8">
-							<select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control">
-								<option value="0">AM</option>
-								<option value="1">PM</option>
-								<option value="2">All day</option>
-							</select>
-						</div>
-					</div>
-					<div class="form-group">
-						<label asp-for="LeaveFormVM.LeaveTypeID" class="col-lg-3 control-label"></label>
-						<div class="col-md-8">
-							<select asp-for="LeaveFormVM.LeaveTypeID" id="selectbasic" class="form-control">
-								@{
-									foreach (var type in await _leaveManager.GetLeaveTypeAsync())
-									{
-										<option value="@type.ID">@type.LeaveName</option>
-									}
-								}
-							</select>
-						</div>
-					</div>
-
-                    <div class="form-group">
-                        <label  class="col-lg-3 control-label">CC</label>
-                        <div class="col-md-8">
-                            <input type="text" class="form-control">
-                            <span class="text-danger" />
-                        </div>
-                    </div>
-
-					<div class="form-group">
-						<label asp-for="LeaveFormVM.Note" class="col-md-3 control-label"></label>
-						<div class="col-md-8">
-							<textarea asp-for="LeaveFormVM.Note" class="form-control" value="" type="text"></textarea>
-							<span asp-validation-for="LeaveFormVM.Note" class="text-danger" />
-						</div>
-					</div>
-
-					<div class="form-group">
-						<label class="col-md-3 control-label"></label>
-						<div class="col-md-8">
-							<input class="btn btn-primary" value="Submit" type="submit" />
-						</div>
-					</div>
-				</form>*@
 			</div>
 		</div>
 	</div>
+
 </section>

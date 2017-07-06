@@ -53,8 +53,8 @@ namespace TSM.DataAccess
                 IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
                                                  .Include(item => item.User)
                                                  .Include(item => item.LeaveType)
-                                                 .OrderByDescending(item => item.SubmittedDate)
-                                                 .ThenByDescending(item => item.State)).ToListAsync()
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)).ToListAsync()
                                                select new LeaveVM()
                                                {
                                                    LeaveID = item.ID,
@@ -105,12 +105,12 @@ namespace TSM.DataAccess
                 {
                     foreach (var item in leaves)
                     {
-                        var submit = _context.Leaves.Find(item.LeaveID);
-                        submit.ApproverID = userid;
-                        submit.ApprovedDate = DateTime.Today;
-                        submit.State = item.Result;
+                        var leave = _context.Leaves.Find(item.LeaveID);
+                        leave.ApproverID = userid;
+                        leave.ApprovedDate = DateTime.Today;
+                        leave.State = item.Result;
 
-                        _context.Entry(submit).State = EntityState.Modified;
+                        _context.Entry(leave).State = EntityState.Modified;
                     }
                     await _context.SaveChangesAsync();
                     transaction.Commit();

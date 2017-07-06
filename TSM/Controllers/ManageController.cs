@@ -90,7 +90,7 @@ namespace TSM.Controllers
 
         // Get: /Manage/TimeSheetManager
         [HttpGet]
-        public async Task<ActionResult> GetTimeSheet()
+        public async Task<ActionResult> GetTimesheet()
         {
             var viewContext = new LeaveWrapper
             {
@@ -99,24 +99,13 @@ namespace TSM.Controllers
 
             return View(viewContext);
         }
-<<<<<<< HEAD
-		
-		public async Task<IActionResult> LoadTable()
-		{
-			var ViewContext = new LeaveWrapper
-			{
-				LeaveVM = await _leaveManager.GetLeaves()
-			};
 
-			return View(ViewContext);
-		}
 
 		[HttpPost]
-=======
+
 
         [HttpPost]
->>>>>>> 87430539cea47766634b6ad2eaa32bb52d9da164
-        [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> LeaveSubmit(LeaveWrapper submit)
         {
             if (ModelState.IsValid)
@@ -127,14 +116,12 @@ namespace TSM.Controllers
                 bool result = await _leaveManager.SubmitLeaveAsync(_submit, userId);
                 var mess = result == true ? "Success" : "Fail";
 
-                return RedirectToAction(nameof(GetTimeSheet), new { Message = mess });
+                return RedirectToAction(nameof(GetTimesheet), new { Message = mess });
             }
 
-            return RedirectToAction(nameof(GetTimeSheet), new { Message = "Validation Fail" });
+            return RedirectToAction(nameof(GetTimesheet), new { Message = "Validation Fail" });
         }
 		
-
-        
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -147,9 +134,9 @@ namespace TSM.Controllers
 
                 var mess = result == true ? "Success" : "Fail";
 
-                return RedirectToAction(nameof(GetTimeSheet), new { Message = "ABC" });
+                return RedirectToAction(nameof(GetTimesheet), new { Message = "ABC" });
             }
-            return RedirectToAction(nameof(GetTimeSheet), new { Message = "Validation Fail" });
+            return RedirectToAction(nameof(GetTimesheet), new { Message = "Validation Fail" });
         }
 
         private Task<ApplicationUser> GetCurrentUserAsync()

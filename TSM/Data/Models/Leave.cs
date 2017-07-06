@@ -15,7 +15,7 @@ namespace TSM.Data.Models
         public enum eState
         {
             Approved,
-            Denied,
+            Rejected,
             OnQueue
         };
 

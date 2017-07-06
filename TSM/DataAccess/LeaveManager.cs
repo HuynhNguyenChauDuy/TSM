@@ -53,7 +53,8 @@ namespace TSM.DataAccess
                 IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
                                                  .Include(item => item.User)
                                                  .Include(item => item.LeaveType)
-                                                 .OrderByDescending(item => item.State)).ToListAsync()
+                                                 .OrderByDescending(item => item.SubmittedDate)
+                                                 .ThenByDescending(item => item.State)).ToListAsync()
                                                select new LeaveVM()
                                                {
                                                    LeaveID = item.ID,

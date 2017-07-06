@@ -81,10 +81,10 @@ namespace TSM.DataAccess
             try
             {
                 data.ApplicationUserID = userid;
-                data.SubmittedDate = DateTime.Today;
+                data.SubmittedDate = DateTime.Now;
                 data.State = Leave.eState.OnQueue;
                 data.ApproverID = null;
-                data.ApprovedDate = DateTime.Today;
+                data.ApprovedDate = DateTime.Now;
 
                 await _context.Leaves.AddAsync(data);
                 await _context.SaveChangesAsync();
@@ -107,7 +107,7 @@ namespace TSM.DataAccess
                     {
                         var leave = _context.Leaves.Find(item.LeaveID);
                         leave.ApproverID = userid;
-                        leave.ApprovedDate = DateTime.Today;
+                        leave.ApprovedDate = DateTime.Now;
                         leave.State = item.Result;
 
                         _context.Entry(leave).State = EntityState.Modified;

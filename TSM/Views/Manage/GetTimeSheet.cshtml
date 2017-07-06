@@ -38,9 +38,8 @@
         curDate.setDate(curDate.getDate() - 1);
 
         $(document).ready(function () {
-            $('.datepicker').datepicker({
+            $('.input-daterange').datepicker({
                 format: 'dd/mm/yyyy',
-                autoclose: true,
                 startDate: curDate
             });
         });
@@ -53,7 +52,7 @@
                 'lengthChange': true,
                 'searching': true,
                 'ordering': true,
-                'info': false,
+                'info': true,
                 'autoWidth': true
             });
         });
@@ -65,7 +64,7 @@
 <section class="content-header">
     <h1>
         TIMESHEET MANAGER
-        <button data-toggle="modal" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary">+ New Request</button>
+        <button data-toggle="modal" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> New Request</button>
     </h1>
 </section>
 <!-- Main content -->
@@ -84,7 +83,7 @@
                                 <th>No.</th>
                                 <th>User Name</th>
                                 <th>Leave Type</th>
-                                <th>Work Shift</th>
+                                <th>WorkShift</th>
                                 <th>From Date</th>
                                 <th>To Date</th>
                                 <th>State</th>
@@ -152,25 +151,26 @@
                 </div>
                 <form role="form" id="SubmitLeaveForm" method="post" asp-controller="Manage" asp-action="LeaveSubmit">
                     <div class="box-body">
-                        <div class="form-group">
-                            <label label asp-for="LeaveFormVM.FromDate"></label>
-                            <input type="text" asp-for="LeaveFormVM.FromDate" class="form-control datepicker">
-                            <span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
-                        </div>
+                        <div class="input-daterange" id="datepicker">
+                            <div class="form-group">
+                                <label label asp-for="LeaveFormVM.FromDate"></label>
+                                <input style="text-align:left" type="text" asp-for="LeaveFormVM.FromDate" class="form-control datepicker">
+                                <span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
+                            </div>
 
-                        <div class="form-group">
-                            <label asp-for="LeaveFormVM.ToDate"></label>
-                            <input type="text" asp-for="LeaveFormVM.ToDate" class="form-control datepicker">
-                            <span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
+                            <div class="form-group">
+                                <label asp-for="LeaveFormVM.ToDate"></label>
+                                <input style="text-align:left" type="text" asp-for="LeaveFormVM.ToDate" class="form-control datepicker">
+                                <span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
+                            </div>
                         </div>
-
                         <div class="form-group">
                             <label asp-for="LeaveFormVM.WorkShift"></label>
                             <div>
                                 <select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control">
-                                    <option value="0">AM</option>
-                                    <option value="1">PM</option>
-                                    <option value="2">All day</option>
+                                    <option value="0">All day</option>
+                                    <option value="1">AM</option>
+                                    <option value="2">PM</option>
                                 </select>
                             </div>
                         </div>

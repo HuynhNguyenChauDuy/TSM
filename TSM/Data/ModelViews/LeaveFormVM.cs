@@ -16,9 +16,6 @@ namespace TSM.Data.ModelViews
         [DataType(DataType.DateTime)]
         public DateTime ToDate { get; set; }
 
-        //[DataType(DataType.DateTime)]
-        //public DateTime SubmittedDate { get; set; }
-
         [Display(Name = "WorkShift")]
         public int WorkShift { get; set; }
 
@@ -26,9 +23,7 @@ namespace TSM.Data.ModelViews
         public string LeaveTypeID { get; set; }
 
         [Display(Name = "Note")]
-        [MaxLengthAttribute]
         public string Note { get; set; }
-
     }
 
     public class LeaveFormVMValidator : AbstractValidator<LeaveFormVM>
@@ -36,7 +31,7 @@ namespace TSM.Data.ModelViews
         public LeaveFormVMValidator()
         {
             //RuleFor(reg => reg.FromDate)
-            //    .GreaterThanOrEqualTo(DateTime.Today);
+            //    .GreaterThanOrEqualTo(DateTime.Today)
         }
     }
 

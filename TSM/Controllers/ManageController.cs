@@ -97,9 +97,15 @@ namespace TSM.Controllers
 
             return View(ViewContext);
         }
-		public IActionResult LoadTable()
+		
+		public async Task<IActionResult> LoadTable()
 		{
-			return View();
+			var ViewContext = new LeaveWrapper
+			{
+				LeaveVM = await _leaveManager.GetLeaves()
+			};
+
+			return View(ViewContext);
 		}
 
 		[HttpPost]

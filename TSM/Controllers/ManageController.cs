@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TSM.Data;
@@ -86,17 +87,19 @@ namespace TSM.Controllers
 		{
 			return View();
 		}
+
         // Get: /Manage/TimeSheetManager
         [HttpGet]
         public async Task<ActionResult> GetTimeSheet()
         {
-            var ViewContext = new LeaveWrapper
+            var viewContext = new LeaveWrapper
             {
-                LeaveVM = await _leaveManager.GetLeaves()
+                LeaveVM = await _leaveManager.GetLeavesAsync()
             };
 
-            return View(ViewContext);
+            return View(viewContext);
         }
+<<<<<<< HEAD
 		
 		public async Task<IActionResult> LoadTable()
 		{
@@ -109,23 +112,45 @@ namespace TSM.Controllers
 		}
 
 		[HttpPost]
+=======
+
+        [HttpPost]
+>>>>>>> 87430539cea47766634b6ad2eaa32bb52d9da164
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LeaveSubmit(LeaveWrapper _submit)
+        public async Task<IActionResult> LeaveSubmit(LeaveWrapper submit)
         {
             if (ModelState.IsValid)
             {
-                var UserID = (await GetCurrentUserAsync()).Id;
-                var Submit = _mapper.Map<LeaveFormVM, Leave>(_submit.LeaveFormVM);
+                var userId = (await GetCurrentUserAsync()).Id;
+                Leave _submit = _mapper.Map<LeaveFormVM, Leave>(submit.LeaveFormVM);
 
-                var Retsult = await _leaveManager.SubmitLeave(Submit, UserID);
-                var Mess = Retsult == true ? "Success" : "Fail";
+                bool result = await _leaveManager.SubmitLeaveAsync(_submit, userId);
+                var mess = result == true ? "Success" : "Fail";
 
-                return RedirectToAction(nameof(GetTimeSheet), new { Message = Mess });
+                return RedirectToAction(nameof(GetTimeSheet), new { Message = mess });
             }
 
             return RedirectToAction(nameof(GetTimeSheet), new { Message = "Validation Fail" });
         }
 		
+
+        
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RequestHandle(IEnumerable<LeaveHandleVM> leaveRequests)
+        {
+            if (ModelState.IsValid)
+            {
+                var userId = (await GetCurrentUserAsync()).Id;
+                bool result = await _leaveManager.RequestHandleAsync(leaveRequests, userId);
+
+                var mess = result == true ? "Success" : "Fail";
+
+                return RedirectToAction(nameof(GetTimeSheet), new { Message = "ABC" });
+            }
+            return RedirectToAction(nameof(GetTimeSheet), new { Message = "Validation Fail" });
+        }
 
         private Task<ApplicationUser> GetCurrentUserAsync()
         {

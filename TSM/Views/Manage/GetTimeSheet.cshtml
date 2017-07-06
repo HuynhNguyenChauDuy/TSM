@@ -144,7 +144,7 @@
                         <div class="col-md-8">
                             <select asp-for="LeaveFormVM.LeaveTypeID" id="selectbasic" class="form-control">
                                 @{
-                                    foreach (var type in await _leaveManager.GetLeaveType())
+                                    foreach (var type in await _leaveManager.GetLeaveTypeAsync())
                                     {
                                         <option value="@type.ID">@type.LeaveName</option>
                                     }

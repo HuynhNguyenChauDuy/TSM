@@ -26,19 +26,19 @@ namespace TSM.DataAccess
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<LeaveTypeVM>> GetLeaveType()
+        public async Task<IEnumerable<LeaveTypeVM>> GetLeaveTypeAsync()
         {
             try
             {
-                var LeavetypeVM = from type in await _context.LeaveTypes.ToListAsync()
-                                  select new LeaveTypeVM()
-                                  {
-                                      ID = type.ID,
-                                      LeaveName = type.LeaveName
-                                  };
+                IEnumerable<LeaveTypeVM> leaveTypeVm = from type in await _context.LeaveTypes.ToListAsync()
+                                                       select new LeaveTypeVM()
+                                                       {
+                                                           ID = type.ID,
+                                                           LeaveName = type.LeaveName
+                                                       };
 
-                return LeavetypeVM;
-               
+                return leaveTypeVm;
+
             }
             catch (Exception)
             {
@@ -46,29 +46,29 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<IEnumerable<LeaveVM>> GetLeaves()
+        public async Task<IEnumerable<LeaveVM>> GetLeavesAsync()
         {
             try
             {
-                var Leaves = (from item in await (_context.Leaves
-                                                .Include(item => item.User)
-                                                .Include(item => item.LeaveType)
-                                                .OrderByDescending(item => item.State)
-                                                .ToListAsync())
-                             select new LeaveVM()
-                             {
-                                 LeaveID = item.ID,
-                                 UserName = item.User.UserName,
-                                 FromDate = item.FromDate.ToString("dd/MM/yyyy"),
-                                 ToDate = item.ToDate.ToString("dd/MM/yyyy"),
-                                 SubmitedDate = item.SubmittedDate.ToString("dd/MM/yyyy"),
-                                 ApprovedDate = item.ApprovedDate.ToString("dd/MM/yyyy"),
-                                 WorkShift = item.WorkShift,
-                                 LeaveType = item.LeaveType.LeaveName,
-                                 State = item.State
-                             });
+                IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
+                                                 .Include(item => item.User)
+                                                 .Include(item => item.LeaveType)
+                                                 .OrderByDescending(item => item.SubmittedDate)
+                                                 .ThenByDescending(item => item.State)).ToListAsync()
+                                               select new LeaveVM()
+                                               {
+                                                   LeaveID = item.ID,
+                                                   UserName = item.User.UserName,
+                                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
+                                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
+                                                   SubmitedDate = item.SubmittedDate.ToString("dd/MM/yyyy"),
+                                                   ApprovedDate = item.ApprovedDate.ToString("dd/MM/yyyy"),
+                                                   WorkShift = item.WorkShift,
+                                                   LeaveType = item.LeaveType.LeaveName,
+                                                   State = item.State
+                                               });
 
-                return Leaves;
+                return leaves;
             }
             catch (Exception)
             {
@@ -76,24 +76,52 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<bool> SubmitLeave(Leave Data, string UserID)
+        public async Task<bool> SubmitLeaveAsync(Leave data, string userid)
         {
             try
             {
-                Data.ApplicationUserID = UserID;
-                Data.SubmittedDate = DateTime.Today;
-                Data.State = Leave.eState.OnQueue;
-                Data.ApproverID = null;
-                Data.ApprovedDate = DateTime.Today;
+                data.ApplicationUserID = userid;
+                data.SubmittedDate = DateTime.Today;
+                data.State = Leave.eState.OnQueue;
+                data.ApproverID = null;
+                data.ApprovedDate = DateTime.Today;
 
-                await _context.Leaves.AddAsync(Data);
-                _context.SaveChanges();
+                await _context.Leaves.AddAsync(data);
+                await _context.SaveChangesAsync();
 
                 return true;
             }
             catch
             {
                 return false;
+            }
+        }
+
+        public async Task<bool> RequestHandleAsync(IEnumerable<LeaveHandleVM> leaves, string userid)
+        {
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    foreach (var item in leaves)
+                    {
+                        var submit = _context.Leaves.Find(item.LeaveID);
+                        submit.ApproverID = userid;
+                        submit.ApprovedDate = DateTime.Today;
+                        submit.State = item.Result;
+
+                        _context.Entry(submit).State = EntityState.Modified;
+                    }
+                    await _context.SaveChangesAsync();
+                    transaction.Commit();
+
+                    return true;
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
             }
         }
     }

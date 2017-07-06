@@ -74,7 +74,7 @@ namespace TSM.Controllers
                 {
                     _logger.LogInformation(1, "User logged in.");
                     var user = await _userManager.FindByEmailAsync(model.Email);
-                    return RedirectToLocal(Url.Action("Index", "Home"));
+                    return RedirectToLocal(Url.Action("GetTimesheet", "Manage"));
                 }
                 if (result.RequiresTwoFactor)
                 {
@@ -145,7 +145,7 @@ namespace TSM.Controllers
         {
             await _signInManager.SignOutAsync();
             _logger.LogInformation(4, "User logged out.");
-            return RedirectToAction(nameof(HomeController.Index), "Home");
+            return RedirectToLocal(Url.Action("LogIn", "Account"));
         }
 
         //

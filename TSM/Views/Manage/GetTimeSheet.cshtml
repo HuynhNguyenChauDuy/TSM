@@ -25,6 +25,14 @@
             border-left: 2px solid;
             padding-left: 0.3em;
         }
+		#cke_editor1 {
+			width: 550px;
+			margin-left:-73px;
+		}
+		.cke_inner cke_reset {
+			width:585px;
+
+		}
     </style>
 }
 
@@ -33,6 +41,7 @@
     <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
     <script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"></script>
+<script src="~/ckeditor/ckeditor.js"></script>
     <script>
         var curDate = new Date();
         curDate.setDate(curDate.getDate() - 1);
@@ -52,10 +61,15 @@
                 'lengthChange': true,
                 'searching': true,
                 'ordering': true,
-                'info': true,
-                'autoWidth': true
+				'info': true,
+				'autoWidth': true,
+				'sorting': false
             });
-        });
+		});
+		
+									
+									CKEDITOR.replace('editor1');
+								
     </script>
 
 }
@@ -64,7 +78,10 @@
 <section class="content-header">
     <h1>
         TIMESHEET MANAGER
-        <button data-toggle="modal" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> New Request</button>
+
+		<button data-toggle="modal" style="margin-left:704px; margin-bottom:-56px" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> Submit All</button>
+		<button data-toggle="modal" style="margin-left:816px;" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> New Request</button>
+      
     </h1>
 </section>
 <!-- Main content -->
@@ -81,7 +98,7 @@
                         <thead>
                             <tr>
                                 <th>No.</th>
-                                <th>User Name</th>
+                                <th>Employees</th>
                                 <th>Leave Type</th>
                                 <th>WorkShift</th>
                                 <th>From Date</th>
@@ -146,12 +163,12 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">Close</button>
+                    
                     <h4 class="modal-title" id="myModalLabel"><strong>Leave of absence form</strong></h4>
                 </div>
                 <form role="form" id="SubmitLeaveForm" method="post" asp-controller="Manage" asp-action="LeaveSubmit">
-                    <div class="box-body">
-                        <div class="input-daterange" id="datepicker">
+                    <div class="box-body" style="padding-left:100px">
+                        @*<div class="input-daterange" id="datepicker">
                             <div class="form-group">
                                 <label label asp-for="LeaveFormVM.FromDate"></label>
                                 <input style="text-align:left" type="text" asp-for="LeaveFormVM.FromDate" class="form-control datepicker">
@@ -163,22 +180,34 @@
                                 <input style="text-align:left" type="text" asp-for="LeaveFormVM.ToDate" class="form-control datepicker">
                                 <span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label asp-for="LeaveFormVM.WorkShift"></label>
+                        </div>*@
+						<label  style="margin-left:-73px">Leave day </label>
+						<div class="input-group input-daterange" id="datepicker" style="width:550px; padding-bottom:10px; margin-left:-73px">
+							<input type="text"  class="form-control" value="2012-04-05">
+							@*<span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />*@
+
+							<div class="input-group-addon">to</div>
+							<input type="text" class="form-control" value="2012-04-19">
+							<span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
+							<span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
+						</div>
+
+                        <div class="form-group" style="float:left; margin-right:50px; width:150px; margin-left:-73px; width:225px">
+                            <label asp-for="LeaveFormVM.WorkShift" style="margin-left:1px"></label>
                             <div>
-                                <select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control">
+                                <select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control" style="width:252px" >
                                     <option value="0">All day</option>
                                     <option value="1">AM</option>
                                     <option value="2">PM</option>
                                 </select>
                             </div>
+
                         </div>
 
-                        <div class="form-group">
-                            <label asp-for="LeaveFormVM.LeaveTypeID"></label>
+                        <div class="form-group" style="margin-left:20px; width:225px; float:left">
+                            <label asp-for="LeaveFormVM.LeaveTypeID" style="margin-left:1px"></label>
                             <div>
-                                <select asp-for="LeaveFormVM.LeaveTypeID" id="selectbasic" class="form-control">
+                                <select asp-for="LeaveFormVM.LeaveTypeID" id="selectbasic" class="form-control" style="width:252px">
                                     @{
                                         foreach (var type in await _leaveManager.GetLeaveTypeAsync())
                                         {
@@ -189,26 +218,33 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>CC</label>
-                            <div>
+                        <div class="form-group" style="clear:left; margin-left:-73px">
+                            <label style="margin-left:1px">CC</label>
+                            <div style="width:408px; width:550px">
                                 <input type="text" class="form-control">
                                 <span class="text-danger" />
                             </div>
                         </div>
 
-                        <div class="form-group">
-                            <label asp-for="LeaveFormVM.Note"></label>
-                            <div>
+                        <div class="form-group" >
+                            @*<label asp-for="LeaveFormVM.Note" style="margin-left:1px"></label>
+                            <div style="width:408px">
                                 <textarea asp-for="LeaveFormVM.Note" class="form-control" value="" type="text"></textarea>
                                 <span asp-validation-for="LeaveFormVM.Note" class="text-danger" />
-                            </div>
+                            </div>*@
+							
+								<textarea name="editor1" id="editor1" rows="10" cols="80">
+                
+								</textarea>
+								
+							
+
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group" style="clear:both; margin-left:337px">
                             <label></label>
                             <div>
-                                <input class="btn btn-primary" value="Submit" type="submit" />
+                                <input style="margin-top:-23px; margin-left:75px" class="btn btn-primary" value="Submit" type="submit" />
                             </div>
                         </div>
                     </div>

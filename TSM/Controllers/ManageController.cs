@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -101,11 +102,7 @@ namespace TSM.Controllers
         }
 
 
-		[HttpPost]
-
-
         [HttpPost]
-
         public async Task<IActionResult> LeaveSubmit(LeaveWrapper submit)
         {
             if (ModelState.IsValid)
@@ -122,27 +119,31 @@ namespace TSM.Controllers
             return RedirectToAction(nameof(GetTimesheet), new { Message = "Validation Fail" });
         }
 		
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RequestHandle(IEnumerable<LeaveHandleVM> leaveRequests)
-        {
-            if (ModelState.IsValid)
-            {
-                var userId = (await GetCurrentUserAsync()).Id;
-                bool result = await _leaveManager.RequestHandleAsync(leaveRequests, userId);
-
-                var mess = result == true ? "Success" : "Fail";
-
-                return RedirectToAction(nameof(GetTimesheet), new { Message = "ABC" });
-            }
-            return RedirectToAction(nameof(GetTimesheet), new { Message = "Validation Fail" });
-        }
-
         private Task<ApplicationUser> GetCurrentUserAsync()
         {
             return _userManager.GetUserAsync(HttpContext.User);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> HandleSingleRequest(LeaveWrapper request)
+        {
+            try
+            {
+                var userId = (await GetCurrentUserAsync()).Id;
+                var result = await _leaveManager.HandleSingleRequestAysnc(request.LeaveHandleVM, userId);
+
+                var mess = result == true ? "Success" : "Fail";
+                _context.SaveChanges();
+
+                return RedirectToAction(nameof(GetTimesheet), new { Message = mess });
+
+            }
+            catch(Exception)
+            {
+                return RedirectToAction(nameof(GetTimesheet), new { Message = "Fail" });
+            }
+        }
+
 
         //
         // POST: /Manage/RemoveLogin

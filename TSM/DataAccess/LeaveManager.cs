@@ -97,31 +97,23 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<bool> RequestHandleAsync(IEnumerable<LeaveHandleVM> leaves, string userid)
+
+        public async Task<bool> HandleSingleRequestAysnc(LeaveHandleVM request, string userId)
         {
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            try
             {
-                try
-                {
-                    foreach (var item in leaves)
-                    {
-                        var leave = _context.Leaves.Find(item.LeaveID);
-                        leave.ApproverID = userid;
-                        leave.ApprovedDate = DateTime.Now;
-                        leave.State = item.Result;
+                var currentleave = await _context.Leaves.FindAsync(request.LeaveID);
+                currentleave.ApproverID = userId;
+                currentleave.State = request.Result;
+                currentleave.ApprovedDate = DateTime.Now;
 
-                        _context.Entry(leave).State = EntityState.Modified;
-                    }
-                    await _context.SaveChangesAsync();
-                    transaction.Commit();
+                await _context.SaveChangesAsync();
 
-                    return true;
-                }
-                catch (Exception)
-                {
-                    transaction.Rollback();
-                    return false;
-                }
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
     }

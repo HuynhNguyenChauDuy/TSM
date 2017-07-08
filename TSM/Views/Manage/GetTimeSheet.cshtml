@@ -2,7 +2,6 @@
 @using TSM.DataAccess
 @using TSM.Services
 
-
 @model LeaveWrapper
 
 @inject LeaveManager _leaveManager
@@ -72,17 +71,35 @@
 								
     </script>
 
+    <script>
+        function HandleSingleRequest(leaveId, result) {
+            $('input[id="LeaveHandleVM_LeaveID"]').val(leaveId);
+            $('input[id="LeaveHandleVM_Result"]').val(result);
+            $("#HandleSingleRequest").submit();
+        };
+    </script>  
+    
 }
 
-<!-- Content Header (Page header) -->
+<!-- Content Header (Page header) MainTable -->
 <section class="content-header">
     <h1>
         TIMESHEET MANAGER
+
 
 		<button data-toggle="modal" style="margin-left:704px; margin-bottom:-56px" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> Submit All</button>
 		<button data-toggle="modal" style="margin-left:816px;" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> New Request</button>
       
     </h1>
+    <form hidden role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
+        <input asp-for="LeaveHandleVM.LeaveID"/>
+        <input asp-for="LeaveHandleVM.Result"/>
+    </form>
+
+    <form hidden role="form" id="HandleMultipleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
+        <input asp-for="LeaveHandleVM.LeaveID" />
+        <input asp-for="LeaveHandleVM.Result" />
+    </form>
 </section>
 <!-- Main content -->
 <section class="content">
@@ -115,7 +132,7 @@
                                 {
                                     <tr>
                                         <td>@i.ToString()</td>
-                                        <td>@item.UserName</td>
+                                        <td name="employeeName">@item.UserName</td>
 
                                         <td>@item.LeaveType</td>
                                         <td>@item.WorkShift </td>
@@ -125,9 +142,9 @@
                                         {
                                             <td><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
                                             <td>
-                                                <a href="#" class="Button btn-success ion-checkmark-round">Approve&nbsp;</a>
+                                                <button onclick="HandleSingleRequest('@item.LeaveID', 'Approved')" class="Button btn-success ion-checkmark-round">Approve&nbsp;</button>
                                                 <label class="horizontal" />
-                                                <a href="#" class="Button btn-danger ion-close-round">&nbsp;Reject&nbsp;</a>
+                                                <button onclick="HandleSingleRequest('@item.LeaveID', 'Rejected')" class="Button btn-danger ion-close-round">&nbsp;Reject&nbsp;</button>
                                             </td>
                                             <td><input type="checkbox" name="checkbox" id="checkbox"></td>
 
@@ -237,8 +254,6 @@
                 
 								</textarea>
 								
-							
-
                         </div>
 
                         <div class="form-group" style="clear:both; margin-left:337px">

@@ -152,6 +152,26 @@ namespace TSM.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> HandleMultipleRequests(LeaveWrapper request)
+        {
+            try
+            {
+                var userId = (await GetCurrentUserAsync()).Id;
+                var result = await _leaveManager.HandleMultipleRequests(request.LeaveHandleVM_Multiple, userId);
+
+                var mess = result == true ? "Success" : "Fail";
+                _context.SaveChanges();
+
+                return RedirectToAction(nameof(GetTimesheet), new { Message = mess });
+
+            }
+            catch (Exception)
+            {
+                return RedirectToAction(nameof(GetTimesheet), new { Message = "Fail" });
+            }
+        }
+
 
         //
         // POST: /Manage/RemoveLogin

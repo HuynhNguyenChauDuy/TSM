@@ -155,5 +155,29 @@ namespace TSM.DataAccess
                 return false;
             }
         }
+
+        public async Task<bool> HandleMultipleRequests(LeaveHandleVM_Multiple requests, string userId)
+        {
+            try
+            {
+                foreach(var item in requests.LeaveID)
+                {
+                    var currentleave = await _context.Leaves.FindAsync(item);
+                    if (currentleave.State == Leave.eState.OnQueue)
+                    {
+                        currentleave.ApproverID = userId;
+                        currentleave.State = requests.Result;
+                        currentleave.ApprovedDate = DateTime.Now;
+                    }
+                }
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
 }

@@ -61,17 +61,51 @@ namespace TSM.DataAccess
                                                    UserName = item.User.UserName,
                                                    FromDate = item.FromDate.ToString("dd/MM/yyyy"),
                                                    ToDate = item.ToDate.ToString("dd/MM/yyyy"),
-                                                   SubmitedDate = item.SubmittedDate.ToString("dd/MM/yyyy"),
-                                                   ApprovedDate = item.ApprovedDate.ToString("dd/MM/yyyy"),
+                                                   SubmittedDate = null,
+                                                   ApprovedDate = null,
                                                    WorkShift = item.WorkShift,
                                                    LeaveType = item.LeaveType.LeaveName,
-                                                   State = item.State
+                                                   State = item.State,
+                                                   Note = null
                                                });
 
                 return leaves;
             }
             catch (Exception)
             {
+                return null;
+            }
+        }
+
+        public LeaveVM GetLeaveDetail(string leaveId)
+        {
+            try
+            {
+                var leave =  _context.Leaves
+                    .Include(item => item.User)
+                    .Include(item => item.LeaveType)
+                    .Where(item => item.ID.CompareTo(leaveId) == 0)
+                    .FirstOrDefault();
+
+                var leaveVM = new LeaveVM()
+                {
+                    LeaveID = leave.ID,
+                    UserName = leave.User.UserName,
+                    FromDate = leave.FromDate.ToString("dd/MM/yyyy"),
+                    ToDate = leave.ToDate.ToString("dd/MM/yyyy"),
+                    SubmittedDate = leave.SubmittedDate.ToString("dd/MM/yyyy"),
+                    ApprovedDate = leave.ApprovedDate.ToString("dd/MM/yyyy"),
+                    WorkShift = leave.WorkShift,
+                    LeaveType = leave.LeaveType.LeaveName,
+                    State = leave.State,
+                    Note = System.Net.WebUtility.HtmlDecode(leave.Note)
+                };
+
+                return leaveVM;
+            }
+            catch (Exception ex)
+            {
+                var k = ex.Message;
                 return null;
             }
         }
@@ -103,6 +137,11 @@ namespace TSM.DataAccess
             try
             {
                 var currentleave = await _context.Leaves.FindAsync(request.LeaveID);
+                if(currentleave.State != Leave.eState.OnQueue)
+                {
+                    return false;
+                }
+
                 currentleave.ApproverID = userId;
                 currentleave.State = request.Result;
                 currentleave.ApprovedDate = DateTime.Now;

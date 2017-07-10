@@ -118,7 +118,15 @@ namespace TSM.Controllers
 
             return RedirectToAction(nameof(GetTimesheet), new { Message = "Validation Fail" });
         }
-		
+
+        [HttpGet]
+        public IActionResult GetLeaveDetail(string leaveId)
+        {
+            LeaveVM leaveVM = _leaveManager.GetLeaveDetail(leaveId);
+            return Json(leaveVM);
+        }
+
+
         private Task<ApplicationUser> GetCurrentUserAsync()
         {
             return _userManager.GetUserAsync(HttpContext.User);

@@ -24,14 +24,34 @@
             border-left: 2px solid;
             padding-left: 0.3em;
         }
-		#cke_editor1 {
-			width: 550px;
-			margin-left:-73px;
-		}
-		.cke_inner cke_reset {
-			width:585px;
 
-		}
+        #cke_editor1 {
+            width: 550px;
+            margin-left: -73px;
+        }
+
+        .cke_inner cke_reset {
+            width: 585px;
+        }
+
+        .center {
+            margin-top: 50px;
+        }
+
+        .boxsizingBorder {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+
+        .cus_left {
+            margin-left: 50px;
+        }
+
+        .textarea {
+            white-space: normal;
+            text-align: justify;
+        }
     </style>
 }
 
@@ -40,7 +60,8 @@
     <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
     <script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"></script>
-<script src="~/ckeditor/ckeditor.js"></script>
+    <script src="~/ckeditor/ckeditor.js"></script>
+
     <script>
         var curDate = new Date();
         curDate.setDate(curDate.getDate() - 1);
@@ -60,46 +81,118 @@
                 'lengthChange': true,
                 'searching': true,
                 'ordering': true,
-				'info': true,
-				'autoWidth': true,
-				'sorting': false
+                'info': true,
+                'autoWidth': true,
+                'aoColumnDefs': [{
+                    'bSortable': false,
+                    'aTargets': ['nosort']
+                }]
             });
-		});
-		
-									
-									CKEDITOR.replace('editor1');
-								
+
+            $('#MainTable tbody').on('click', 'tr', function () {
+                var leaveId = $(this).closest('tr').find('td:last').html().toString();
+                $('#LeaveHandleVM_LeaveID').val(leaveId);
+
+                var targetUrl = '@Url.Action("GetLeaveDetail", "Manage")?leaveId=' + leaveId;
+                $.ajax({
+                    url: targetUrl,
+                    type: "GET",
+                    dataType: 'json',
+                    contentType: "application/json; charset=utf-8",
+                    success: function (result) {
+                        if (result != null)
+                        {
+                            var leaveId = result['leaveID'];
+                            var employeeName = result['userName'];
+                            var submittedDate = result['submittedDate'];
+                            var fromDate = result['fromDate'];
+                            var ToDate = result['toDate'];
+                            var leaveType = result['leaveType'];
+                            var workShift = result['workShift'];
+                            var approvedDate = result['approvedDate'];
+                            var note = result['note'];
+                            var state = result['state'];
+
+                            $('#DetailVM_leaveID').val(leaveId);
+                            $("label[id='DetailVM_employeeName']").html(employeeName);
+                            $("label[id='DetailVM_submittedDate']").html(submittedDate);
+                            $("label[id='DetailVM_fromDate']").html(fromDate);
+                            $("label[id='DetailVM_toDate']").html(ToDate);
+                            $("label[id='DetailVM_leaveType']").html(leaveType);
+                            $("label[id='DetailVM_approvedDate']").html(approvedDate);
+                            $("text[id='DetailVM_note']").html(note);
+
+                            var statusClass = '';
+                            var statusName = '';
+                            if (state != '2')
+                            {
+                                if (state == '0')
+                                {
+                                    statusClass = 'label label-success'
+                                    statusName = 'Approved';
+                                }
+                                else
+                                {
+                                    statusClass = 'label label-danger'
+                                    statusName = 'Rejected';
+                                }
+                                $("button[id='DetailVM_approve']").hide();
+                                $("button[id='DetailVM_reject']").hide();
+                            }
+                            else
+                            {
+                                statusClass = 'label label-warning';
+                                statusName = 'Waiting';
+
+                                $("button[id='DetailVM_approve']").show();
+                                $("button[id='DetailVM_reject']").show();
+                            }
+
+                            var workShiftName = 'All Day';
+                            if (workShift == '1') { workShiftName = 'Morning'}
+                            else if (workShift == '2') { workShiftName = 'Afternoon'}
+
+                            $("label[id='DetailVM_state']").html(statusName);
+                            $("label[id='DetailVM_workShift']").html(workShiftName);
+                            $("label[id='DetailVM_state']").addClass(statusClass);
+
+                            $('#DetailVM_note').val(note);
+                            $('#DetailMD').modal('show');
+                        }
+                        else
+                        {
+                            alert('Something goes wrong, please refresh the page');
+                        }
+                    },
+                    error: function () {
+                        alert('Fail to connect to server, please contact IT department for support');
+                    }
+                });
+            });
+        });
     </script>
 
     <script>
-        function HandleSingleRequest(leaveId, result) {
-            $('input[id="LeaveHandleVM_LeaveID"]').val(leaveId);
+        function HandleSingleRequest(result) {
             $('input[id="LeaveHandleVM_Result"]').val(result);
             $("#HandleSingleRequest").submit();
         };
-    </script>  
-    
+    </script>
+
+    <script>
+        CKEDITOR.replace('LeaveFormVM.Note');
+    </script>
+
 }
 
-<!-- Content Header (Page header) MainTable -->
 <section class="content-header">
     <h1>
         TIMESHEET MANAGER
-
-
-		<button data-toggle="modal" style="margin-left:704px; margin-bottom:-56px" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> Submit All</button>
-		<button data-toggle="modal" style="margin-left:816px;" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> New Request</button>
-      
+        <button data-toggle="modal" style="position:absolute; background-color:lawngreen; right:21px; bottom:1px  " type="button" class="btn btn-success ion-android-done-all"> Approve All</button>
+        <button data-toggle="modal" style="position:absolute; bottom:1px; right:133px" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> New Request</button>
     </h1>
-    <form hidden role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
-        <input asp-for="LeaveHandleVM.LeaveID"/>
-        <input asp-for="LeaveHandleVM.Result"/>
-    </form>
 
-    <form hidden role="form" id="HandleMultipleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
-        <input asp-for="LeaveHandleVM.LeaveID" />
-        <input asp-for="LeaveHandleVM.Result" />
-    </form>
+    <form hidden role="form" id="HandleMultipleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest"></form>
 </section>
 <!-- Main content -->
 <section class="content">
@@ -109,7 +202,6 @@
                 <div class="box-header">
                     <h3 class="box-title">Leave Of Absent</h3>
                 </div>
-                <!-- /.box-header -->
                 <div class="box-body">
                     <table id="MainTable" class="table table-bordered table-hover">
                         <thead>
@@ -121,8 +213,8 @@
                                 <th>From Date</th>
                                 <th>To Date</th>
                                 <th>State</th>
-                                <th>Actions</th>
-                                <th></th>
+                                <th class="nosort"></th>
+                                <th name="LeaveID" hidden>LeaveID</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -132,8 +224,7 @@
                                 {
                                     <tr>
                                         <td>@i.ToString()</td>
-                                        <td name="employeeName">@item.UserName</td>
-
+                                        <td>@item.UserName</td>
                                         <td>@item.LeaveType</td>
                                         <td>@item.WorkShift </td>
                                         <td>@item.FromDate</td>
@@ -141,26 +232,21 @@
                                         @if (item.State == TSM.Data.Models.Leave.eState.OnQueue)
                                         {
                                             <td><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
-                                            <td>
-                                                <button onclick="HandleSingleRequest('@item.LeaveID', 'Approved')" class="Button btn-success ion-checkmark-round">Approve&nbsp;</button>
-                                                <label class="horizontal" />
-                                                <button onclick="HandleSingleRequest('@item.LeaveID', 'Rejected')" class="Button btn-danger ion-close-round">&nbsp;Reject&nbsp;</button>
-                                            </td>
                                             <td><input type="checkbox" name="checkbox" id="checkbox"></td>
-
-                                        }
-                                        else if (item.State == TSM.Data.Models.Leave.eState.Approved)
-                                        {
-                                            <td><label class="label label-success">Approved</label></td>
-                                            <td></td>
-                                            <td></td>
                                         }
                                         else
                                         {
-                                            <td><label class="label label-danger">Rejected</label></td>
-                                            <td></td>
+                                            if (item.State == TSM.Data.Models.Leave.eState.Approved)
+                                            {
+                                                <td><label class="label label-success">Approved</label></td>
+                                            }
+                                            else
+                                            {
+                                                <td><label class="label label-danger">Rejected</label></td>
+                                            }
                                             <td></td>
                                         }
+                                        <td hidden>@item.LeaveID</td>
                                     </tr>
                                     i++;
                                 }
@@ -169,50 +255,32 @@
                     </table>
                 </div>
             </div>
-            <!-- /.box-body -->
         </div>
-        <!-- /.box -->
     </div>
-    <!-- /.col -->
-    <!-- /.row -->
-    <!--popup form-->
+
+    <!-- Add new request pop-up -->
     <div class="modal fade" id="SubmitLeaveFormMD" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    
+
                     <h4 class="modal-title" id="myModalLabel"><strong>Leave of absence form</strong></h4>
                 </div>
                 <form role="form" id="SubmitLeaveForm" method="post" asp-controller="Manage" asp-action="LeaveSubmit">
                     <div class="box-body" style="padding-left:100px">
-                        @*<div class="input-daterange" id="datepicker">
-                            <div class="form-group">
-                                <label label asp-for="LeaveFormVM.FromDate"></label>
-                                <input style="text-align:left" type="text" asp-for="LeaveFormVM.FromDate" class="form-control datepicker">
-                                <span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="LeaveFormVM.ToDate"></label>
-                                <input style="text-align:left" type="text" asp-for="LeaveFormVM.ToDate" class="form-control datepicker">
-                                <span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
-                            </div>
-                        </div>*@
-						<label  style="margin-left:-73px">Leave day </label>
-						<div class="input-group input-daterange" id="datepicker" style="width:550px; padding-bottom:10px; margin-left:-73px">
-							<input type="text"  class="form-control" value="2012-04-05">
-							@*<span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />*@
-
-							<div class="input-group-addon">to</div>
-							<input type="text" class="form-control" value="2012-04-19">
-							<span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
-							<span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
-						</div>
+                        <label style="margin-left:-73px">Leave day </label>
+                        <div class="input-group input-daterange" id="datepicker" style="width:550px; padding-bottom:10px; margin-left:-73px">
+                            <input asp-for="LeaveFormVM.FromDate" type="text" class="form-control">
+                            <div class="input-group-addon">to</div>
+                            <input asp-for="LeaveFormVM.ToDate" type="text" class="form-control">
+                            <span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
+                            <span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
+                        </div>
 
                         <div class="form-group" style="float:left; margin-right:50px; width:150px; margin-left:-73px; width:225px">
                             <label asp-for="LeaveFormVM.WorkShift" style="margin-left:1px"></label>
                             <div>
-                                <select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control" style="width:252px" >
+                                <select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control" style="width:252px">
                                     <option value="0">All day</option>
                                     <option value="1">AM</option>
                                     <option value="2">PM</option>
@@ -243,17 +311,8 @@
                             </div>
                         </div>
 
-                        <div class="form-group" >
-                            @*<label asp-for="LeaveFormVM.Note" style="margin-left:1px"></label>
-                            <div style="width:408px">
-                                <textarea asp-for="LeaveFormVM.Note" class="form-control" value="" type="text"></textarea>
-                                <span asp-validation-for="LeaveFormVM.Note" class="text-danger" />
-                            </div>*@
-							
-								<textarea name="editor1" id="editor1" rows="10" cols="80">
-                
-								</textarea>
-								
+                        <div class="form-group col-sm-12">
+                            <textarea asp-for="LeaveFormVM.Note"></textarea>
                         </div>
 
                         <div class="form-group" style="clear:both; margin-left:337px">
@@ -264,6 +323,93 @@
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+    <!-- Detail pop-up -->
+    <div class="modal fade" id="DetailMD" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">x</button>
+                    <h3 class="modal-title">Leave Details</h3>
+                </div>
+                <div class="modal-body col-sm-12">
+                    <form role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
+                        <input hidden asp-for="LeaveHandleVM.LeaveID" />
+                        <input hidden asp-for="LeaveHandleVM.Result" />
+                        <div>
+                            <div class="form-group col-sm-6">
+                                <label>Employee Name</label>
+                                <div class="cus_left"><label id="DetailVM_employeeName"></label></div>
+                            </div>
+
+                            <div class="form-group col-sm-6">
+                                <label>State</label>
+                                <div class="cus_left"><label id="DetailVM_state"></label></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="form-group col-sm-6">
+                                <label>From Date</label>
+                                <div class="cus_left"><label id="DetailVM_fromDate"></label></div>
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label>To Date</label>
+                                <div class="cus_left"><label id="DetailVM_toDate"></label></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="form-group col-sm-6">
+                                <label>LeaveType</label>
+                                <div class="cus_left"><label id="DetailVM_leaveType"></label></div>
+                            </div>
+
+                            <div class="form-group col-sm-6">
+                                <label>WorkShift</label>
+                                <div class="cus_left"><label id="DetailVM_workShift"></label></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="form-group col-sm-6">
+                                <label>Submitted Date</label>
+                                <div class="cus_left"><label id="DetailVM_submittedDate"></label></div>
+                            </div>
+                            <div class="form-group col-sm-6">
+                                <label>Approved/Rejected Date</label>
+                                <div class="cus_left"><label id="DetailVM_approvedDate"></label></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="form-group col-sm-6">
+                                <label>Approver</label>
+                                <div class="cus_left"><label>Coming soon</label></div>
+                            </div>
+                            <div class="form-group col-sm-6">
+
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group col-sm-12">
+                                <label>Note</label>
+                                <div class="cus_leftai"><text id="DetailVM_note" class="codec-"></text></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <div class="btn-group btn-group-justified" role="group" aria-label="group button">
+                        <div class="col-sm-12">
+                            <button id="DetailVM_approve" onclick="HandleSingleRequest('Approved')" type="button" class="btn btn-success">&nbsp;Approve</button>
+                            <button id="DetailVM_reject" onclick="HandleSingleRequest('Rejected')" type="button" class="btn btn-danger">&nbsp;Reject&nbsp;</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

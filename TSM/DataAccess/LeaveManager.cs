@@ -51,7 +51,7 @@ namespace TSM.DataAccess
             try
             {
                 IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
-                                                 .Include(item => item.User)
+                                                 .Include(item => item.User).ThenInclude(item => item.Team)
                                                  .Include(item => item.LeaveType)
                                                  .OrderBy(item => item.FromDate)
                                                  .ThenBy(item => item.ToDate)).ToListAsync()
@@ -66,7 +66,42 @@ namespace TSM.DataAccess
                                                    WorkShift = item.WorkShift,
                                                    LeaveType = item.LeaveType.LeaveName,
                                                    State = item.State,
-                                                   Note = null
+                                                   Note = null,
+                                                   TeamName = item.User.Team.TeamName
+                                               });
+
+                return leaves;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<LeaveVM>> GetLeavesAsync(ApplicationUser user)
+        {
+            try
+            {
+                IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
+                                                 .Include(item => item.User)
+                                                 .ThenInclude(item => item.Team)
+                                                 .Where(item => item.User.TeamID.CompareTo(user.TeamID) == 0)
+                                                 .Include(item => item.LeaveType)
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)).ToListAsync()
+                                               select new LeaveVM()
+                                               {
+                                                   LeaveID = item.ID,
+                                                   UserName = item.User.UserName,
+                                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
+                                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
+                                                   SubmittedDate = null,
+                                                   ApprovedDate = null,
+                                                   WorkShift = item.WorkShift,
+                                                   LeaveType = item.LeaveType.LeaveName,
+                                                   State = item.State,
+                                                   Note = null,
+                                                   TeamName = item.User.Team.TeamName
                                                });
 
                 return leaves;

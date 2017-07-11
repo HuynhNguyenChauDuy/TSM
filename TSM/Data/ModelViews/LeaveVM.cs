@@ -15,5 +15,6 @@ namespace TSM.Data.ModelViews
         public string LeaveType { get; set; }
 		public Leave.eState State { get; set; }
         public string Note { get; set; }
+        public string TeamName { get; set; }
     }
 }

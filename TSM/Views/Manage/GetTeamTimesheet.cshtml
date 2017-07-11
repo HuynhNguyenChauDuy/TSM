@@ -10,6 +10,7 @@
     ViewData["Title"] = "TimeSheet Manager";
     Layout = "~/Views/Shared/CustomLayout.cshtml";
 }
+
 @section Customcss{
     <link href="~/DatePicker/css/bootstrap-datepicker.css" rel="stylesheet" />
     <link href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css" rel="stylesheet" />
@@ -174,14 +175,6 @@
         });
     </script>
 
-    <!--Handle Single Request-->
-    <script>
-        function HandleSingleRequest(result) {
-            $('input[id="LeaveHandleVM_Result"]').val(result);
-            $("#HandleSingleRequest").submit();
-        };
-    </script>
-
     <!--CkEditor-->
     <script>
         CKEDITOR.replace('LeaveFormVM.Note');
@@ -197,35 +190,13 @@
             }
         });
     </script>
-
-    <!--handle Multiple request  -->
-    <script>
-        $('#btnApproveAll').click(function () {
-            $('#MainTable tbody tr').each(function () {
-                var leaveId = $(this).closest('tr').find('td:last').html().toString();
-                var str = '<input hidden type="text" name="LeaveHandleVM_Multiple.LeaveID" value="' + leaveId + '" />';
-
-                $('#HandleMultipleRequests').append(str);
-            });
-
-            var result = 'Approved';
-            var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
-            $('#HandleMultipleRequests').append(str2);
-            $('#HandleMultipleRequests').submit();
-        });
-    </script>
 }
 
 <section class="content-header">
     <h1>
         TIMESHEET MANAGER
-        <button id="btnApproveAll" data-toggle="modal" type="button" class="btn btn-success ion-android-done-all"> Approve All</button>
-        <button id="btnApproveChecked" data-toggle="modal" type="button" class="btn btn-bitbucket ion-android-checkbox-outline"> Approve Checked</button>
-        <button id="btnRejectChecked" data-toggle="modal" type="button" class="btn btn-danger ion-android-checkbox-outline"> Reject Checked</button>
         <button data-toggle="modal" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> New Request</button>
     </h1>
-
-    <form hidden role="form" id="HandleMultipleRequests" method="post" asp-controller="Manage" asp-action="HandleMultipleRequests"></form>
 </section>
 <!-- Main content -->
 <section class="content">
@@ -246,7 +217,6 @@
                                 <th>From Date</th>
                                 <th>To Date</th>
                                 <th>State</th>
-                                <th class="nosort"><input id="cbCheckAll" type="checkbox" /></th>
                                 <th name="LeaveID" hidden>LeaveID</th>
                             </tr>
                         </thead>
@@ -265,7 +235,6 @@
                                         @if (item.State == TSM.Data.Models.Leave.eState.OnQueue)
                                         {
                                             <td><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
-                                            <td><input type="checkbox" name="subCheckbox"></td>
                                         }
                                         else
                                         {
@@ -277,7 +246,6 @@
                                             {
                                                 <td><label class="label label-danger">Rejected</label></td>
                                             }
-                                            <td></td>
                                         }
                                         <td hidden>@item.LeaveID</td>
                                     </tr>
@@ -449,8 +417,8 @@
                 <div class="modal-footer">
                     <div class="btn-group btn-group-justified" role="group" aria-label="group button">
                         <div class="col-sm-12">
-                            <button id="DetailVM_approve" onclick="HandleSingleRequest('Approved')" type="button" class="btn btn-success">&nbsp;Approve</button>
-                            <button id="DetailVM_reject" onclick="HandleSingleRequest('Rejected')" type="button" class="btn btn-danger">&nbsp;Reject&nbsp;</button>
+                            <button type="button" class="btn btn-primary">&nbsp;Edit</button>
+                            <button type="button" class="btn btn-danger">&nbsp;Delete&nbsp;</button>
                         </div>
                     </div>
                 </div>

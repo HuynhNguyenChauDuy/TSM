@@ -91,8 +91,10 @@ namespace TSM.Controllers
 
         // Get: /Manage/TimeSheetManager
         [HttpGet]
+        [Authorize(Roles = "Project Manager")]
         public async Task<ActionResult> GetTimesheet()
         {
+            var user = await GetCurrentUserAsync();
             var viewContext = new LeaveWrapper
             {
                 LeaveVM = await _leaveManager.GetLeavesAsync()
@@ -101,6 +103,17 @@ namespace TSM.Controllers
             return View(viewContext);
         }
 
+        [HttpGet]
+        public async Task<ActionResult> GetTeamTimesheet()
+        {
+            var user = await GetCurrentUserAsync();
+            var viewContext = new LeaveWrapper
+            {
+                LeaveVM = await _leaveManager.GetLeavesAsync(user)
+            };
+
+            return View(viewContext);
+        }
 
         [HttpPost]
         public async Task<IActionResult> LeaveSubmit(LeaveWrapper submit)
@@ -133,6 +146,7 @@ namespace TSM.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Project Manager, Team Leader")]
         public async Task<IActionResult> HandleSingleRequest(LeaveWrapper request)
         {
             try
@@ -153,6 +167,7 @@ namespace TSM.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Project Manager, Team Leader")]
         public async Task<IActionResult> HandleMultipleRequests(LeaveWrapper request)
         {
             try

@@ -44,6 +44,8 @@ namespace TSM.Controllers
             _logger = loggerFactory.CreateLogger<AccountController>();
         }
 
+        
+
         //
         // GET: /Account/Login
         [HttpGet]
@@ -55,6 +57,11 @@ namespace TSM.Controllers
 
             ViewData["ReturnUrl"] = returnUrl;
             return View();
+        }
+
+        private Task<ApplicationUser> GetCurrentUserAsync()
+        {
+            return _userManager.GetUserAsync(HttpContext.User);
         }
 
         //
@@ -74,7 +81,16 @@ namespace TSM.Controllers
                 {
                     _logger.LogInformation(1, "User logged in.");
                     var user = await _userManager.FindByEmailAsync(model.Email);
-                    return RedirectToLocal(Url.Action("GetTimesheet", "Manage"));
+                    
+                    var userRoles = await _userManager.GetRolesAsync(user);
+                    if (userRoles.Contains("Project Manager"))
+                    {
+                        return RedirectToLocal(Url.Action("GetTimesheet", "Manage"));
+                    }
+                    else
+                    {
+                        return RedirectToLocal(Url.Action("GetTeamTimesheet", "Manage"));
+                    }
                 }
                 if (result.RequiresTwoFactor)
                 {

@@ -65,6 +65,8 @@
     <!--DatePicker-->
     <script>
         var curDate = new Date();
+        curDate.setDate(curDate.getDate() - 1);
+
         $(document).ready(function () {
             $('.input-daterange').datepicker({
                 format: 'dd/mm/yyyy',
@@ -112,7 +114,6 @@
                             var approvedDate = result['approvedDate'];
                             var note = result['note'];
                             var state = result['state'];
-                            var teamName = result['teamName'];
 
                             $('#DetailVM_leaveID').val(leaveId);
                             $("label[id='DetailVM_employeeName']").html(employeeName);
@@ -122,7 +123,6 @@
                             $("label[id='DetailVM_leaveType']").html(leaveType);
                             $("label[id='DetailVM_approvedDate']").html(approvedDate);
                             $("text[id='DetailVM_note']").html(note);
-                            $("text[id='DetailVM_teamName']").html(teamName);
 
                             var statusClass = '';
                             var statusName = '';
@@ -371,7 +371,7 @@
                     <form role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
                         <input hidden asp-for="LeaveHandleVM.LeaveID" />
                         <input hidden asp-for="LeaveHandleVM.Result" />
-                        <div class="row">
+                        <div>
                             <div class="form-group col-sm-6">
                                 <label>Employee Name</label>
                                 <div class="cus_left"><label id="DetailVM_employeeName"></label></div>
@@ -383,7 +383,7 @@
                             </div>
                         </div>
 
-                        <div class="row">
+                        <div>
                             <div class="form-group col-sm-6">
                                 <label>From Date</label>
                                 <div class="cus_left"><label id="DetailVM_fromDate"></label></div>
@@ -394,7 +394,7 @@
                             </div>
                         </div>
 
-                        <div class="row">
+                        <div>
                             <div class="form-group col-sm-6">
                                 <label>LeaveType</label>
                                 <div class="cus_left"><label id="DetailVM_leaveType"></label></div>
@@ -406,7 +406,7 @@
                             </div>
                         </div>
 
-                        <div class="row">
+                        <div>
                             <div class="form-group col-sm-6">
                                 <label>Submitted Date</label>
                                 <div class="cus_left"><label id="DetailVM_submittedDate"></label></div>
@@ -417,7 +417,7 @@
                             </div>
                         </div>
 
-                        <div class="row">
+                        <div>
                             <div class="form-group col-sm-6">
                                 <label>Approver</label>
                                 <div class="cus_left"><label>Coming soon</label></div>
@@ -426,21 +426,10 @@
 
                             </div>
                         </div>
-
-                        <div class="row">
-                            <div class="form-group col-sm-6">
-                                <label>Team</label>
-                                <div class="cus_left"><label id="DetailVM_teamName"></label></div>
-                            </div>
-                            <div class="form-group col-sm-6">
-
-                            </div>
-                        </div>
-
-                        <div class="row">
+                        <div>
                             <div class="form-group col-sm-12">
                                 <label>Note</label>
-                                <div class="cus_leftai"><text id="DetailVM_note"></text></div>
+                                <div class="cus_leftai"><text id="DetailVM_note" class="codec-"></text></div>
                             </div>
                         </div>
                     </form>

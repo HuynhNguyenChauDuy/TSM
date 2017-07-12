@@ -77,6 +77,37 @@ namespace TSM.DataAccess
             }
         }
 
+        public async Task<IEnumerable<LeaveVM>> GetLeavebyUserIdsAsync(string userId)
+        {
+            try
+            {
+                IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
+                                                 .Include(item => item.User).Where(item => item.ApplicationUserID.CompareTo(userId) == 0)
+                                                 .Include(item => item.LeaveType)
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)).ToListAsync()
+                                               select new LeaveVM()
+                                               {
+                                                   LeaveID = item.ID,
+                                                   UserName = item.User.UserName,
+                                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
+                                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
+                                                   SubmittedDate = null,
+                                                   ApprovedDate = null,
+                                                   WorkShift = item.WorkShift,
+                                                   LeaveType = item.LeaveType.LeaveName,
+                                                   State = item.State,
+                                                   Note = null
+                                               });
+
+                return leaves;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         public LeaveVM GetLeaveDetail(string leaveId)
         {
             try

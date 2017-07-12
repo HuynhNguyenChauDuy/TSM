@@ -83,15 +83,21 @@ namespace TSM.Controllers
             return View(model);
         }
 
-		[HttpGet]
-		public IActionResult EMPTYPAGE()
-		{
-			return View();
-		}
-
         // Get: /Manage/TimeSheetManager
         [HttpGet]
         public async Task<ActionResult> GetTimesheet()
+        {
+            var userID = (await GetCurrentUserAsync()).Id;
+            var viewContext = new LeaveWrapper
+            {
+                LeaveVM = await _leaveManager.GetLeavebyUserIdsAsync(userID)
+            };
+
+            return View(viewContext);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> GetTimesheetManager()
         {
             var viewContext = new LeaveWrapper
             {

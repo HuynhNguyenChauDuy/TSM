@@ -1,4 +1,4 @@
-@using TSM.Data.ModelViews
+﻿@using TSM.Data.ModelViews
 @using TSM.DataAccess
 @using TSM.Services
 
@@ -13,7 +13,7 @@
 @section Customcss{
     <link href="~/DatePicker/css/bootstrap-datepicker.css" rel="stylesheet" />
     <link href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css" rel="stylesheet" />
-
+    <link href="~/select2-master/dist/css/select2.css" rel="stylesheet" />
     <style>
         .table {
             text-align: center
@@ -61,12 +61,11 @@
     <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
     <script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"></script>
     <script src="~/ckeditor/ckeditor.js"></script>
+    <script src="~/select2-master/dist/js/select2.js"></script>
 
-    <!--DatePicker-->
+    <!--DatePicker setup-->
     <script>
         var curDate = new Date();
-        curDate.setDate(curDate.getDate() - 1);
-
         $(document).ready(function () {
             $('.input-daterange').datepicker({
                 format: 'dd/mm/yyyy',
@@ -75,7 +74,12 @@
         });
     </script>
 
-    <!--DataTable-->
+    <!--Ckeditor setup-->
+    <script>
+        CKEDITOR.replace('[name="LeaveFormVM.Note]"');
+    </script>
+
+    <!--DataTable row click-->
     <script>
         $(document).ready(function () {
             $('#MainTable').DataTable({
@@ -104,7 +108,6 @@
                     success: function (result) {
                         if (result != null)
                         {
-                            var leaveId = result['leaveID'];
                             var employeeName = result['userName'];
                             var submittedDate = result['submittedDate'];
                             var fromDate = result['fromDate'];
@@ -115,7 +118,7 @@
                             var note = result['note'];
                             var state = result['state'];
 
-                            $('#DetailVM_leaveID').val(leaveId);
+                            $('#LeaveFormVM_ID').val(leaveId);
                             $("label[id='DetailVM_employeeName']").html(employeeName);
                             $("label[id='DetailVM_submittedDate']").html(submittedDate);
                             $("label[id='DetailVM_fromDate']").html(fromDate);
@@ -138,16 +141,18 @@
                                     statusClass = 'label label-danger'
                                     statusName = 'Rejected';
                                 }
-                                $("button[id='DetailVM_approve']").hide();
-                                $("button[id='DetailVM_reject']").hide();
+
+                                $("button[id='EditButton']").hide();
+                                $("button[id='DeleteButton']").hide();
+
                             }
                             else
                             {
                                 statusClass = 'label label-warning';
                                 statusName = 'Waiting';
 
-                                $("button[id='DetailVM_approve']").show();
-                                $("button[id='DetailVM_reject']").show();
+                                $("button[id='EditButton']").show();
+                                $("button[id='DeleteButton']").show();
                             }
 
                             var workShiftName = 'All Day';
@@ -174,19 +179,29 @@
         });
     </script>
 
-   
+    <!--Edit button-->
     <script>
-        CKEDITOR.replace('LeaveFormVM.Note');
-    </script>
+        $(document).ready(function () {
+            $("#EditButton").click(function () {
+                //var fromdate = $("label[id='DetailVM_fromDate']").html();
+                //var todate = $("label[id='DetailVM_toDate']").html();
+                //var workshift = $("label[id='DetailVM_workShift']").html();
+                //var leavetype = $("label[id='DetailVM_leaveType']").html();
 
+                //$('#LeaveFormVM_fromDate').val(fromdate);
+                //$('#LeaveFormVM_toDate').val(todate);
+                $('#DetailMD').modal('hide');
+            });
+        });
+    </script>
 }
 
 <section class="content-header">
     <h1>
-        TIMESHEET MANAGER
+        PERSONAL TIMESHEET
         <button data-toggle="modal" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> New Request</button>
     </h1>
-
+    <!--Hidden content-->
     <form hidden role="form" id="HandleMultipleRequests" method="post" asp-controller="Manage" asp-action="HandleMultipleRequests"></form>
 </section>
 <!-- Main content -->
@@ -298,11 +313,13 @@
                         <div class="form-group" style="clear:left; margin-left:-73px">
                             <label style="margin-left:1px">CC</label>
                             <div style="width:408px; width:550px">
-                                <input type="text" class="form-control">
+                                <select class="js-data-example-ajax">
+                                    <option></option>
+                                </select>
                                 <span class="text-danger" />
                             </div>
                         </div>
-
+                        
                         <div class="form-group col-sm-12">
                             <textarea asp-for="LeaveFormVM.Note"></textarea>
                         </div>
@@ -318,6 +335,82 @@
             </div>
         </div>
     </div>
+
+    <!--Edit pop-up-->
+    <div class="modal fade" id="EditLeaveFormMD" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="myModalLabel"><strong>Edit Leave</strong></h4>
+                </div>
+                <form role="form" id="EditLeaveForm" method="post" asp-controller="Manage" asp-action="EditLeave">
+                    <input hidden asp-for="LeaveFormVM.ID" type="text" />
+                    <div class="box-body" style="padding-left:100px">
+                        <label style="margin-left:-73px">Leave day </label>
+                        <div class="input-group input-daterange" id="datepicker" style="width:550px; padding-bottom:10px; margin-left:-73px">
+                            <input asp-for="LeaveFormVM.FromDate" type="text" class="form-control">
+                            <div class="input-group-addon">to</div>
+                            <input asp-for="LeaveFormVM.ToDate" type="text" class="form-control">
+                            <span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
+                            <span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
+                        </div>
+
+                        <div class="form-group" style="float:left; margin-right:50px; width:150px; margin-left:-73px; width:225px">
+                            <label asp-for="LeaveFormVM.WorkShift" style="margin-left:1px"></label>
+                            <div>
+                                <select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control" style="width:252px">
+                                    <option value="0">All day</option>
+                                    <option value="1">AM</option>
+                                    <option value="2">PM</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-left:20px; width:225px; float:left">
+                            <label asp-for="LeaveFormVM.LeaveTypeID" style="margin-left:1px"></label>
+                            <div>
+                                <select asp-for="LeaveFormVM.LeaveTypeID" id="selectbasic" class="form-control" style="width:252px">
+                                    @{
+                                        foreach (var type in await _leaveManager.GetLeaveTypeAsync())
+                                        {
+                                            <option value="@type.ID">@type.LeaveName</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        @*<div class="form-group" style="clear:left; margin-left:-73px">
+                            <label style="margin-left:1px">CC</label>
+                            <div style="width:408px; width:550px">
+                               <input type="text" />
+                                <span class="text-danger" />
+                            </div>
+                        </div>
+
+                        <div class="form-group col-sm-12">
+                            <textarea asp-for="LeaveFormVM.Note"></textarea>
+                        </div>*@
+
+                        <div class="form-group">
+                            <label>CC</label>
+                            <div class="col-md-8">
+                                <textarea asp-for="LeaveFormVM.Note"></textarea>
+                            </div>
+                        </div> 
+
+                        <div class="form-group" style="clear:both; margin-left:337px">
+                            <label></label>
+                            <div>
+                                <input style="margin-top:-23px; margin-left:75px" class="btn btn-primary" value="Submit" type="submit" />
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Detail pop-up -->
     <div class="modal fade" id="DetailMD" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -327,6 +420,7 @@
                     <h3 class="modal-title">Leave Details</h3>
                 </div>
                 <div class="modal-body col-sm-12">
+                    <!-- sửa thành form cho function deleteLeave-->
                     <form role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
                         <input hidden asp-for="LeaveHandleVM.LeaveID" />
                         <input hidden asp-for="LeaveHandleVM.Result" />
@@ -397,8 +491,8 @@
                 <div class="modal-footer">
                     <div class="btn-group btn-group-justified" role="group" aria-label="group button">
                         <div class="col-sm-12">
-                            <button  type="button" class="btn btn-primary">&nbsp;Edit</button>
-                            <button  type="button" class="btn btn-danger">&nbsp;Delete&nbsp;</button>
+                            <button id="EditButton" data-toggle="modal" data-target="#EditLeaveFormMD"  type="button" class="btn btn-primary">&nbsp;Edit</button>
+                            <button id="DeleteButton" type="button" class="btn btn-danger">&nbsp;Delete&nbsp;</button>
                         </div>
                     </div>
                 </div>

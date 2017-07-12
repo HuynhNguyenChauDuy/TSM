@@ -97,26 +97,57 @@ namespace TSM.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = ("Project Manager,Team Leader"))]
         public async Task<ActionResult> GetTimesheetManager()
         {
+            var user = await GetCurrentUserAsync();
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+            IEnumerable<LeaveVM> leaveVM = null;
+            if (userRoles.Contains("Project Manager"))
+            {
+                leaveVM = await _leaveManager.GetAllLeavesAsync();
+            }
+            else
+            {
+                leaveVM = await _leaveManager.GetLeavesByTeamIdAsync(user.TeamID);
+            }
+
             var viewContext = new LeaveWrapper
             {
-                LeaveVM = await _leaveManager.GetLeavesAsync()
+                LeaveVM = leaveVM
             };
 
             return View(viewContext);
         }
-
 
         [HttpPost]
         public async Task<IActionResult> LeaveSubmit(LeaveWrapper submit)
         {
             if (ModelState.IsValid)
             {
-                var userId = (await GetCurrentUserAsync()).Id;
+                var user = await GetCurrentUserAsync();
                 Leave _submit = _mapper.Map<LeaveFormVM, Leave>(submit.LeaveFormVM);
 
-                bool result = await _leaveManager.SubmitLeaveAsync(_submit, userId);
+                bool result = await _leaveManager.SubmitLeaveAsync(_submit, user);
+                var mess = result == true ? "Success" : "Fail";
+
+                return RedirectToAction(nameof(GetTimesheet), new { Message = mess });
+            }
+
+            return RedirectToAction(nameof(GetTimesheet), new { Message = "Validation Fail" });
+        }
+
+        
+        [HttpPost]
+        public async Task<IActionResult> EditLeave(LeaveWrapper submit)
+        {
+            if (ModelState.IsValid)
+            {
+                var userId = (await GetCurrentUserAsync()).Id;
+                Leave changes = _mapper.Map<LeaveFormVM, Leave>(submit.LeaveFormVM);
+
+                bool result = await _leaveManager.EditLeaveAsync(changes, userId);
                 var mess = result == true ? "Success" : "Fail";
 
                 return RedirectToAction(nameof(GetTimesheet), new { Message = mess });
@@ -132,6 +163,20 @@ namespace TSM.Controllers
             return Json(leaveVM);
         }
 
+        [HttpGet]
+        public IActionResult GetCCRecommend(string term, int page)
+        {
+            var result = from cc in (_context.Users.Where(item => item.Email.Contains(term)).ToList())
+                         select new
+                         {
+                             value = cc.Email,
+                             date = cc.Id
+                         };
+
+
+            return Json(result);
+        }
+
 
         private Task<ApplicationUser> GetCurrentUserAsync()
         {
@@ -139,6 +184,7 @@ namespace TSM.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = ("Project Manager,Team Leader"))]
         public async Task<IActionResult> HandleSingleRequest(LeaveWrapper request)
         {
             try
@@ -149,16 +195,17 @@ namespace TSM.Controllers
                 var mess = result == true ? "Success" : "Fail";
                 _context.SaveChanges();
 
-                return RedirectToAction(nameof(GetTimesheet), new { Message = mess });
+                return RedirectToAction(nameof(GetTimesheetManager), new { Message = mess });
 
             }
-            catch(Exception)
+            catch (Exception)
             {
-                return RedirectToAction(nameof(GetTimesheet), new { Message = "Fail" });
+                return RedirectToAction(nameof(GetTimesheetManager), new { Message = "Fail" });
             }
         }
 
         [HttpPost]
+        [Authorize(Roles = ("Project Manager,Team Leader"))]
         public async Task<IActionResult> HandleMultipleRequests(LeaveWrapper request)
         {
             try
@@ -169,17 +216,23 @@ namespace TSM.Controllers
                 var mess = result == true ? "Success" : "Fail";
                 _context.SaveChanges();
 
-                return RedirectToAction(nameof(GetTimesheet), new { Message = mess });
+                return RedirectToAction(nameof(GetTimesheetManager), new { Message = mess });
 
             }
             catch (Exception)
             {
-                return RedirectToAction(nameof(GetTimesheet), new { Message = "Fail" });
+                return RedirectToAction(nameof(GetTimesheetManager), new { Message = "Fail" });
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> DeleteLeave(LeaveWrapper request)
+        {
+            return null;
+        }
 
-        //
+
+
         // POST: /Manage/RemoveLogin
         [HttpPost]
         [ValidateAntiForgeryToken]

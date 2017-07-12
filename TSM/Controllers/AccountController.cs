@@ -75,12 +75,6 @@ namespace TSM.Controllers
                     _logger.LogInformation(1, "User logged in.");
                     var user = await _userManager.FindByEmailAsync(model.Email);
 
-                    var userRoles = await _userManager.GetRolesAsync(user);
-                    if(userRoles.Contains("Project Manager") || userRoles.Contains("Team Leader"))
-                    {
-                        return RedirectToLocal(Url.Action("GetTimesheetManager", "Manage"));
-                    }
-
                     return RedirectToLocal(Url.Action("GetTimesheet", "Manage"));
                 }
                 if (result.RequiresTwoFactor)

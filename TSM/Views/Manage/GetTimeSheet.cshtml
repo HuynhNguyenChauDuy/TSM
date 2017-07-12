@@ -62,6 +62,7 @@
     <script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"></script>
     <script src="~/ckeditor/ckeditor.js"></script>
 
+    <!--DatePicker-->
     <script>
         var curDate = new Date();
         curDate.setDate(curDate.getDate() - 1);
@@ -74,6 +75,7 @@
         });
     </script>
 
+    <!--DataTable-->
     <script>
         $(document).ready(function () {
             $('#MainTable').DataTable({
@@ -172,6 +174,7 @@
         });
     </script>
 
+    <!--Handle Single Request-->
     <script>
         function HandleSingleRequest(result) {
             $('input[id="LeaveHandleVM_Result"]').val(result);
@@ -179,20 +182,50 @@
         };
     </script>
 
+    <!--CkEditor-->
     <script>
         CKEDITOR.replace('LeaveFormVM.Note');
     </script>
+    <!--Checkbox - Check All-->
+    <script>
+        $('#cbCheckAll').click(function () {
+            if ($('#cbCheckAll').is(":checked")) {
+                $('input[name="subCheckbox"]').prop('checked', true);
+            }
+            else {
+                $('input[name="subCheckbox"]').prop('checked', false);
+            }
+        });
+    </script>
 
+    <!--handle Multiple request  -->
+    <script>
+        $('#btnApproveAll').click(function () {
+            $('#MainTable tbody tr').each(function () {
+                var leaveId = $(this).closest('tr').find('td:last').html().toString();
+                var str = '<input hidden type="text" name="LeaveHandleVM_Multiple.LeaveID" value="' + leaveId + '" />';
+
+                $('#HandleMultipleRequests').append(str);
+            });
+
+            var result = 'Approved';
+            var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
+            $('#HandleMultipleRequests').append(str2);
+            $('#HandleMultipleRequests').submit();
+        });
+    </script>
 }
 
 <section class="content-header">
     <h1>
         TIMESHEET MANAGER
-        <button data-toggle="modal" style="position:absolute; background-color:lawngreen; right:21px; bottom:1px  " type="button" class="btn btn-success ion-android-done-all"> Approve All</button>
-        <button data-toggle="modal" style="position:absolute; bottom:1px; right:133px" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> New Request</button>
+        <button id="btnApproveAll" data-toggle="modal" type="button" class="btn btn-success ion-android-done-all"> Approve All</button>
+        <button id="btnApproveChecked" data-toggle="modal" type="button" class="btn btn-bitbucket ion-android-checkbox-outline"> Approve Checked</button>
+        <button id="btnRejectChecked" data-toggle="modal" type="button" class="btn btn-danger ion-android-checkbox-outline"> Reject Checked</button>
+        <button data-toggle="modal" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> New Request</button>
     </h1>
 
-    <form hidden role="form" id="HandleMultipleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest"></form>
+    <form hidden role="form" id="HandleMultipleRequests" method="post" asp-controller="Manage" asp-action="HandleMultipleRequests"></form>
 </section>
 <!-- Main content -->
 <section class="content">
@@ -213,7 +246,7 @@
                                 <th>From Date</th>
                                 <th>To Date</th>
                                 <th>State</th>
-                                <th class="nosort"></th>
+                                <th class="nosort"><input id="cbCheckAll" type="checkbox" /></th>
                                 <th name="LeaveID" hidden>LeaveID</th>
                             </tr>
                         </thead>
@@ -232,7 +265,7 @@
                                         @if (item.State == TSM.Data.Models.Leave.eState.OnQueue)
                                         {
                                             <td><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
-                                            <td><input type="checkbox" name="checkbox" id="checkbox"></td>
+                                            <td><input type="checkbox" name="subCheckbox"></td>
                                         }
                                         else
                                         {

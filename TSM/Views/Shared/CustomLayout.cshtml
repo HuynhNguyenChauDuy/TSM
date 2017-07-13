@@ -252,8 +252,8 @@
                                     <li class="user-header">
                                         <img src="~/userImage/Octocat.png" class="img-circle" alt="User Image">
                                         <p>
-                                            @_userManager.GetUserName(User) - Web Developer
-                                            <small>Member since Jun. 2017</small>
+                                            @_userManager.GetUserName(User)
+                                            <small>Member since 2017</small>
                                         </p>
                                     </li>
                                     <!-- Menu Body -->
@@ -323,20 +323,25 @@
                 <!-- sidebar menu: : style can be found in sidebar.less -->
                 <ul class="sidebar-menu" data-widget="tree">
                     <li class="header">MAIN NAVIGATION</li>
-
                     <li class="treeview">
                         <a href="#">
-                            <i class="fa fa-table"></i> <span>Tables</span>
+                            <i class="fa fa-table"></i> <span>Timesheet</span>
                             <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
                             </span>
                         </a>
                         <ul class="treeview-menu">
-                            <li><a href="pages/tables/simple.html"><i class="fa fa-circle-o"></i> Simple tables</a></li>
-                            <li><a href="http://localhost:64623/Manage/LoadTable"><i class="fa fa-circle-o"></i> Data tables</a></li>
+                            <li><a asp-controller="Manage" asp-action="GetTimesheet"><i class="fa fa-circle-o"></i> Personal Timesheet</a></li>
+                            @{
+                                var user = await _userManager.GetUserAsync(User);
+                                var userRoles = await _userManager.GetRolesAsync(user);
+                                if (userRoles.Contains("Project Manager") || userRoles.Contains("Team Leader"))
+                                {
+                                    <li><a asp-controller="Manage" asp-action="GetTimesheetManager"><i class="fa fa-circle-o"></i> Timesheet Manager</a></li>
+                                }
+                            }
                         </ul>
                     </li>
-
                 </ul>
             </section>
             <!-- /.sidebar -->

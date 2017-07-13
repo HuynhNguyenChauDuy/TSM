@@ -6,6 +6,8 @@ namespace TSM.Data.ModelViews
 {
     public class LeaveFormVM
     {
+        public string ID { get; set; }
+
         [Required(ErrorMessage = "Please pick up a date")]
         [Display(Name = "From Date")]
         [DataType(DataType.DateTime)]

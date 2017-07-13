@@ -91,6 +91,12 @@
             });
 
             $('#MainTable tbody').on('click', 'tr', function () {
+
+                if ($(this).index() == 7)
+                {
+                    return;
+                }
+
                 var leaveId = $(this).closest('tr').find('td:last').html().toString();
                 $('#LeaveHandleVM_LeaveID').val(leaveId);
 
@@ -199,18 +205,51 @@
 
     <!--handle Multiple request  -->
     <script>
-        $('#btnApproveAll').click(function () {
-            $('#MainTable tbody tr').each(function () {
-                var leaveId = $(this).closest('tr').find('td:last').html().toString();
-                var str = '<input hidden type="text" name="LeaveHandleVM_Multiple.LeaveID" value="' + leaveId + '" />';
+        $(document).ready(function () {
+            $('#btnApproveAll').click(function () {
+                $('#MainTable tbody tr').each(function () {
+                    var leaveId = $(this).closest('tr').find('td:last').html().toString();
+                    var str = '<input hidden type="text" name="LeaveHandleVM_Multiple.LeaveID" value="' + leaveId + '" />';
 
-                $('#HandleMultipleRequests').append(str);
+                    $('#HandleMultipleRequests').append(str);
+                });
+
+                var result = 'Approved';
+                var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
+                $('#HandleMultipleRequests').append(str2);
+                $('#HandleMultipleRequests').submit();
             });
 
-            var result = 'Approved';
-            var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
-            $('#HandleMultipleRequests').append(str2);
-            $('#HandleMultipleRequests').submit();
+
+            $('#btnApproveChecked').click(function () {
+                $('#MainTable tbody tr').find('input:checkbox:checked').each(function () {
+                    var leaveId = $(this).closest('tr').find('td:last').html().toString();
+
+                    var str = '<input hidden type="text" name="LeaveHandleVM_Multiple.LeaveID" value="' + leaveId + '" />';
+
+                    $('#HandleMultipleRequests').append(str);
+                });
+
+                var result = 'Approved';
+                var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
+                $('#HandleMultipleRequests').append(str2);
+                $('#HandleMultipleRequests').submit();
+            });
+
+            $('#btnRejectChecked').click(function () {
+                $('#MainTable tbody tr').find('input:checkbox:checked').each(function () {
+                    var leaveId = $(this).closest('tr').find('td:last').html().toString();
+
+                    var str = '<input hidden type="text" name="LeaveHandleVM_Multiple.LeaveID" value="' + leaveId + '" />';
+
+                    $('#HandleMultipleRequests').append(str);
+                });
+
+                var result = 'Rejected';
+                var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
+                $('#HandleMultipleRequests').append(str2);
+                $('#HandleMultipleRequests').submit();
+            });
         });
     </script>
 }
@@ -263,7 +302,7 @@
                                         @if (item.State == TSM.Data.Models.Leave.eState.OnQueue)
                                         {
                                             <td><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
-                                            <td><input type="checkbox" name="subCheckbox"></td>
+                                            <td><input type="checkbox" id="subCheckbox" name="subCheckbox"></td>
                                         }
                                         else
                                         {
@@ -301,7 +340,7 @@
                     <form role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
                         <input hidden asp-for="LeaveHandleVM.LeaveID" />
                         <input hidden asp-for="LeaveHandleVM.Result" />
-                        <div>
+                        <div class="row">
                             <div class="form-group col-sm-6">
                                 <label>Employee Name</label>
                                 <div class="cus_left"><label id="DetailVM_employeeName"></label></div>
@@ -313,7 +352,7 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div class="row">
                             <div class="form-group col-sm-6">
                                 <label>From Date</label>
                                 <div class="cus_left"><label id="DetailVM_fromDate"></label></div>
@@ -324,7 +363,7 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div class="row">
                             <div class="form-group col-sm-6">
                                 <label>LeaveType</label>
                                 <div class="cus_left"><label id="DetailVM_leaveType"></label></div>
@@ -336,7 +375,7 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div class="row">
                             <div class="form-group col-sm-6">
                                 <label>Submitted Date</label>
                                 <div class="cus_left"><label id="DetailVM_submittedDate"></label></div>
@@ -347,7 +386,7 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div class="row">
                             <div class="form-group col-sm-6">
                                 <label>Approver</label>
                                 <div class="cus_left"><label>Coming soon</label></div>
@@ -356,7 +395,7 @@
 
                             </div>
                         </div>
-                        <div>
+                        <div class="row">
                             <div class="form-group col-sm-12">
                                 <label>Note</label>
                                 <div class="cus_leftai"><text id="DetailVM_note" class="codec-"></text></div>

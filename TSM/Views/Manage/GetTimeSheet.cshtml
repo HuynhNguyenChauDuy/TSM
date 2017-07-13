@@ -76,7 +76,7 @@
 
     <!--Ckeditor setup-->
     <script>
-        CKEDITOR.replace('[name="LeaveFormVM.Note]"');
+        CKEDITOR.replace('LeaveFormVM.Note');
     </script>
 
     <!--DataTable row click-->
@@ -95,7 +95,10 @@
                 }]
             });
 
-            $('#MainTable tbody').on('click', 'tr', function () {
+            $('#MainTable tbody').on('click', 'tr', function (event) {
+                if ($(event.target).is('input[type=checkbox]')) {
+                    return;
+                }
                 var leaveId = $(this).closest('tr').find('td:last').html().toString();
                 $('#LeaveHandleVM_LeaveID').val(leaveId);
 
@@ -276,7 +279,7 @@
                 <form role="form" id="SubmitLeaveForm" method="post" asp-controller="Manage" asp-action="LeaveSubmit">
                     <div class="box-body" style="padding-left:100px">
                         <label style="margin-left:-73px">Leave day </label>
-                        <div class="input-group input-daterange" id="datepicker" style="width:550px; padding-bottom:10px; margin-left:-73px">
+                        <div class="row input-group input-daterange" id="datepicker" style="width:550px; padding-bottom:10px; margin-left:-73px">
                             <input asp-for="LeaveFormVM.FromDate" type="text" class="form-control">
                             <div class="input-group-addon">to</div>
                             <input asp-for="LeaveFormVM.ToDate" type="text" class="form-control">
@@ -284,7 +287,7 @@
                             <span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
                         </div>
 
-                        <div class="form-group" style="float:left; margin-right:50px; width:150px; margin-left:-73px; width:225px">
+                        <div class="row form-group" style="float:left; margin-right:50px; width:150px; margin-left:-73px; width:225px">
                             <label asp-for="LeaveFormVM.WorkShift" style="margin-left:1px"></label>
                             <div>
                                 <select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control" style="width:252px">
@@ -296,7 +299,7 @@
 
                         </div>
 
-                        <div class="form-group" style="margin-left:20px; width:225px; float:left">
+                        <div class="row form-group" style="margin-left:20px; width:225px; float:left">
                             <label asp-for="LeaveFormVM.LeaveTypeID" style="margin-left:1px"></label>
                             <div>
                                 <select asp-for="LeaveFormVM.LeaveTypeID" id="selectbasic" class="form-control" style="width:252px">
@@ -310,7 +313,7 @@
                             </div>
                         </div>
 
-                        <div class="form-group" style="clear:left; margin-left:-73px">
+                        <div class="row form-group" style="clear:left; margin-left:-73px">
                             <label style="margin-left:1px">CC</label>
                             <div style="width:408px; width:550px">
                                 <select class="js-data-example-ajax">
@@ -320,7 +323,7 @@
                             </div>
                         </div>
                         
-                        <div class="form-group col-sm-12">
+                        <div class="row form-group col-sm-12">
                             <textarea asp-for="LeaveFormVM.Note"></textarea>
                         </div>
 
@@ -424,7 +427,7 @@
                     <form role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
                         <input hidden asp-for="LeaveHandleVM.LeaveID" />
                         <input hidden asp-for="LeaveHandleVM.Result" />
-                        <div>
+                        <div class="row">
                             <div class="form-group col-sm-6">
                                 <label>Employee Name</label>
                                 <div class="cus_left"><label id="DetailVM_employeeName"></label></div>
@@ -436,7 +439,7 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div class="row">
                             <div class="form-group col-sm-6">
                                 <label>From Date</label>
                                 <div class="cus_left"><label id="DetailVM_fromDate"></label></div>
@@ -447,7 +450,7 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div class="row">
                             <div class="form-group col-sm-6">
                                 <label>LeaveType</label>
                                 <div class="cus_left"><label id="DetailVM_leaveType"></label></div>
@@ -459,7 +462,7 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div class="row">
                             <div class="form-group col-sm-6">
                                 <label>Submitted Date</label>
                                 <div class="cus_left"><label id="DetailVM_submittedDate"></label></div>
@@ -470,7 +473,7 @@
                             </div>
                         </div>
 
-                        <div>
+                        <div class="row">
                             <div class="form-group col-sm-6">
                                 <label>Approver</label>
                                 <div class="cus_left"><label>Coming soon</label></div>
@@ -479,7 +482,7 @@
 
                             </div>
                         </div>
-                        <div>
+                        <div class="row">
                             <div class="form-group col-sm-12">
                                 <label>Note</label>
                                 <div class="cus_leftai"><text id="DetailVM_note" class="codec-"></text></div>

@@ -232,8 +232,30 @@ namespace TSM.DataAccess
                 return false;
             }
         }
+		public async Task<bool> DeleteLeave(string id, string userid)
+		{
+			try
+			{
+				var deleteLeave = _context.Leaves.Where(s => s.ID.CompareTo(id) == 0 && s.ApplicationUserID.CompareTo(userid) ==0 ).FirstOrDefault();
+				 
+				if (deleteLeave == null)
+				{
+					return false;
+				}
+				
+				_context.Entry(deleteLeave).State = EntityState.Deleted;
+				_context.Leaves.Remove(deleteLeave);
 
-        public async Task<bool> HandleSingleRequestAysnc(LeaveHandleVM request, string userId)
+				await _context.SaveChangesAsync();
+				return true;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		public async Task<bool> HandleSingleRequestAysnc(LeaveHandleVM request, string userId)
         {
             try
             {

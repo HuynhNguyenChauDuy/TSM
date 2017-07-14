@@ -7,52 +7,60 @@
 @inject LeaveManager _leaveManager
 
 @{
-    ViewData["Title"] = "TimeSheet Manager";
-    Layout = "~/Views/Shared/CustomLayout.cshtml";
+	ViewData["Title"] = "TimeSheet Manager";
+	Layout = "~/Views/Shared/CustomLayout.cshtml";
 }
 @section Customcss{
-    <link href="~/DatePicker/css/bootstrap-datepicker.css" rel="stylesheet" />
-    <link href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css" rel="stylesheet" />
-    <link href="~/select2-master/dist/css/select2.css" rel="stylesheet" />
-    <style>
-        .table {
-            text-align: center
-        }
+	<link href="~/DatePicker/css/bootstrap-datepicker.css" rel="stylesheet" />
+	<link href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css" rel="stylesheet" />
+	<link href="~/select2-master/dist/css/select2.css" rel="stylesheet" />
+	<style>
+		.table {
+			text-align: center
+		}
 
-        .horizontal {
-            display: inline;
-            border-left: 2px solid;
-            padding-left: 0.3em;
-        }
+		.horizontal {
+			display: inline;
+			border-left: 2px solid;
+			padding-left: 0.3em;
+		}
 
-        #cke_editor1 {
-            width: 550px;
-            margin-left: -73px;
-        }
+		#cke_editor1 {
+			width: 550px;
+			margin-left: -73px;
+		}
 
-        .cke_inner cke_reset {
-            width: 585px;
-        }
+		.cke_inner cke_reset {
+			width: 585px;
+		}
 
-        .center {
-            margin-top: 50px;
-        }
+		.center {
+			margin-top: 50px;
+		}
 
-        .boxsizingBorder {
-            -webkit-box-sizing: border-box;
-            -moz-box-sizing: border-box;
-            box-sizing: border-box;
-        }
+		.boxsizingBorder {
+			-webkit-box-sizing: border-box;
+			-moz-box-sizing: border-box;
+			box-sizing: border-box;
+		}
 
-        .cus_left {
-            margin-left: 50px;
-        }
+		.cus_left {
+			margin-left: 50px;
+		}
 
-        .textarea {
-            white-space: normal;
-            text-align: justify;
-        }
-    </style>
+		.textarea {
+			white-space: normal;
+			text-align: justify;
+		}
+
+		form {
+			margin-left: 10px;
+			margin-right: 10px;
+		}
+
+
+	</style>
+
 }
 
 @section jvscript{
@@ -93,7 +101,17 @@
                     'bSortable': false,
                     'aTargets': ['nosort']
                 }]
-            });
+			});
+
+			$('#Deletebtn').click(function () {
+				$('#DeleteForm').submit();
+			});
+			$('#MainTable tbody').on('click', 'tr', function () {
+				var leaveId = $(this).closest('tr').find('td:last').html().toString();
+				$('#LeaveHandleVM_LeaveID').val(leaveId);
+				$('#txtLeaveId').val(leaveId);
+
+			});
 
             $('#MainTable tbody').on('click', 'tr', function (event) {
                 if ($(event.target).is('input[type=checkbox]')) {
@@ -128,7 +146,7 @@
                             $("label[id='DetailVM_toDate']").html(ToDate);
                             $("label[id='DetailVM_leaveType']").html(leaveType);
                             $("label[id='DetailVM_approvedDate']").html(approvedDate);
-                            $("text[id='DetailVM_note']").html(note);
+							$("text[id='DetailVM_note']").html(note);
 
                             var statusClass = '';
                             var statusName = '';
@@ -155,7 +173,7 @@
                                 statusName = 'Waiting';
 
                                 $("button[id='EditButton']").show();
-                                $("button[id='DeleteButton']").show();
+								$("button[id='DeleteButton']").show();
                             }
 
                             var workShiftName = 'All Day';
@@ -167,7 +185,7 @@
                             $("label[id='DetailVM_state']").addClass(statusClass);
 
                             $('#DetailVM_note').val(note);
-                            $('#DetailMD').modal('show');
+							$('#DetailMD').modal('show');
                         }
                         else
                         {
@@ -180,326 +198,356 @@
                 });
             });
         });
-    </script>
+	</script>
 
-    <!--Edit button-->
-    <script>
-        $(document).ready(function () {
-            $("#EditButton").click(function () {
-                //var fromdate = $("label[id='DetailVM_fromDate']").html();
-                //var todate = $("label[id='DetailVM_toDate']").html();
-                //var workshift = $("label[id='DetailVM_workShift']").html();
-                //var leavetype = $("label[id='DetailVM_leaveType']").html();
+	<!--Edit button-->
+	<script>
+		$("#EditButton").click(function () {
+			$('#DetailMD').modal('hide');
 
-                //$('#LeaveFormVM_fromDate').val(fromdate);
-                //$('#LeaveFormVM_toDate').val(todate);
-                $('#DetailMD').modal('hide');
-            });
-        });
-    </script>
+
+		});
+
+		$('#DeleteButton').click(function () {
+			$('#DeleteForm').submit();
+		});
+		$('#MainTable tbody').on('click', 'tr', function () {
+			var leaveId = $(this).closest('tr').find('td:last').html().toString();
+
+			$('#txtLeaveId').val(leaveId);
+		});
+	</script>
+	@*<script>
+			$(document).ready(function () {
+				$("#EditButton").click(function () {
+					//var fromdate = $("label[id='DetailVM_fromDate']").html();
+					//var todate = $("label[id='DetailVM_toDate']").html();
+					//var workshift = $("label[id='DetailVM_workShift']").html();
+					//var leavetype = $("label[id='DetailVM_leaveType']").html();
+
+					//$('#LeaveFormVM_fromDate').val(fromdate);
+					//$('#LeaveFormVM_toDate').val(todate);
+
+
+
+
+					$('#DetailMD').modal('hide');
+				});
+			});
+		</script>*@
 }
 
-<section class="content-header">
-    <h1>
-        PERSONAL TIMESHEET
-        <button data-toggle="modal" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> New Request</button>
-    </h1>
-    <!--Hidden content-->
-    <form hidden role="form" id="HandleMultipleRequests" method="post" asp-controller="Manage" asp-action="HandleMultipleRequests"></form>
+<section class="content-header" style="position:relative">
+	<h1>
+		PERSONAL TIMESHEET
+
+		<button data-toggle="modal" style="position:absolute; right:18px" data-target="#SubmitLeaveFormMD" type="button" class="btn btn-primary ion-plus-round"> New Request</button>
+		
+	</h1>
+	<!--Hidden content-->
+	<form hidden role="form" id="HandleMultipleRequests" method="post" asp-controller="Manage" asp-action="HandleMultipleRequests"></form>
 </section>
 <!-- Main content -->
 <section class="content">
-    <div class="row">
-        <div class="col-xs-12">
-            <div class="box">
-                <div class="box-header">
-                    <h3 class="box-title">Leave Of Absent</h3>
-                </div>
-                <div class="box-body">
-                    <table id="MainTable" class="table table-bordered table-hover">
-                        <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Employees</th>
-                                <th>Leave Type</th>
-                                <th>WorkShift</th>
-                                <th>From Date</th>
-                                <th>To Date</th>
-                                <th>State</th>
-                                <th name="LeaveID" hidden>LeaveID</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{
-                                int i = 1;
-                                foreach (var item in Model.LeaveVM)
-                                {
-                                    <tr>
-                                        <td>@i.ToString()</td>
-                                        <td>@item.UserName</td>
-                                        <td>@item.LeaveType</td>
-                                        <td>@item.WorkShift </td>
-                                        <td>@item.FromDate</td>
-                                        <td>@item.ToDate</td>
-                                        @if (item.State == TSM.Data.Models.Leave.eState.OnQueue)
-                                        {
-                                            <td><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
-                                        }
-                                        else
-                                        {
-                                            if (item.State == TSM.Data.Models.Leave.eState.Approved)
-                                            {
-                                                <td><label class="label label-success">Approved</label></td>
-                                            }
-                                            else
-                                            {
-                                                <td><label class="label label-danger">Rejected</label></td>
-                                            }
-                                        }
-                                        <td hidden>@item.LeaveID</td>
-                                    </tr>
-                                    i++;
-                                }
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="row">
+		<div class="col-xs-12">
+			<div class="box">
+				<div class="box-header">
+					<h3 class="box-title">Leave Of Absent</h3>
+				</div>
+				<div class="box-body" style="overflow:auto">
+					<table id="MainTable" class="table table-bordered table-hover">
+						<thead>
+							<tr>
+								<th>No.</th>
+								<th>Employees</th>
+								<th>Leave Type</th>
+								<th>WorkShift</th>
+								<th>From Date</th>
+								<th>To Date</th>
+								<th>State</th>
+								<th name="LeaveID" hidden>LeaveID</th>
+							</tr>
+						</thead>
+						<tbody>
+							@{
+								int i = 1;
+								foreach (var item in Model.LeaveVM)
+								{
+									<tr>
+										<td>@i.ToString()</td>
+										<td>@item.UserName</td>
+										<td>@item.LeaveType</td>
+										<td>@item.WorkShift </td>
+										<td>@item.FromDate</td>
+										<td>@item.ToDate</td>
+										@if (item.State == TSM.Data.Models.Leave.eState.OnQueue)
+										{
+											<td><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
+										}
+										else
+										{
+											if (item.State == TSM.Data.Models.Leave.eState.Approved)
+											{
+												<td><label class="label label-success">Approved</label></td>
+											}
+											else
+											{
+												<td><label class="label label-danger">Rejected</label></td>
+											}
+										}
+										<td hidden>@item.LeaveID</td>
+									</tr>
+									i++;
+								}
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <!-- Add new request pop-up -->
-    <div class="modal fade" id="SubmitLeaveFormMD" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
+	<!-- Add new request pop-up -->
+	<div class="modal fade" id="SubmitLeaveFormMD" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+					<h3 class="modal-title" id="lineModalLabel">Leave of absence submit</h3>
+				</div>
+				<div class="modal-body">
+					<!-- content goes here -->
+					<form role="form" id="SubmitLeaveForm" method="post" asp-controller="Manage" asp-action="LeaveSubmit">
+						<div class="form-group">
+							<label>Leave Date</label>
+							<div class="input-group input-daterange" id="datepicker">
+								<input asp-for="LeaveFormVM.FromDate" type="text" class="form-control">
+								<div class="input-group-addon">to</div>
+								<input asp-for="LeaveFormVM.ToDate" type="text" id="txtTodate" class="form-control">
+								<span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
+								<span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
+							</div>
+						</div>
 
-                    <h4 class="modal-title" id="myModalLabel"><strong>Leave of absence form</strong></h4>
-                </div>
-                <form role="form" id="SubmitLeaveForm" method="post" asp-controller="Manage" asp-action="LeaveSubmit">
-                    <div class="box-body" style="padding-left:100px">
-                        <label style="margin-left:-73px">Leave day </label>
-                        <div class="row input-group input-daterange" id="datepicker" style="width:550px; padding-bottom:10px; margin-left:-73px">
-                            <input asp-for="LeaveFormVM.FromDate" type="text" class="form-control">
-                            <div class="input-group-addon">to</div>
-                            <input asp-for="LeaveFormVM.ToDate" type="text" class="form-control">
-                            <span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
-                            <span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
-                        </div>
+						<div class="row form-group">
+							<div class="col-sm-6">
+								<label asp-for="LeaveFormVM.WorkShift"></label>
+								<div>
+									<select asp-for="LeaveFormVM.WorkShift" id="workshift_selectbasic" class="form-control">
+										<option value="0">All day</option>
+										<option value="1">AM</option>
+										<option value="2">PM</option>
+									</select>
+								</div>
+							</div>
 
-                        <div class="row form-group" style="float:left; margin-right:50px; width:150px; margin-left:-73px; width:225px">
-                            <label asp-for="LeaveFormVM.WorkShift" style="margin-left:1px"></label>
-                            <div>
-                                <select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control" style="width:252px">
-                                    <option value="0">All day</option>
-                                    <option value="1">AM</option>
-                                    <option value="2">PM</option>
-                                </select>
-                            </div>
+							<div class="col-sm-6">
+								<label asp-for="LeaveFormVM.LeaveTypeID"></label>
+								<div>
+									<select asp-for="LeaveFormVM.LeaveTypeID" id="leavename_selectbasic" class="form-control">
+										@{
+											foreach (var type in await _leaveManager.GetLeaveTypeAsync())
+											{
+												<option value="@type.ID">@type.LeaveName</option>
+											}
+										}
+									</select>
+								</div>
+							</div>
+						</div>
 
-                        </div>
+						<div class="row form-group">
+							<div class="col-sm-12">
+								<label>CC</label>
+								<div>
+									<input id="txtCC" class="form-control" type="text" />
+								</div>
+							</div>
+						</div>
 
-                        <div class="row form-group" style="margin-left:20px; width:225px; float:left">
-                            <label asp-for="LeaveFormVM.LeaveTypeID" style="margin-left:1px"></label>
-                            <div>
-                                <select asp-for="LeaveFormVM.LeaveTypeID" id="selectbasic" class="form-control" style="width:252px">
-                                    @{
-                                        foreach (var type in await _leaveManager.GetLeaveTypeAsync())
-                                        {
-                                            <option value="@type.ID">@type.LeaveName</option>
-                                        }
-                                    }
-                                </select>
-                            </div>
-                        </div>
+						<div class="row form-group">
+							<div class="col-sm-12">
+								<label>Note</label>
+								<textarea class="form-control" asp-for="LeaveFormVM.Note"></textarea>
+							</div>
+						</div>
+						<div class="row form-group">
+							<div class="col-sm-10"></div>
+							<div class="col-sm-2">
+								<button type="submit" class="btn btn-primary">Submit</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
 
-                        <div class="row form-group" style="clear:left; margin-left:-73px">
-                            <label style="margin-left:1px">CC</label>
-                            <div style="width:408px; width:550px">
-                                <select class="js-data-example-ajax">
-                                    <option></option>
-                                </select>
-                                <span class="text-danger" />
-                            </div>
-                        </div>
-                        
-                        <div class="row form-group col-sm-12">
-                            <textarea asp-for="LeaveFormVM.Note"></textarea>
-                        </div>
 
-                        <div class="form-group" style="clear:both; margin-left:337px">
-                            <label></label>
-                            <div>
-                                <input style="margin-top:-23px; margin-left:75px" class="btn btn-primary" value="Submit" type="submit" />
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    <!--Edit pop-up-->
-    <div class="modal fade" id="EditLeaveFormMD" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title" id="myModalLabel"><strong>Edit Leave</strong></h4>
-                </div>
-                <form role="form" id="EditLeaveForm" method="post" asp-controller="Manage" asp-action="EditLeave">
-                    <input hidden asp-for="LeaveFormVM.ID" type="text" />
-                    <div class="box-body" style="padding-left:100px">
-                        <label style="margin-left:-73px">Leave day </label>
-                        <div class="input-group input-daterange" id="datepicker" style="width:550px; padding-bottom:10px; margin-left:-73px">
-                            <input asp-for="LeaveFormVM.FromDate" type="text" class="form-control">
-                            <div class="input-group-addon">to</div>
-                            <input asp-for="LeaveFormVM.ToDate" type="text" class="form-control">
-                            <span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
-                            <span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
-                        </div>
+	<!--Edit pop-up-->
+	<div class="modal fade" id="EditLeaveFormMD" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="myModalLabel"><strong>Edit Leave</strong></h4>
+				</div>
+				<form role="form" id="EditLeaveForm" method="post" asp-controller="Manage" asp-action="EditLeave">
+					<input hidden asp-for="LeaveFormVM.ID" type="text" />
+					<div class="box-body">
+						<label>Leave day </label>
+						<div class="input-group input-daterange" id="datepicker">
+							<input asp-for="LeaveFormVM.FromDate" type="text" class="form-control">
+							<div class="input-group-addon">to</div>
+							<input asp-for="LeaveFormVM.ToDate" type="text" id="txtToDate" class="form-control">
+							<span asp-validation-for="LeaveFormVM.FromDate" class="text-danger" />
+							<span asp-validation-for="LeaveFormVM.ToDate" class="text-danger" />
+						</div>
 
-                        <div class="form-group" style="float:left; margin-right:50px; width:150px; margin-left:-73px; width:225px">
-                            <label asp-for="LeaveFormVM.WorkShift" style="margin-left:1px"></label>
-                            <div>
-                                <select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control" style="width:252px">
-                                    <option value="0">All day</option>
-                                    <option value="1">AM</option>
-                                    <option value="2">PM</option>
-                                </select>
-                            </div>
-                        </div>
 
-                        <div class="form-group" style="margin-left:20px; width:225px; float:left">
-                            <label asp-for="LeaveFormVM.LeaveTypeID" style="margin-left:1px"></label>
-                            <div>
-                                <select asp-for="LeaveFormVM.LeaveTypeID" id="selectbasic" class="form-control" style="width:252px">
-                                    @{
-                                        foreach (var type in await _leaveManager.GetLeaveTypeAsync())
-                                        {
-                                            <option value="@type.ID">@type.LeaveName</option>
-                                        }
-                                    }
-                                </select>
-                            </div>
-                        </div>
+						<div class=" row form-group">
+							<div class="col-sm-6">
+								<label asp-for="LeaveFormVM.WorkShift" style="margin-left:1px"></label>
+								<div>
+									<select asp-for="LeaveFormVM.WorkShift" id="selectbasic" class="form-control">
+										<option value="0">All day</option>
+										<option value="1">AM</option>
+										<option value="2">PM</option>
+									</select>
+								</div>
+							</div>
 
-                        @*<div class="form-group" style="clear:left; margin-left:-73px">
-                            <label style="margin-left:1px">CC</label>
-                            <div style="width:408px; width:550px">
-                               <input type="text" />
-                                <span class="text-danger" />
-                            </div>
-                        </div>
+							<div class="col-sm-6">
+								<label asp-for="LeaveFormVM.LeaveTypeID"></label>
+								<div>
+									<select asp-for="LeaveFormVM.LeaveTypeID" id="selectbasic" class="form-control">
+										@{
+											foreach (var type in await _leaveManager.GetLeaveTypeAsync())
+											{
+												<option value="@type.ID">@type.LeaveName</option>
+											}
+										}
+									</select>
+								</div>
+							</div>
+						</div>
 
-                        <div class="form-group col-sm-12">
-                            <textarea asp-for="LeaveFormVM.Note"></textarea>
-                        </div>*@
+						<div class="form-group">
+							<label>CC</label>
+							<input class="form-control" type="text">
+						</div>
 
-                        <div class="form-group">
-                            <label>CC</label>
-                            <div class="col-md-8">
-                                <textarea asp-for="LeaveFormVM.Note"></textarea>
-                            </div>
-                        </div> 
+						<div class="row form-group">
+							<div class="col-sm-12">
+								<label>Note</label>
+								<textarea class="form-control" asp-for="LeaveFormVM.Note"></textarea>
+							</div>
+						</div>
+						<div class="row form-group">
+							<div class="col-sm-10"></div>
+							<div class="col-sm-2">
+								<button type="submit" class="btn btn-primary">Submit</button>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<!--End Edit Form-->
+	<!-- Detail pop-up -->
+	<div class="modal fade" id="DetailMD" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">x</button>
+					<h3 class="modal-title">Leave Details</h3>
+				</div>
+				<div class="modal-body col-sm-12">
+					<!-- sửa thành form cho function deleteLeave-->
+					<form role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
+						<input hidden asp-for="LeaveHandleVM.LeaveID" />
+						<input hidden asp-for="LeaveHandleVM.Result" />
+						<div class="row">
+							<div class="form-group col-sm-6">
+								<label>Employee Name : </label>
+								<div class="cus_left"><label id="DetailVM_employeeName"></label></div>
+							</div>
 
-                        <div class="form-group" style="clear:both; margin-left:337px">
-                            <label></label>
-                            <div>
-                                <input style="margin-top:-23px; margin-left:75px" class="btn btn-primary" value="Submit" type="submit" />
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+							<div class="form-group col-sm-6">
+								<label>State : </label>
+								<div class="cus_left"><label id="DetailVM_state"></label></div>
+							</div>
+						</div>
 
-    <!-- Detail pop-up -->
-    <div class="modal fade" id="DetailMD" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">x</button>
-                    <h3 class="modal-title">Leave Details</h3>
-                </div>
-                <div class="modal-body col-sm-12">
-                    <!-- sửa thành form cho function deleteLeave-->
-                    <form role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
-                        <input hidden asp-for="LeaveHandleVM.LeaveID" />
-                        <input hidden asp-for="LeaveHandleVM.Result" />
-                        <div class="row">
-                            <div class="form-group col-sm-6">
-                                <label>Employee Name</label>
-                                <div class="cus_left"><label id="DetailVM_employeeName"></label></div>
-                            </div>
+						<div class="row">
+							<div class="form-group col-sm-6">
+								<label>From Date : </label>
+								<div class="cus_left"><label id="DetailVM_fromDate"></label></div>
+							</div>
+							<div class="form-group col-sm-6">
+								<label>To Date : </label>
+								<div class="cus_left"><label id="DetailVM_toDate"></label></div>
+							</div>
+						</div>
 
-                            <div class="form-group col-sm-6">
-                                <label>State</label>
-                                <div class="cus_left"><label id="DetailVM_state"></label></div>
-                            </div>
-                        </div>
+						<div class="row">
+							<div class="form-group col-sm-6">
+								<label>LeaveType : </label>
+								<div class="cus_left"><label id="DetailVM_leaveType"></label></div>
+							</div>
 
-                        <div class="row">
-                            <div class="form-group col-sm-6">
-                                <label>From Date</label>
-                                <div class="cus_left"><label id="DetailVM_fromDate"></label></div>
-                            </div>
-                            <div class="form-group col-sm-6">
-                                <label>To Date</label>
-                                <div class="cus_left"><label id="DetailVM_toDate"></label></div>
-                            </div>
-                        </div>
+							<div class="form-group col-sm-6">
+								<label>WorkShift : </label>
+								<div class="cus_left"><label id="DetailVM_workShift"></label></div>
+							</div>
+						</div>
 
-                        <div class="row">
-                            <div class="form-group col-sm-6">
-                                <label>LeaveType</label>
-                                <div class="cus_left"><label id="DetailVM_leaveType"></label></div>
-                            </div>
+						<div class="row">
+							<div class="form-group col-sm-6">
+								<label>Submitted Date : </label>
+								<div class="cus_left"><label id="DetailVM_submittedDate"></label></div>
+							</div>
+							<div class="form-group col-sm-6">
+								<label>Approved/Rejected Date : </label>
+								<div class="cus_left"><label id="DetailVM_approvedDate"></label></div>
+							</div>
+						</div>
 
-                            <div class="form-group col-sm-6">
-                                <label>WorkShift</label>
-                                <div class="cus_left"><label id="DetailVM_workShift"></label></div>
-                            </div>
-                        </div>
+						<div class="row">
+							<div class="form-group col-sm-6">
+								<label>Approver : </label>
+								<div class="cus_left"><label>Coming soon</label></div>
+							</div>
+							<div class="form-group col-sm-6">
 
-                        <div class="row">
-                            <div class="form-group col-sm-6">
-                                <label>Submitted Date</label>
-                                <div class="cus_left"><label id="DetailVM_submittedDate"></label></div>
-                            </div>
-                            <div class="form-group col-sm-6">
-                                <label>Approved/Rejected Date</label>
-                                <div class="cus_left"><label id="DetailVM_approvedDate"></label></div>
-                            </div>
-                        </div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="form-group col-sm-12">
+								<label>Note</label>
+								<div class="cus_leftai"><text id="DetailVM_note" class="codec-"></text></div>
+							</div>
+						</div>
+					</form>
+				</div>
 
-                        <div class="row">
-                            <div class="form-group col-sm-6">
-                                <label>Approver</label>
-                                <div class="cus_left"><label>Coming soon</label></div>
-                            </div>
-                            <div class="form-group col-sm-6">
+				<div class="modal-footer">
+					<div class="btn-group btn-group-justified" role="group" aria-label="group button">
+						<div class="col-sm-12">
+							<div class="col-sm-10">
+								<button id="EditButton" data-toggle="modal" data-target="#EditLeaveFormMD" type="button" class="btn btn-primary">&nbsp;Edit</button>
+							</div>
+							<form id="DeleteForm" method="post" asp-controller="Manage" asp-action="DeleteLeave">
+								<input id="txtLeaveId" name="LeaveHandleVM.LeaveID" hidden>
+								<button id="DeleteButton" type="button" class="btn btn-danger">&nbsp;Delete&nbsp;</button>
+							</form>
+						</div>
 
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="form-group col-sm-12">
-                                <label>Note</label>
-                                <div class="cus_leftai"><text id="DetailVM_note" class="codec-"></text></div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="modal-footer">
-                    <div class="btn-group btn-group-justified" role="group" aria-label="group button">
-                        <div class="col-sm-12">
-                            <button id="EditButton" data-toggle="modal" data-target="#EditLeaveFormMD"  type="button" class="btn btn-primary">&nbsp;Edit</button>
-                            <button id="DeleteButton" type="button" class="btn btn-danger">&nbsp;Delete&nbsp;</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </section>

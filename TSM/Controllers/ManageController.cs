@@ -162,8 +162,23 @@ namespace TSM.Controllers
             LeaveVM leaveVM = _leaveManager.GetLeaveDetail(leaveId);
             return Json(leaveVM);
         }
+		[HttpPost]
+		public async Task<IActionResult> DeleteLeave(LeaveWrapper delete)
+		{
 
-        [HttpGet]
+			var leaveID = delete.LeaveHandleVM.LeaveID;
+			var userID = (await GetCurrentUserAsync()).Id;
+
+			bool result = await _leaveManager.DeleteLeave(leaveID, userID);
+			var mess = result == true ? "Success" : "Fail";
+
+			return RedirectToAction(nameof(GetTimesheet), new { Message = mess });
+
+
+
+		}
+
+		[HttpGet]
         public IActionResult GetCCRecommend(string term, int page)
         {
             var result = from cc in (_context.Users.Where(item => item.Email.Contains(term)).ToList())
@@ -223,11 +238,7 @@ namespace TSM.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> DeleteLeave(LeaveWrapper request)
-        {
-            return null;
-        }
+       
 
 
 

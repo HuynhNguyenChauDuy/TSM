@@ -57,9 +57,18 @@ namespace TSM.Controllers
             return View();
         }
 
-        //
-        // POST: /Account/Login
-        [HttpPost]
+
+		[HttpGet]
+		[Authorize]
+		public async Task<IActionResult> GetProfile(string returnUrl = null)
+		{
+			
+			ViewData["ReturnUrl"] = returnUrl;
+			return View();
+		}
+		//
+		// POST: /Account/Login
+		[HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)

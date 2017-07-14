@@ -7,7 +7,7 @@
 @inject LeaveManager _leaveManager
 
 @{
-    ViewData["Title"] = "GetTimesheetManager";
+    ViewData["Title"] = "Timesheet Manager";
     Layout = "~/Views/Shared/CustomLayout.cshtml";
 }
 
@@ -49,9 +49,10 @@
             margin-left: 50px;
         }
 
-        .textarea {
-            white-space: normal;
-            text-align: justify;
+
+        form {
+            margin-right: 10px;
+            margin-left: 10px;
         }
     </style>
 }
@@ -90,13 +91,13 @@
                 }]
             });
 
-            $('#MainTable tbody').on('click', 'tr', function () {
+            // prevent 'onclick' handler for checkbox
+            $('#MainTable tr').find('input[name="subCheckbox"]').on('click', function (e) {
+                //e.preventDefault();
+                e.stopPropagation();
+            });
 
-                if ($(this).index() == 7)
-                {
-                    return;
-                }
-
+            $('#MainTable tbody').on('click', 'tr', function (event) {
                 var leaveId = $(this).closest('tr').find('td:last').html().toString();
                 $('#LeaveHandleVM_LeaveID').val(leaveId);
 
@@ -109,28 +110,20 @@
                     success: function (result) {
                         if (result != null)
                         {
-                            var leaveId = result['leaveID'];
-                            var employeeName = result['userName'];
-                            var submittedDate = result['submittedDate'];
-                            var fromDate = result['fromDate'];
-                            var ToDate = result['toDate'];
-                            var leaveType = result['leaveType'];
-                            var workShift = result['workShift'];
-                            var approvedDate = result['approvedDate'];
-                            var note = result['note'];
-                            var state = result['state'];
-
-                            $('#DetailVM_leaveID').val(leaveId);
-                            $("label[id='DetailVM_employeeName']").html(employeeName);
-                            $("label[id='DetailVM_submittedDate']").html(submittedDate);
-                            $("label[id='DetailVM_fromDate']").html(fromDate);
-                            $("label[id='DetailVM_toDate']").html(ToDate);
-                            $("label[id='DetailVM_leaveType']").html(leaveType);
-                            $("label[id='DetailVM_approvedDate']").html(approvedDate);
-                            $("text[id='DetailVM_note']").html(note);
+                            $('#DetailVM_leaveID').val(result['leaveID']);
+                            $("label[id='DetailVM_employeeName']").html(result['userName']);
+                            $("label[id='DetailVM_submittedDate']").html(result['submittedDate']);
+                            $("label[id='DetailVM_fromDate']").html(result['fromDate']);
+                            $("label[id='DetailVM_toDate']").html(result['toDate']);
+                            $("label[id='DetailVM_leaveType']").html(result['leaveType']);
+                            $("label[id='DetailVM_approvedDate']").html(result['approvedDate']);
+                            $("text[id='DetailVM_note']").html(result['note']);
+                            $('#DetailVM_note').val(result['note']);
 
                             var statusClass = '';
                             var statusName = '';
+
+                            var state = result['state'];
                             if (state != '2')
                             {
                                 if (state == '0')
@@ -143,6 +136,7 @@
                                     statusClass = 'label label-danger'
                                     statusName = 'Rejected';
                                 }
+
                                 $("button[id='DetailVM_approve']").hide();
                                 $("button[id='DetailVM_reject']").hide();
                             }
@@ -156,14 +150,16 @@
                             }
 
                             var workShiftName = 'All Day';
-                            if (workShift == '1') { workShiftName = 'Morning'}
-                            else if (workShift == '2') { workShiftName = 'Afternoon'}
+                            var workShift = result['workShift'];
+                            if (workShift == '1')
+                                 {workShiftName = 'Morning'}
+                            else if (workShift == '2')
+                                 {workShiftName = 'Afternoon'}
 
                             $("label[id='DetailVM_state']").html(statusName);
                             $("label[id='DetailVM_workShift']").html(workShiftName);
                             $("label[id='DetailVM_state']").addClass(statusClass);
-
-                            $('#DetailVM_note').val(note);
+                            
                             $('#DetailMD').modal('show');
                         }
                         else
@@ -187,14 +183,10 @@
         };
     </script>
 
-    <!--CkEditor-->
-    <script>
-        CKEDITOR.replace('LeaveFormVM.Note');
-    </script>
     <!--Checkbox - Check All-->
     <script>
         $('#cbCheckAll').click(function () {
-            if ($('#cbCheckAll').is(":checked")) {
+            if ($('#cbCheckAll').is(':checked')) {
                 $('input[name="subCheckbox"]').prop('checked', true);
             }
             else {
@@ -255,12 +247,21 @@
 }
 
 <section class="content-header">
-    <h1>
-        TIMESHEET MANAGER
-        <button id="btnApproveAll" data-toggle="modal" type="button" class="btn btn-success ion-android-done-all"> Approve All</button>
-        <button id="btnApproveChecked" data-toggle="modal" type="button" class="btn btn-bitbucket ion-android-checkbox-outline"> Approve Checked</button>
-        <button id="btnRejectChecked" data-toggle="modal" type="button" class="btn btn-danger ion-android-checkbox-outline"> Reject Checked</button>
-    </h1>
+    <div class="row">
+        <div class="col-sm-6">
+            <h1>TIMESHEET MANAGER</h1>
+        </div>
+        <div class="col-sm-6">
+            <h1>
+                <span class="pull-right">
+                    <button id="btnApproveAll" data-toggle="modal" type="button" class="btn btn-success ion-android-done-all"> Approve All</button>
+                    <button id="btnApproveChecked" data-toggle="modal" type="button" class="btn btn-bitbucket ion-android-checkbox-outline"> Approve Checked</button>
+                    <button id="btnRejectChecked" data-toggle="modal" type="button" class="btn btn-danger ion-android-close"> Reject Checked</button>
+                </span>
+            </h1>
+        </div>
+    </div>
+    
 
     <form hidden role="form" id="HandleMultipleRequests" method="post" asp-controller="Manage" asp-action="HandleMultipleRequests"></form>
 </section>
@@ -277,7 +278,7 @@
                         <thead>
                             <tr>
                                 <th>No.</th>
-                                <th>Employees</th>
+                                <th>Employee</th>
                                 <th>Leave Type</th>
                                 <th>WorkShift</th>
                                 <th>From Date</th>
@@ -314,7 +315,7 @@
                                             {
                                                 <td><label class="label label-danger">Rejected</label></td>
                                             }
-                                            <td></td>
+                                            <td class="no-Event"></td>
                                         }
                                         <td hidden>@item.LeaveID</td>
                                     </tr>

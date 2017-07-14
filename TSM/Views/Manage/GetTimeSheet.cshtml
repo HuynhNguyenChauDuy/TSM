@@ -64,32 +64,31 @@
 }
 
 @section jvscript{
-	<script src="~/DatePicker/js/bootstrap-datepicker.js"></script>
-	<script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"></script>
-	<script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
-	<script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"></script>
-	<script src="~/ckeditor/ckeditor.js"></script>
-	<script src="~/select2-master/dist/js/select2.js"></script>
+    <script src="~/DatePicker/js/bootstrap-datepicker.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/ckeditor/ckeditor.js"></script>
+    <script src="~/select2-master/dist/js/select2.js"></script>
 
-	<!--DatePicker setup-->
-	<script>
-		var curDate = new Date();
-		$(document).ready(function () {
-			$('.input-daterange').datepicker({
-				format: 'dd/MM/yyyy',
-				startDate: curDate
-			});
-		});
-	</script>
+    <!--DatePicker setup-->
+    <script>
+        var curDate = new Date();
+        $(document).ready(function () {
+            $('.input-daterange').datepicker({
+                format: 'dd/mm/yyyy',
+                startDate: curDate
+            });
+        });
+    </script>
 
-	<!--Ckeditor setup-->
-	<script>
-		CKEDITOR.replace('LeaveFormVM.Note');
+    <!--Ckeditor setup-->
+    <script>
+        CKEDITOR.replace('LeaveFormVM.Note');
+    </script>
 
-	</script>
-
-	<!--DataTable row click-->
-	<script>
+    <!--DataTable row click-->
+    <script>
         $(document).ready(function () {
             $('#MainTable').DataTable({
                 'paging': true,
@@ -114,7 +113,10 @@
 
 			});
 
-            $('#MainTable tbody').on('click', 'tr', function () {
+            $('#MainTable tbody').on('click', 'tr', function (event) {
+                if ($(event.target).is('input[type=checkbox]')) {
+                    return;
+                }
                 var leaveId = $(this).closest('tr').find('td:last').html().toString();
                 $('#LeaveHandleVM_LeaveID').val(leaveId);
 

@@ -291,6 +291,7 @@ namespace TSM.DataAccess
                         currentleave.ApproverID = userId;
                         currentleave.State = requests.Result;
                         currentleave.ApprovedDate = DateTime.Now;
+                        _context.Entry(currentleave).State = EntityState.Modified;
                     }
                 }
                 await _context.SaveChangesAsync();

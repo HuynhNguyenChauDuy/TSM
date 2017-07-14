@@ -208,7 +208,6 @@ namespace TSM.Controllers
                 var result = await _leaveManager.HandleSingleRequestAysnc(request.LeaveHandleVM, userId);
 
                 var mess = result == true ? "Success" : "Fail";
-                _context.SaveChanges();
 
                 return RedirectToAction(nameof(GetTimesheetManager), new { Message = mess });
 
@@ -229,8 +228,7 @@ namespace TSM.Controllers
                 var result = await _leaveManager.HandleMultipleRequests(request.LeaveHandleVM_Multiple, userId);
 
                 var mess = result == true ? "Success" : "Fail";
-                _context.SaveChanges();
-
+              
                 return RedirectToAction(nameof(GetTimesheetManager), new { Message = mess });
 
             }

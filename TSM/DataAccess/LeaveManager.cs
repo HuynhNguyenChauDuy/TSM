@@ -143,13 +143,13 @@ namespace TSM.DataAccess
         {
             try
             {
-                var leave =  _context.Leaves
+                Leave leave =  _context.Leaves
                     .Include(item => item.User)
                     .Include(item => item.LeaveType)
                     .Where(item => item.ID.CompareTo(leaveId) == 0)
                     .FirstOrDefault();
 
-                var leaveVM = new LeaveVM()
+                LeaveVM leaveVM = new LeaveVM()
                 {
                     LeaveID = leave.ID,
                     UserName = leave.User.UserName,
@@ -172,11 +172,29 @@ namespace TSM.DataAccess
             }
         }
 
+        private async Task<bool> DateInputIsValid(DateTime fromDate, DateTime toDate, string userId)
+        {
+            foreach (var item in await _context.Leaves.Where(item => item.ApplicationUserID.CompareTo(userId) == 0).ToListAsync())
+            {
+                if ((fromDate >= item.FromDate && fromDate <= item.ToDate) || (toDate >= item.FromDate && toDate <= item.ToDate))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public async Task<bool> SubmitLeaveAsync(Leave data, ApplicationUser user)
         {
             try
             {
-                var userRoles = await _userManager.GetRolesAsync(user);
+                if(!(await DateInputIsValid(data.FromDate, data.ToDate, user.Id)))
+                {
+                    return false;
+                }
+
+                IList<string> userRoles = await _userManager.GetRolesAsync(user);
                 if (userRoles.Contains("Project Manager"))
                 {
                     data.State = Leave.eState.Approved;
@@ -207,7 +225,7 @@ namespace TSM.DataAccess
         {
             try
             {
-                var curLeave = await _context.Leaves
+                Leave curLeave = await _context.Leaves
                     .Where(item => item.ID.CompareTo(data.ID) == 0 && item.ApplicationUserID.CompareTo(userid) == 0)
                     .FirstOrDefaultAsync();
 
@@ -232,19 +250,21 @@ namespace TSM.DataAccess
                 return false;
             }
         }
-		public async Task<bool> DeleteLeave(string id, string userid)
+
+		public async Task<bool> DeleteLeaveAsync(string id, string userid)
 		{
 			try
 			{
-				var deleteLeave = _context.Leaves.Where(s => s.ID.CompareTo(id) == 0 && s.ApplicationUserID.CompareTo(userid) ==0 ).FirstOrDefault();
-				 
-				if (deleteLeave == null)
+                Leave leave = await _context.Leaves
+                    .Where(s => s.ID.CompareTo(id) == 0 && s.ApplicationUserID.CompareTo(userid) == 0)
+                    .FirstOrDefaultAsync();
+				if (leave == null)
 				{
 					return false;
 				}
 				
-				_context.Entry(deleteLeave).State = EntityState.Deleted;
-				_context.Leaves.Remove(deleteLeave);
+				_context.Entry(leave).State = EntityState.Deleted;
+				_context.Leaves.Remove(leave);
 
 				await _context.SaveChangesAsync();
 				return true;
@@ -259,7 +279,7 @@ namespace TSM.DataAccess
         {
             try
             {
-                var currentleave = await _context.Leaves.FindAsync(request.LeaveID);
+                Leave currentleave = await _context.Leaves.FindAsync(request.LeaveID);
                 if(currentleave.State != Leave.eState.OnQueue)
                 {
                     return false;
@@ -279,7 +299,7 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<bool> HandleMultipleRequests(LeaveHandleVM_Multiple requests, string userId)
+        public async Task<bool> HandleMultipleRequestsAsync(LeaveHandleVM_Multiple requests, string userId)
         {
             try
             {

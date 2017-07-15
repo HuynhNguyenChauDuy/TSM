@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
+using NToastNotify;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,8 +28,10 @@ namespace TSM.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
+
         private readonly LeaveManager _leaveManager;
         private readonly IMapper _mapper;
+        private IToastNotification _toastNotification;
 
         public ManageController(
           UserManager<ApplicationUser> userManager,
@@ -40,7 +42,8 @@ namespace TSM.Controllers
           ILoggerFactory loggerFactory,
           ApplicationDbContext context,
           LeaveManager leaveManager,
-          IMapper mapper)
+          IMapper mapper,
+          IToastNotification toastNotification)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -51,6 +54,7 @@ namespace TSM.Controllers
             _context = context;
             _leaveManager = leaveManager;
             _mapper = mapper;
+            _toastNotification = toastNotification;
         }
 
         //
@@ -124,36 +128,86 @@ namespace TSM.Controllers
         [HttpPost]
         public async Task<IActionResult> LeaveSubmit(LeaveWrapper submit)
         {
+            // toast message properties
+            string messageTitle;
+            string message;
+            ToastEnums.ToastType messageType;
+
             if (ModelState.IsValid)
             {
                 var user = await GetCurrentUserAsync();
                 Leave _submit = _mapper.Map<LeaveFormVM, Leave>(submit.LeaveFormVM);
 
                 bool result = await _leaveManager.SubmitLeaveAsync(_submit, user);
-                var mess = result == true ? "Success" : "Fail";
 
-                return RedirectToAction(nameof(GetTimesheet), new { Message = mess });
+                // assign toast message properties
+                if (result)
+                {
+                    messageTitle = "Sucessful";
+                    message = "Your request submitted";
+                    messageType = ToastEnums.ToastType.Success;
+                }
+                else
+                {
+                    messageTitle = "Error";
+                    message = "The range of dates already existed";
+                    messageType = ToastEnums.ToastType.Error;
+                }
+            }
+            else
+            {
+                messageTitle = "Validation error";
+                message = "Please check your leave form again";
+                messageType = ToastEnums.ToastType.Error;
             }
 
-            return RedirectToAction(nameof(GetTimesheet), new { Message = "Validation Fail" });
+            _toastNotification.AddToastMessage(
+              messageTitle, message, messageType);
+
+            return RedirectToAction(nameof(GetTimesheet));
         }
 
-        
+
         [HttpPost]
         public async Task<IActionResult> EditLeave(LeaveWrapper submit)
         {
+            // toast message properties
+            string messageTitle;
+            string message;
+            ToastEnums.ToastType messageType;
+
             if (ModelState.IsValid)
             {
                 var userId = (await GetCurrentUserAsync()).Id;
                 Leave changes = _mapper.Map<LeaveFormVM, Leave>(submit.LeaveFormVM);
 
                 bool result = await _leaveManager.EditLeaveAsync(changes, userId);
-                var mess = result == true ? "Success" : "Fail";
 
-                return RedirectToAction(nameof(GetTimesheet), new { Message = mess });
+                // assign toast message properties
+                if (result)
+                {
+                    messageTitle = "Sucessful";
+                    message = "Your request edited";
+                    messageType = ToastEnums.ToastType.Success;
+                }
+                else
+                {
+                    messageTitle = "Error";
+                    message = "Unable to edit your request";
+                    messageType = ToastEnums.ToastType.Error;
+                }
+            }
+            else
+            {
+                messageTitle = "Validation errors";
+                message = "Please check your request again";
+                messageType = ToastEnums.ToastType.Error;
             }
 
-            return RedirectToAction(nameof(GetTimesheet), new { Message = "Validation Fail" });
+            _toastNotification.AddToastMessage(
+              messageTitle, message, messageType);
+
+            return RedirectToAction(nameof(GetTimesheet));
         }
 
         [HttpGet]
@@ -162,23 +216,41 @@ namespace TSM.Controllers
             LeaveVM leaveVM = _leaveManager.GetLeaveDetail(leaveId);
             return Json(leaveVM);
         }
-		[HttpPost]
-		public async Task<IActionResult> DeleteLeave(LeaveWrapper delete)
-		{
 
-			var leaveID = delete.LeaveHandleVM.LeaveID;
-			var userID = (await GetCurrentUserAsync()).Id;
+        [HttpPost]
+        public async Task<IActionResult> DeleteLeave(LeaveWrapper delete)
+        {
+            // toast message properties
+            string messageTitle;
+            string message;
+            ToastEnums.ToastType messageType;
 
-			bool result = await _leaveManager.DeleteLeave(leaveID, userID);
-			var mess = result == true ? "Success" : "Fail";
+            var leaveID = delete.LeaveHandleVM.LeaveID;
+            var userID = (await GetCurrentUserAsync()).Id;
 
-			return RedirectToAction(nameof(GetTimesheet), new { Message = mess });
+            bool result = await _leaveManager.DeleteLeaveAsync(leaveID, userID);
 
+            // assign message properties
+            if (result)
+            {
+                messageTitle = "Successful";
+                message = "Your request deleted";
+                messageType = ToastEnums.ToastType.Success;
+            }
+            else
+            {
+                messageTitle = "Error";
+                message = "Unable to delete your request";
+                messageType = ToastEnums.ToastType.Error;
+            }
 
+            _toastNotification.AddToastMessage(
+             messageTitle, message, messageType);
 
-		}
+            return RedirectToAction(nameof(GetTimesheet));
+        }
 
-		[HttpGet]
+        [HttpGet]
         public IActionResult GetCCRecommend(string term, int page)
         {
             var result = from cc in (_context.Users.Where(item => item.Email.Contains(term)).ToList())
@@ -188,10 +260,8 @@ namespace TSM.Controllers
                              date = cc.Id
                          };
 
-
             return Json(result);
         }
-
 
         private Task<ApplicationUser> GetCurrentUserAsync()
         {
@@ -202,45 +272,71 @@ namespace TSM.Controllers
         [Authorize(Roles = ("Project Manager,Team Leader"))]
         public async Task<IActionResult> HandleSingleRequest(LeaveWrapper request)
         {
-            try
+            // toast message properties
+            string messageTitle;
+            string message;
+            ToastEnums.ToastType messageType;
+
+            var userId = (await GetCurrentUserAsync()).Id;
+            var result = await _leaveManager.HandleSingleRequestAysnc(request.LeaveHandleVM, userId);
+
+            // assign message properties
+            if(result)
             {
-                var userId = (await GetCurrentUserAsync()).Id;
-                var result = await _leaveManager.HandleSingleRequestAysnc(request.LeaveHandleVM, userId);
+                message = request.LeaveHandleVM.Result == Leave.eState.Approved ? 
+                    "Request approved" : "Request rejected";
 
-                var mess = result == true ? "Success" : "Fail";
-
-                return RedirectToAction(nameof(GetTimesheetManager), new { Message = mess });
-
+                messageTitle = "Successful";
+                messageType = ToastEnums.ToastType.Success;
             }
-            catch (Exception)
+            else
             {
-                return RedirectToAction(nameof(GetTimesheetManager), new { Message = "Fail" });
+                messageTitle = "Error";
+                message = "Unable to handle this request";
+                messageType = ToastEnums.ToastType.Error;
             }
+
+            _toastNotification.AddToastMessage(
+            messageTitle, message, messageType);
+
+            return RedirectToAction(nameof(GetTimesheetManager));
+
         }
 
         [HttpPost]
         [Authorize(Roles = ("Project Manager,Team Leader"))]
         public async Task<IActionResult> HandleMultipleRequests(LeaveWrapper request)
         {
-            try
-            {
-                var userId = (await GetCurrentUserAsync()).Id;
-                var result = await _leaveManager.HandleMultipleRequests(request.LeaveHandleVM_Multiple, userId);
+            // toast message properties
+            string messageTitle;
+            string message;
+            ToastEnums.ToastType messageType;
 
-                var mess = result == true ? "Success" : "Fail";
-              
-                return RedirectToAction(nameof(GetTimesheetManager), new { Message = mess });
+            var userId = (await GetCurrentUserAsync()).Id;
+            var result = await _leaveManager.HandleMultipleRequestsAsync(request.LeaveHandleVM_Multiple, userId);
 
-            }
-            catch (Exception)
+            // assign message properties
+            if(result)
             {
-                return RedirectToAction(nameof(GetTimesheetManager), new { Message = "Fail" });
+                message = request.LeaveHandleVM_Multiple.Result == Leave.eState.Approved ?
+                    "Requests approved" : "Requests rejected";
+
+                messageTitle = "Successful";
+                messageType = ToastEnums.ToastType.Success;
             }
+            else
+            {
+                messageTitle = "Error";
+                message = "Unable to handle these requests";
+                messageType = ToastEnums.ToastType.Error;
+            }
+
+            _toastNotification.AddToastMessage(
+           messageTitle, message, messageType);
+
+            return RedirectToAction(nameof(GetTimesheetManager));
+
         }
-
-       
-
-
 
         // POST: /Manage/RemoveLogin
         [HttpPost]
@@ -261,7 +357,7 @@ namespace TSM.Controllers
             return RedirectToAction(nameof(ManageLogins), new { Message = message });
         }
 
-        //
+        
         // GET: /Manage/AddPhoneNumber
         public IActionResult AddPhoneNumber()
         {

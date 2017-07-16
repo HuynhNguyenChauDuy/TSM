@@ -149,6 +149,17 @@ namespace TSM.DataAccess
                     .Where(item => item.ID.CompareTo(leaveId) == 0)
                     .FirstOrDefault();
 
+                // approved/reject date
+                var approvedDate = leave.State == Leave.eState.OnQueue ? "--/--/---" : leave.ApprovedDate.ToString("dd/MM/yyy");
+
+                var approverName = "-----";
+                if(leave.ApproverID != null)
+                {
+                    approverName = (_context.Users
+                   .Where(item => item.Id.CompareTo(leave.ApproverID) == 0)
+                   .FirstOrDefault()).UserName;
+                }
+
                 LeaveVM leaveVM = new LeaveVM()
                 {
                     LeaveID = leave.ID,
@@ -156,11 +167,12 @@ namespace TSM.DataAccess
                     FromDate = leave.FromDate.ToString("dd/MM/yyyy"),
                     ToDate = leave.ToDate.ToString("dd/MM/yyyy"),
                     SubmittedDate = leave.SubmittedDate.ToString("dd/MM/yyyy"),
-                    ApprovedDate = leave.ApprovedDate.ToString("dd/MM/yyyy"),
+                    ApprovedDate = approvedDate,
                     WorkShift = leave.WorkShift,
                     LeaveType = leave.LeaveType.LeaveName,
                     State = leave.State,
-                    Note = System.Net.WebUtility.HtmlDecode(leave.Note)
+                    Note = System.Net.WebUtility.HtmlDecode(leave.Note),
+                    Approver = approverName
                 };
 
                 return leaveVM;
@@ -174,7 +186,9 @@ namespace TSM.DataAccess
 
         private async Task<bool> DateInputIsValid(DateTime fromDate, DateTime toDate, string userId)
         {
-            foreach (var item in await _context.Leaves.Where(item => item.ApplicationUserID.CompareTo(userId) == 0).ToListAsync())
+            foreach (var item in _context.Leaves
+                .Where(item => item.ApplicationUserID
+                .CompareTo(userId) == 0))
             {
                 if ((fromDate >= item.FromDate && fromDate <= item.ToDate) || (toDate >= item.FromDate && toDate <= item.ToDate))
                 {
@@ -221,12 +235,12 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<bool> EditLeaveAsync(Leave data, string userid)
+        public async Task<bool> EditLeaveAsync(Leave leave, string userId)
         {
             try
             {
                 Leave curLeave = await _context.Leaves
-                    .Where(item => item.ID.CompareTo(data.ID) == 0 && item.ApplicationUserID.CompareTo(userid) == 0)
+                    .Where(item => item.ID.CompareTo(leave.ID) == 0 && item.ApplicationUserID.CompareTo(userId) == 0)
                     .FirstOrDefaultAsync();
 
                 if(curLeave == null || curLeave.State != Leave.eState.OnQueue)
@@ -234,11 +248,22 @@ namespace TSM.DataAccess
                     return false;
                 }
 
-                curLeave.FromDate = data.FromDate;
-                curLeave.ToDate = data.ToDate;
-                curLeave.WorkShift = data.WorkShift;
-                curLeave.LeaveTypeID = data.LeaveTypeID;
-                curLeave.Note = data.Note;
+                // temporarily put this condition code snipps above, seperate it if possible
+                foreach(var item in _context.Leaves
+                        .Where(item => item.ApplicationUserID
+                        .CompareTo(userId) == 0 && item.ID.CompareTo(leave.ID) != 0))
+                {
+                    if ((leave.FromDate >= item.FromDate && leave.FromDate <= item.ToDate) || (leave.ToDate >= item.FromDate && leave.ToDate <= item.ToDate))
+                    {
+                        return false;
+                    }
+                }
+
+                curLeave.FromDate = leave.FromDate;
+                curLeave.ToDate = leave.ToDate;
+                curLeave.WorkShift = leave.WorkShift;
+                curLeave.LeaveTypeID = leave.LeaveTypeID;
+                curLeave.Note = leave.Note;
 
                 _context.Entry(curLeave).State = EntityState.Modified;
                 await _context.SaveChangesAsync();

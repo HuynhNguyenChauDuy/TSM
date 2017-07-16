@@ -14,9 +14,11 @@ namespace TSM.Data.ModelViews
 
     public class LeaveWrapper
     {
+        public LeaveVM LeaveVMForDisplay { get; }
         public LeaveHandleVM LeaveHandleVM { get; set; }
         public LeaveFormVM LeaveFormVM { get; set; }
         public IEnumerable<LeaveVM> LeaveVM { get; set; }
         public LeaveHandleVM_Multiple LeaveHandleVM_Multiple { get; set; }
+
     }
 }

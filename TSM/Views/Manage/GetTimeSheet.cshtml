@@ -8,14 +8,15 @@
 @inject LeaveManager _leaveManager
 
 @{
-    ViewData["Title"] = "TimeSheet Manager";
+    ViewData["Title"] = "Personal Timesheet";
     Layout = "~/Views/Shared/CustomLayout.cshtml";
 }
 @section Customcss{
     <link href="~/DatePicker/css/bootstrap-datepicker.css" rel="stylesheet" />
-    <link href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <link href="~/DataTables-1.10.15/media/css/jquery.dataTables.css" rel="stylesheet" />
     <link href="~/select2-master/dist/css/select2.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <link href="~/toastr-master/toastr.css" rel="stylesheet" />
+
     <style>
         .table {
             text-align: center
@@ -65,12 +66,12 @@
 
 @section jvscript{
     <script src="~/DatePicker/js/bootstrap-datepicker.js"></script>
-    <script src="https://ajax.aspnetcdn.com/ajax/jquery.validate/1.14.0/jquery.validate.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
-    <script src="https://ajax.aspnetcdn.com/ajax/jquery.validation.unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/DataTables-1.10.15/media/js/jquery.dataTables.js"></script>
+    <script src="~/jquery-validation-unobtrusive-master/dist/jquery.validate.unobtrusive.js"></script>
     <script src="~/ckeditor/ckeditor.js"></script>
     <script src="~/select2-master/dist/js/select2.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="~/toastr-master/toastr.min.js"></script>
 
     <!--DatePicker setup-->
     <script>
@@ -127,6 +128,7 @@
                             $("label[id='DetailVM_leaveType']").html(result['leaveType']);
                             $("label[id='DetailVM_approvedDate']").html(result['approvedDate']);
                             $("text[id='DetailVM_note']").html(result['note']);
+                            $("label[id='DetailVM_Approver']").html(result['approver']);
                             $('#DetailVM_note').val(result['note']);
 
                             var statusClass = '';
@@ -224,12 +226,12 @@
                         <thead>
                             <tr>
                                 <th>No.</th>
-                                <th>Employee</th>
-                                <th>Leave Type</th>
-                                <th>Work Shift</th>
-                                <th>From Date</th>
-                                <th>To Date</th>
-                                <th>State</th>
+                                <th>@Html.DisplayNameFor(Model => Model.LeaveVMForDisplay.UserName)</th>
+                                <th>@Html.DisplayNameFor(Model => Model.LeaveVMForDisplay.LeaveType)</th>
+                                <th>@Html.DisplayNameFor(Model => Model.LeaveVMForDisplay.WorkShift)</th>
+                                <th>@Html.DisplayNameFor(Model => Model.LeaveVMForDisplay.FromDate)</th>
+                                <th>@Html.DisplayNameFor(Model => Model.LeaveVMForDisplay.ToDate)</th>
+                                <th>@Html.DisplayNameFor(Model => Model.LeaveVMForDisplay.State)</th>
                                 <th name="LeaveID" hidden>LeaveID</th>
                             </tr>
                         </thead>
@@ -240,11 +242,11 @@
                                 {
                                     <tr>
                                         <td>@i.ToString()</td>
-                                        <td>@item.UserName</td>
-                                        <td>@item.LeaveType</td>
-                                        <td>@item.WorkShift </td>
-                                        <td>@item.FromDate</td>
-                                        <td>@item.ToDate</td>
+                                        <td>@Html.DisplayFor(m => item.UserName)</td>
+                                        <td>@Html.DisplayFor(m => item.LeaveType)</td>
+                                        <td>@Html.DisplayFor(m => item.WorkShift)</td>
+                                        <td>@Html.DisplayFor(m => item.FromDate)</td>
+                                        <td>@Html.DisplayFor(m => item.ToDate)</td>
                                         @if (item.State == TSM.Data.Models.Leave.eState.OnQueue)
                                         {
                                             <td><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
@@ -436,70 +438,64 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">x</button>
-                    <h3 class="modal-title">Leave Details</h3>
+                    <div class="modal-title">
+                        <h3 class="pull-left">
+                            <label>Leave Details</label>
+                            <label id="DetailVM_state"></label>
+                        </h3>
+                        <button type="button" class="close" data-dismiss="modal">x</button>
+                    </div>
                 </div>
                 <div class="modal-body col-sm-12">
-                    <!-- sửa thành form cho function deleteLeave-->
                     <div class="row">
                         <div class="form-group col-sm-6">
-                            <label>Employee Name : </label>
-                            <div class="cus_left"><label id="DetailVM_employeeName"></label></div>
+                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.UserName)
+                            <div class="cus_left">
+                                <label id="DetailVM_employeeName"></label>
+                            </div>
                         </div>
-
                         <div class="form-group col-sm-6">
-                            <label>State : </label>
-                            <div class="cus_left"><label id="DetailVM_state"></label></div>
+                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.LeaveType)
+                            <div class="cus_left"><label class="" id="DetailVM_leaveType"></label></div>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="form-group col-sm-6">
-                            <label>From Date : </label>
-                            <div class="cus_left"><label id="DetailVM_fromDate"></label></div>
+                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.FromDate)
+                            <div class="cus_left"><label class="" id="DetailVM_fromDate"></label></div>
                         </div>
                         <div class="form-group col-sm-6">
-                            <label>To Date : </label>
-                            <div class="cus_left"><label id="DetailVM_toDate"></label></div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="form-group col-sm-6">
-                            <label>LeaveType : </label>
-                            <div class="cus_left"><label id="DetailVM_leaveType"></label></div>
-                        </div>
-
-                        <div class="form-group col-sm-6">
-                            <label>WorkShift : </label>
-                            <div class="cus_left"><label id="DetailVM_workShift"></label></div>
+                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.ToDate)
+                            <div class="cus_left"><label class="" id="DetailVM_toDate"></label></div>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="form-group col-sm-6">
-                            <label>Submitted Date : </label>
-                            <div class="cus_left"><label id="DetailVM_submittedDate"></label></div>
+                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.SubmittedDate)
+                            <div class="cus_left"><label class="" id="DetailVM_submittedDate"></label></div>
                         </div>
                         <div class="form-group col-sm-6">
-                            <label>Approved/Rejected Date : </label>
-                            <div class="cus_left"><label id="DetailVM_approvedDate"></label></div>
+                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.WorkShift)
+                            <div class="cus_left"><label class="" id="DetailVM_workShift"></label></div>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="form-group col-sm-6">
-                            <label>Approver : </label>
-                            <div class="cus_left"><label>Coming soon</label></div>
+                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.Approver)
+                            <div class="cus_left"><label class="" id="DetailVM_Approver"></label></div>
                         </div>
                         <div class="form-group col-sm-6">
-
+                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.ApprovedDate)
+                            <div class="cus_left"><label class="" id="DetailVM_approvedDate"></label></div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="form-group col-sm-12">
-                            <label>Note</label>
-                            <div class="cus_leftai"><text id="DetailVM_note"></text></div>
+                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.Note)
+                            <div class="cus_leftai"><text class="" id="DetailVM_note"></text></div>
                         </div>
                     </div>
                 </div>

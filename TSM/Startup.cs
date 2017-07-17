@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NToastNotify;
 using TSM.Data;
 using TSM.DataAccess;
 using TSM.Models;
@@ -48,6 +49,12 @@ namespace TSM
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+
+            services.AddNToastNotify(new ToastOption()
+            {
+                ProgressBar = false,
+              //  PositionClass = ToastPositions.TopRight
+            });
 
             services.AddMvc()
                 .AddFluentValidation(fvc =>

@@ -12,7 +12,7 @@ namespace TSM.Data.ModelViews
         [Display(Name = "From Date")]
         public string FromDate { get; set; }
 
-        [Display(Name = "To date")]
+        [Display(Name = "To Date")]
         public string ToDate { get; set; }
 
         [Display(Name = "Approved/Rejected Date")]
@@ -32,5 +32,8 @@ namespace TSM.Data.ModelViews
 
         [Display(Name = "Note")]
         public string Note { get; set; }
+
+        [Display(Name = "Approver")]
+        public string Approver { get; set; }
     }
 }

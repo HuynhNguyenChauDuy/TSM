@@ -12,8 +12,11 @@ using Microsoft.Extensions.Options;
 using TSM.Models;
 using TSM.Models.AccountViewModels;
 using TSM.Services;
+using TSM.DataAccess;
+using TSM.Data.ModelViews;
 using TSM.Data.Models;
 using TSM.Data;
+using TSM.Data.Models.AccountViewModels;
 
 namespace TSM.Controllers
 {
@@ -22,11 +25,12 @@ namespace TSM.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        
+
         private readonly IEmailSender _emailSender;
         private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
         private readonly string _externalCookieScheme;
+        private readonly ExUserManager _exUserManager;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -34,7 +38,8 @@ namespace TSM.Controllers
             IOptions<IdentityCookieOptions> identityCookieOptions,
             IEmailSender emailSender,
             ISmsSender smsSender,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            ExUserManager exUserManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -42,6 +47,7 @@ namespace TSM.Controllers
             _emailSender = emailSender;
             _smsSender = smsSender;
             _logger = loggerFactory.CreateLogger<AccountController>();
+            _exUserManager = exUserManager;
         }
 
         //
@@ -57,18 +63,26 @@ namespace TSM.Controllers
             return View();
         }
 
+        private Task<ApplicationUser> GetCurrentUserAsync()
+        {
+            return _userManager.GetUserAsync(HttpContext.User);
+        }
 
-		[HttpGet]
-		[Authorize]
-		public async Task<IActionResult> GetProfile(string returnUrl = null)
-		{
-			
-			ViewData["ReturnUrl"] = returnUrl;
-			return View();
-		}
-		//
-		// POST: /Account/Login
-		[HttpPost]
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userId = (await GetCurrentUserAsync()).Id;
+
+            var userDetail = await _exUserManager.GetUserDetailById(userId);
+
+
+            return View(userDetail);
+        }
+        //
+        // POST: /Account/Login
+        [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)

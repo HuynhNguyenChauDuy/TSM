@@ -44,7 +44,7 @@ namespace TSM
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
 
-
+            services.AddTransient<ExUserManager>();
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();

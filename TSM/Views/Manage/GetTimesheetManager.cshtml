@@ -297,7 +297,18 @@
         <div class="col-xs-12">
             <div class="box">
                 <div class="box-header">
-                    <h3 class="box-title">Leave Of Absence</h3>
+                    <!-- Assign time slider right here-->
+                    <div class="col-sm-12">
+                        <div class="pull-left">
+                            <button class="glyphicon glyphicon-menu-left" />
+                        </div>
+                        <div class="text-center">
+                            <label>12/12/1995</label>
+                        </div>
+                        <div class="pull-right">
+                            <button class="glyphicon glyphicon-menu-right" />
+                        </div>
+                    </div>
                 </div>
                 <div class="box-body">
                     <table id="MainTable" class="table table-bordered table-hover">
@@ -376,13 +387,13 @@
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.UserName)
                                 <div>
-                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_employeeName">
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_employeeName">
                                 </div>
                             </div>
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.LeaveType)
                                 <div>
-                                    <input class="input_displayOnly" readonly type="text"  id="DetailVM_leaveType">
+                                    <input class="input_displayOnly" readonly disabled type="text"  id="DetailVM_leaveType">
                                 </div>
                             </div>
                         </div>
@@ -391,13 +402,13 @@
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.FromDate)
                                 <div>
-                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_fromDate">
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_fromDate">
                                 </div>
                             </div>
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.ToDate)
                                 <div>
-                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_toDate">
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_toDate">
                                 </div>
                             </div>
                         </div>
@@ -406,13 +417,13 @@
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.SubmittedDate)
                                 <div>
-                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_submittedDate">
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_submittedDate">
                                 </div>
                             </div>
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.WorkShift)
                                 <div>
-                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_workShift">
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_workShift">
                                 </div>
                             </div>
                         </div>
@@ -421,37 +432,39 @@
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.Approver)
                                 <div>
-                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_Approver">
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_Approver">
                                 </div>
                             </div>
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.ApprovedDate)
                                 <div>
-                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_approvedDate">
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_approvedDate">
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            <div class="form-group">
+                        <div class="row">
+                            <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.DefaultAnnualLeave)
                                 <div>
-                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_AnnualLeave">
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_AnnualLeave">
                                 </div>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.DefaultSickLeave)
                                 <div>
-                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_SickLeave">
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_SickLeave">
                                 </div>
                             </div>
-                            <div class="form-group">
+                        </div>
+
+                        <div class="row">
+                            <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.NOtherLeave)
                                 <div>
-                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_OtherLeave">
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_OtherLeave">
                                 </div>
                             </div>
-
                         </div>
 
                         <div class="row">

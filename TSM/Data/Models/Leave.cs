@@ -7,9 +7,9 @@ namespace TSM.Data.Models
     {
         public enum eWorkShift
         {
+            AllDay,
             Morning,
-            Afternoon,
-            AllDay
+            Afternoon
         };
 
         public enum eState
@@ -36,6 +36,4 @@ namespace TSM.Data.Models
         public string LeaveTypeID { get; set; }
         public LeaveType LeaveType { get; set; }
     }
-
-	 
 }

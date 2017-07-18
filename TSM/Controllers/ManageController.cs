@@ -2,9 +2,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MimeKit;
 using NToastNotify;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,12 +24,11 @@ namespace TSM.Controllers
     [Authorize]
     public class ManageController : Controller
     {
+        private readonly MailKitService _mailKit;
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly string _externalCookieScheme;
-        private readonly IEmailSender _emailSender;
-        private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
 
         private readonly LeaveManager _leaveManager;
@@ -37,24 +39,23 @@ namespace TSM.Controllers
           UserManager<ApplicationUser> userManager,
           SignInManager<ApplicationUser> signInManager,
           IOptions<IdentityCookieOptions> identityCookieOptions,
-          IEmailSender emailSender,
-          ISmsSender smsSender,
           ILoggerFactory loggerFactory,
           ApplicationDbContext context,
           LeaveManager leaveManager,
           IMapper mapper,
-          IToastNotification toastNotification)
+          IToastNotification toastNotification,
+          MailKitService mailKit
+          )
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _externalCookieScheme = identityCookieOptions.Value.ExternalCookieAuthenticationScheme;
-            _emailSender = emailSender;
-            _smsSender = smsSender;
             _logger = loggerFactory.CreateLogger<ManageController>();
             _context = context;
             _leaveManager = leaveManager;
             _mapper = mapper;
             _toastNotification = toastNotification;
+            _mailKit = mailKit;
         }
 
         //
@@ -102,7 +103,7 @@ namespace TSM.Controllers
 
         [HttpGet]
         [Authorize(Roles = ("Project Manager,Team Leader"))]
-        public async Task<ActionResult> GetTimesheetManager()
+        public async Task<ActionResult> GetTimesheetManager(DateTime? date = null)
         {
             var user = await GetCurrentUserAsync();
 
@@ -110,7 +111,7 @@ namespace TSM.Controllers
             IEnumerable<LeaveVM> leaveVM = null;
             if (userRoles.Contains("Project Manager"))
             {
-                leaveVM = await _leaveManager.GetAllLeavesAsync();
+                leaveVM = await _leaveManager.GetAllLeavesAsync(date);
             }
             else
             {
@@ -136,16 +137,24 @@ namespace TSM.Controllers
             if (ModelState.IsValid)
             {
                 var user = await GetCurrentUserAsync();
-                Leave _submit = _mapper.Map<LeaveFormVM, Leave>(submit.LeaveFormVM);
+                Leave newLeave = _mapper.Map<LeaveFormVM, Leave>(submit.LeaveFormVM);
 
-                bool result = await _leaveManager.SubmitLeaveAsync(_submit, user);
+                var result = await _leaveManager.SubmitLeaveAsync(newLeave, user);
 
                 // assign toast message properties
-                if (result)
+                if (result != null)
                 {
                     messageTitle = "Sucessful";
                     message = "Your request submitted";
                     messageType = ToastEnums.ToastType.Success;
+
+                    var leaveType = (_context.LeaveTypes.Find(newLeave.LeaveTypeID).LeaveName);
+
+                    // email setup
+                    MimeMessage email = _mailKit.SetUpEmailInfo(user.Email, null, "Your leave request is being handled");
+                    email.Body = await _mailKit.SetUpEmailBody_LeaveSubmit(newLeave.ID);
+
+                    _mailKit.Send(email);
                 }
                 else
                 {
@@ -178,10 +187,10 @@ namespace TSM.Controllers
 
             if (ModelState.IsValid)
             {
-                var userId = (await GetCurrentUserAsync()).Id;
+                var user = await GetCurrentUserAsync();
                 Leave changes = _mapper.Map<LeaveFormVM, Leave>(submit.LeaveFormVM);
 
-                bool result = await _leaveManager.EditLeaveAsync(changes, userId);
+                bool result = await _leaveManager.EditLeaveAsync(changes, user.Id);
 
                 // assign toast message properties
                 if (result)
@@ -189,6 +198,12 @@ namespace TSM.Controllers
                     messageTitle = "Sucessful";
                     message = "Your request edited";
                     messageType = ToastEnums.ToastType.Success;
+
+                    // email setup
+                    MimeMessage email = _mailKit.SetUpEmailInfo(user.Email, null, "Your leave request is being handled");
+                    email.Body = await _mailKit.SetUpEmailBody_EditLeave(changes.ID);
+
+                    _mailKit.Send(email);
                 }
                 else
                 {
@@ -232,9 +247,13 @@ namespace TSM.Controllers
             ToastEnums.ToastType messageType;
 
             var leaveID = delete.LeaveHandleVM.LeaveID;
-            var userID = (await GetCurrentUserAsync()).Id;
+           
+            var user = await GetCurrentUserAsync();
 
-            bool result = await _leaveManager.DeleteLeaveAsync(leaveID, userID);
+            var leave = await _context.Leaves.Include(item => item.User).Include(item => item.LeaveType)
+                .Where(item => item.ID.CompareTo(leaveID) == 0).FirstOrDefaultAsync();
+
+            bool result = await _leaveManager.DeleteLeaveAsync(leaveID, user.Id);
 
             // assign message properties
             if (result)
@@ -242,6 +261,12 @@ namespace TSM.Controllers
                 messageTitle = "Successful";
                 message = "Your request deleted";
                 messageType = ToastEnums.ToastType.Success;
+
+                // email setup
+                MimeMessage email = _mailKit.SetUpEmailInfo(user.Email, null, "Your leave request was deleted");
+                email.Body = await _mailKit.SetUpEmailBody_DeleteLeave(leave);
+
+                _mailKit.Send(email);
             }
             else
             {
@@ -283,8 +308,8 @@ namespace TSM.Controllers
             string message;
             ToastEnums.ToastType messageType;
 
-            var userId = (await GetCurrentUserAsync()).Id;
-            var result = await _leaveManager.HandleSingleRequestAysnc(request.LeaveHandleVM, userId);
+            var approverId = (await GetCurrentUserAsync()).Id;
+            var result = await _leaveManager.HandleSingleRequestAysnc(request.LeaveHandleVM, approverId);
 
             // assign message properties
             if(result)
@@ -294,6 +319,17 @@ namespace TSM.Controllers
 
                 messageTitle = "Successful";
                 messageType = ToastEnums.ToastType.Success;
+
+                var employeeEmail = (await _context.Leaves
+                                        .Include(item => item.User)
+                                        .Where(item => item.ID.CompareTo(request.LeaveHandleVM.LeaveID) == 0)
+                                        .FirstOrDefaultAsync()).User.Email;
+
+                // email setup
+                MimeMessage email = _mailKit.SetUpEmailInfo(employeeEmail, null, "Your leave request handled");
+                email.Body = await _mailKit.SetUpEmailBody_HandleRequest(request.LeaveHandleVM.LeaveID, request.LeaveHandleVM.Result);
+
+                _mailKit.Send(email);
             }
             else
             {
@@ -306,7 +342,6 @@ namespace TSM.Controllers
             messageTitle, message, messageType);
 
             return RedirectToAction(nameof(GetTimesheetManager));
-
         }
 
         [HttpPost]
@@ -319,16 +354,20 @@ namespace TSM.Controllers
             ToastEnums.ToastType messageType;
 
             var userId = (await GetCurrentUserAsync()).Id;
-            var result = await _leaveManager.HandleMultipleRequestsAsync(request.LeaveHandleVM_Multiple, userId);
+            List<string> result = await _leaveManager.HandleMultipleRequestsAsync(request.LeaveHandleVM_Multiple, userId);
 
             // assign message properties
-            if(result)
+            if(result != null)
             {
                 message = request.LeaveHandleVM_Multiple.Result == Leave.eState.Approved ?
                     "Requests approved" : "Requests rejected";
 
                 messageTitle = "Successful";
                 messageType = ToastEnums.ToastType.Success;
+
+                // send email
+
+                await _mailKit.SendMultipleEmail(result, request.LeaveHandleVM_Multiple.Result);
             }
             else
             {
@@ -387,7 +426,7 @@ namespace TSM.Controllers
                 return View("Error");
             }
             var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, model.PhoneNumber);
-            await _smsSender.SendSmsAsync(model.PhoneNumber, "Your security code is: " + code);
+          //  await _smsSender.SendSmsAsync(model.PhoneNumber, "Your security code is: " + code);
             return RedirectToAction(nameof(VerifyPhoneNumber), new { PhoneNumber = model.PhoneNumber });
         }
 

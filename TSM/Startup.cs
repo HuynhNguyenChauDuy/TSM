@@ -65,6 +65,8 @@ namespace TSM
             services.AddTransient<ISmsSender, AuthMessageSender>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<LeaveManager>();
+            services.AddTransient<MailKitService>();
+
             services.AddAutoMapper(typeof(Startup));
         }
 

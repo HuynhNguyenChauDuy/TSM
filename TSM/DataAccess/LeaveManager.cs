@@ -139,25 +139,111 @@ namespace TSM.DataAccess
             }
         }
 
-        public LeaveVM GetLeaveDetail(string leaveId)
+        private async Task<int> CountLeavesByUserId(string userId, string LeaveType)
         {
             try
             {
-                Leave leave =  _context.Leaves
+                int count = 0;
+
+                foreach(var item in (_context.Leaves
+                                           .Include(item => item.LeaveType)
+                                           .Where(item => item.ApplicationUserID.CompareTo(userId) == 0
+                                           && item.LeaveType.LeaveName.CompareTo(LeaveType) == 0
+                                           && item.State == Leave.eState.Approved)))
+                {
+                    count += (item.ToDate - item.FromDate).Days == 0 ? 1 : (item.ToDate - item.FromDate).Days + 1;
+                }
+
+                return count;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        public async Task<LeaveVM> GetLeaveDetailForManager(string leaveId)
+        {
+            try
+            {
+                // get current leave
+                Leave leave = await _context.Leaves
                     .Include(item => item.User)
                     .Include(item => item.LeaveType)
                     .Where(item => item.ID.CompareTo(leaveId) == 0)
-                    .FirstOrDefault();
+                    .FirstOrDefaultAsync();
 
                 // approved/reject date
-                var approvedDate = leave.State == Leave.eState.OnQueue ? "--/--/---" : leave.ApprovedDate.ToString("dd/MM/yyy");
+                var approvedDate = leave.State == Leave.eState.OnQueue ?
+                                            "--/--/----" : leave.ApprovedDate.ToString("dd/MM/yyy");
 
-                var approverName = "-----";
+                // get approver's name
+                var approverName = "---------";
                 if(leave.ApproverID != null)
                 {
-                    approverName = (_context.Users
+                    approverName = (await _context.Users
                    .Where(item => item.Id.CompareTo(leave.ApproverID) == 0)
-                   .FirstOrDefault()).UserName;
+                   .FirstOrDefaultAsync()).UserName;
+                }
+
+                // get leave owner
+                var user = _context.Users.Find(leave.ApplicationUserID);
+
+                // get leave count
+                var nSickleave = await CountLeavesByUserId(user.Id, "Sick Leave");
+                var nAnnualLeave = await CountLeavesByUserId(user.Id, "Annual Leave");
+                var nOtherLeave = await CountLeavesByUserId(user.Id, "Other");
+
+                LeaveVM leaveVM = new LeaveVM()
+                {
+                    LeaveID = leave.ID,
+                    UserName = leave.User.UserName,
+                    FromDate = leave.FromDate.ToString("dd/MM/yyyy"),
+                    ToDate = leave.ToDate.ToString("dd/MM/yyyy"),
+                    SubmittedDate = leave.SubmittedDate.ToString("dd/MM/yyyy"),
+                    ApprovedDate = approvedDate,
+                    WorkShift = leave.WorkShift,
+                    LeaveType = leave.LeaveType.LeaveName,
+                    State = leave.State,
+                    Note = System.Net.WebUtility.HtmlDecode(leave.Note),
+                    Approver = approverName,
+                    DefaultAnnualLeave = user.DefaultAnnualLeave,
+                    DefaultSickLeave = user.DefaultSickLeave,
+                    NAnnualLeave = nAnnualLeave,
+                    NOtherLeave = nOtherLeave,
+                    NSickLeave = nSickleave
+                };
+
+                return leaveVM;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<LeaveVM> GetLeaveDetail(string leaveId)
+        {
+            try
+            {
+                // get current leave
+                Leave leave = await _context.Leaves
+                    .Include(item => item.User)
+                    .Include(item => item.LeaveType)
+                    .Where(item => item.ID.CompareTo(leaveId) == 0)
+                   .FirstOrDefaultAsync();
+
+                // approved/reject date
+                var approvedDate = leave.State == Leave.eState.OnQueue ?
+                                            "--/--/----" : leave.ApprovedDate.ToString("dd/MM/yyy");
+
+                // get approver's name
+                var approverName = "---------";
+                if(leave.ApproverID != null)
+                {
+                    approverName = (await _context.Users
+                   .Where(item => item.Id.CompareTo(leave.ApproverID) == 0)
+                   .FirstOrDefaultAsync()).UserName;
                 }
 
                 LeaveVM leaveVM = new LeaveVM()
@@ -177,14 +263,13 @@ namespace TSM.DataAccess
 
                 return leaveVM;
             }
-            catch (Exception ex)
+            catch
             {
-                var k = ex.Message;
                 return null;
             }
         }
 
-        private async Task<bool> DateInputIsValid(DateTime fromDate, DateTime toDate, string userId)
+        private async Task<bool> DateInputIsValidAsync(DateTime fromDate, DateTime toDate, string userId)
         {
             foreach (var item in _context.Leaves
                 .Where(item => item.ApplicationUserID
@@ -203,7 +288,7 @@ namespace TSM.DataAccess
         {
             try
             {
-                if(!(await DateInputIsValid(data.FromDate, data.ToDate, user.Id)))
+                if(!(await DateInputIsValidAsync(data.FromDate, data.ToDate, user.Id)))
                 {
                     return false;
                 }

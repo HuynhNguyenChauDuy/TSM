@@ -211,9 +211,15 @@ namespace TSM.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetLeaveDetail(string leaveId)
+        public async Task<IActionResult> GetLeaveDetailForManager(string leaveId)
         {
-            LeaveVM leaveVM = _leaveManager.GetLeaveDetail(leaveId);
+            LeaveVM leaveVM = await _leaveManager.GetLeaveDetailForManager(leaveId);
+            return Json(leaveVM);
+        }
+
+        public async Task<IActionResult> GetLeaveDetail(string leaveId)
+        {
+            LeaveVM leaveVM = await _leaveManager.GetLeaveDetail(leaveId);
             return Json(leaveVM);
         }
 

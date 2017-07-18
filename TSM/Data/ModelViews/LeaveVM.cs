@@ -30,10 +30,25 @@ namespace TSM.Data.ModelViews
         [Display(Name = "State")]
         public Leave.eState State { get; set; }
 
+        [Display(Name = "Approver")]
+        public string Approver { get; set; }
+
         [Display(Name = "Note")]
         public string Note { get; set; }
 
-        [Display(Name = "Approver")]
-        public string Approver { get; set; }
+        [Display(Name = "Default Sick Leave")]
+        public int DefaultSickLeave { get; set; }
+
+        [Display(Name = "Default Annual Leave")]
+        public int DefaultAnnualLeave { get; set; }
+
+        [Display(Name = "Sick Leave Left")]
+        public int NSickLeave { get; set; }
+
+        [Display(Name = "Annual Leave Left")]
+        public int NAnnualLeave { get; set; }
+
+        [Display(Name = "Other Leave")]
+        public int NOtherLeave { get; set; }
     }
 }

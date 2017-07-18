@@ -19,7 +19,7 @@
 
     <style>
         .table {
-            text-align: center
+            text-align: center;
         }
 
         .horizontal {
@@ -55,6 +55,13 @@
         form {
             margin-right: 10px;
             margin-left: 10px;
+        }
+        .input_displayOnly {
+            text-align: center;
+            margin-left: 50px;
+            /*border-radius: 10px;
+           border: 2px solid #ff00bf;
+            padding: 5px;*/
         }
     </style>
 }
@@ -102,7 +109,7 @@
                 var leaveId = $(this).closest('tr').find('td:last').html().toString();
                 $('#LeaveHandleVM_LeaveID').val(leaveId);
 
-                var targetUrl = '@Url.Action("GetLeaveDetail", "Manage")?leaveId=' + leaveId;
+                var targetUrl = '@Url.Action("GetLeaveDetailForManager", "Manage")?leaveId=' + leaveId;
                 $.ajax({
                     url: targetUrl,
                     type: "GET",
@@ -112,16 +119,28 @@
                         if (result != null)
                         {
                             $('#DetailVM_leaveID').val(result['leaveID']);
-                            $("label[id='DetailVM_employeeName']").html(result['userName']);
-                            $("label[id='DetailVM_submittedDate']").html(result['submittedDate']);
-                            $("label[id='DetailVM_fromDate']").html(result['fromDate']);
-                            $("label[id='DetailVM_toDate']").html(result['toDate']);
-                            $("label[id='DetailVM_leaveType']").html(result['leaveType']);
-                            $("label[id='DetailVM_approvedDate']").html(result['approvedDate']);
+                            $("input[id='DetailVM_employeeName']").val(result['userName']);
+                            $("input[id='DetailVM_submittedDate']").val(result['submittedDate']);
+                            $("input[id='DetailVM_fromDate']").val(result['fromDate']);
+                            $("input[id='DetailVM_toDate']").val(result['toDate']);
+                            $("input[id='DetailVM_leaveType']").val(result['leaveType']);
+                            $("input[id='DetailVM_approvedDate']").val(result['approvedDate']);
+                            $("input[id='DetailVM_Approver']").val(result['approver']);
                             $("text[id='DetailVM_note']").html(result['note']);
-                            $("label[id='DetailVM_Approver']").html(result['approver']);
-                            $('#DetailVM_note').val(result['note']);
 
+                            // handle Leave data
+
+                            var defaulAnnualLeave = result['defaultAnnualLeave'];
+                            var nAnnualLeave = result['nAnnualLeave'];
+                            var defaulSickLeave = result['defaultSickLeave'];
+                            var nSickLeave = result['nSickLeave'];
+                            var otherLeave = result['nOtherLeave'];
+                        
+                            $("input[id='DetailVM_AnnualLeave']").val(nAnnualLeave + "/" + defaulAnnualLeave);
+                            $("input[id='DetailVM_SickLeave']").val(nSickLeave + "/" + defaulSickLeave);
+                            $("input[id='DetailVM_OtherLeave']").val(otherLeave);
+
+                            // handle State label
                             var statusClass = '';
                             var statusName = '';
 
@@ -147,10 +166,12 @@
                                 statusClass = 'label label-warning';
                                 statusName = 'Waiting';
 
+                                // show button
                                 $("button[id='DetailVM_approve']").show();
                                 $("button[id='DetailVM_reject']").show();
                             }
 
+                            // handle workshift label
                             var workShiftName = 'All Day';
                             var workShift = result['workShift'];
                             if (workShift == '1')
@@ -158,8 +179,11 @@
                             else if (workShift == '2')
                                  {workShiftName = 'Afternoon'}
 
+                            // assign value to elements
                             $("label[id='DetailVM_state']").html(statusName);
-                            $("label[id='DetailVM_workShift']").html(workShiftName);
+                            $("input[id='DetailVM_workShift']").val(workShiftName);
+
+                            $("label[id='DetailVM_state']").removeClass();
                             $("label[id='DetailVM_state']").addClass(statusClass);
 
                             $('#DetailMD').modal('show');
@@ -275,7 +299,7 @@
                 <div class="box-header">
                     <h3 class="box-title">Leave Of Absence</h3>
                 </div>
-                <div class="box-body" style="overflow:auto">
+                <div class="box-body">
                     <table id="MainTable" class="table table-bordered table-hover">
                         <thead>
                             <tr>
@@ -338,7 +362,7 @@
                 <div class="modal-header">
                     <div class="modal-title">
                         <h3 class="pull-left">
-                            <label>Leave Details</label>s
+                            <label>Leave Details</label>
                             <label id="DetailVM_state"></label>
                         </h3>
                         <button type="button" class="close" data-dismiss="modal">x</button>
@@ -351,52 +375,89 @@
                         <div class="row">
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.UserName)
-                                <div class="cus_left">
-                                    <label id="DetailVM_employeeName"></label>
+                                <div>
+                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_employeeName">
                                 </div>
                             </div>
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.LeaveType)
-                                <div class="cus_left"><label class="" id="DetailVM_leaveType"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly type="text"  id="DetailVM_leaveType">
+                                </div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.FromDate)
-                                <div class="cus_left"><label class="" id="DetailVM_fromDate"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_fromDate">
+                                </div>
                             </div>
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.ToDate)
-                                <div class="cus_left"><label class="" id="DetailVM_toDate"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_toDate">
+                                </div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.SubmittedDate)
-                                <div class="cus_left"><label class="" id="DetailVM_submittedDate"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_submittedDate">
+                                </div>
                             </div>
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.WorkShift)
-                                <div class="cus_left"><label class="" id="DetailVM_workShift"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_workShift">
+                                </div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.Approver)
-                                <div class="cus_left"><label class="" id="DetailVM_Approver"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_Approver">
+                                </div>
                             </div>
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.ApprovedDate)
-                                <div class="cus_left"><label class="" id="DetailVM_approvedDate"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_approvedDate">
+                                </div>
                             </div>
                         </div>
+
+                        <div>
+                            <div class="form-group">
+                                @Html.LabelFor(Model => Model.LeaveVMForDisplay.DefaultAnnualLeave)
+                                <div>
+                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_AnnualLeave">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(Model => Model.LeaveVMForDisplay.DefaultSickLeave)
+                                <div>
+                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_SickLeave">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                @Html.LabelFor(Model => Model.LeaveVMForDisplay.NOtherLeave)
+                                <div>
+                                    <input class="input_displayOnly" readonly type="text" id="DetailVM_OtherLeave">
+                                </div>
+                            </div>
+
+                        </div>
+
                         <div class="row">
                             <div class="form-group col-sm-12">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.Note)
-                                <div class="cus_leftai"><text class="" id="DetailVM_note"></text></div>
+                                <div><text id="DetailVM_note"></text></div>
                             </div>
                         </div>
                     </form>

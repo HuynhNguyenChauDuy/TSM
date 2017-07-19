@@ -18,28 +18,9 @@
     <link href="~/toastr-master/toastr.css" rel="stylesheet" />
 
     <style>
-        .table {
+        /*.table {
             text-align: center;
-        }
-
-        .horizontal {
-            display: inline;
-            border-left: 2px solid;
-            padding-left: 0.3em;
-        }
-
-        #cke_editor1 {
-            width: 550px;
-            margin-left: -73px;
-        }
-
-        .cke_inner cke_reset {
-            width: 585px;
-        }
-
-        .center {
-            margin-top: 50px;
-        }
+        }*/
 
         .boxsizingBorder {
             -webkit-box-sizing: border-box;
@@ -50,7 +31,6 @@
         .cus_left {
             margin-left: 50px;
         }
-
 
         form {
             margin-right: 10px;
@@ -71,6 +51,50 @@
     <script src="~/DataTables-1.10.15/media/js/jquery.dataTables.js"></script>
     <script src="~/ckeditor/ckeditor.js"></script>
     <script src="~/toastr-master/toastr.min.js"></script>
+    <script src="~/momentjs/moment.js"></script>
+    <script>
+        $(document).ready(function () {
+            var curDate = '@ViewData["curDate"]';
+            $("button[id='curDate']").val(curDate);
+            $("button[id='curDate']").html(curDate);
+            moment().format();
+        });
+
+        $(document).ready(function () {
+            $('#previousDate').click(function () {
+                var curDate = $('#curDate').val();
+                var previousDate = moment(curDate, "DD/MM/YYYY");
+                previousDate.add(-1, 'day');
+
+                GetTimeSheetManagerOfDate(previousDate.format('MM-DD-YYYY'));
+            });
+        });
+        
+
+        $(document).ready(function () {
+            $('#nextDate').click(function () {
+                var curDate = $('#curDate').val();
+                var nextDate = moment(curDate, "DD/MM/YYYY");
+                nextDate.add(1, 'day');
+
+                GetTimeSheetManagerOfDate(nextDate.format('MM-DD-YYYY'));
+            });
+        });
+
+        function GetTimeSheetManagerOfDate(data) {
+            var targetUrl = '@Url.Action("GetTimesheetManager","Manage")?date=' + data;
+            window.location.href = targetUrl;
+        }
+
+        $(document).ready(function () {
+            $('#curDate').click(function () {
+                var today = new Date();
+                var _today = moment(curDate, "DD/MM/YYYY");
+
+                GetTimeSheetManagerOfDate(_today.format('MM-DD-YYYY'));
+            });
+        });
+    </script>
 
     <!--DatePicker-->
     <script>
@@ -129,7 +153,6 @@
                             $("text[id='DetailVM_note']").html(result['note']);
 
                             // handle Leave data
-
                             var defaulAnnualLeave = result['defaultAnnualLeave'];
                             var nAnnualLeave = result['nAnnualLeave'];
                             var defaulSickLeave = result['defaultSickLeave'];
@@ -149,13 +172,13 @@
                             {
                                 if (state == '0')
                                 {
-                                    statusClass = 'label label-success'
-                                    statusName = 'Approved';
+                                    statusClass = 'label label-success ion-checkmark-round'
+                                    statusName = ' Approved';
                                 }
                                 else
                                 {
-                                    statusClass = 'label label-danger'
-                                    statusName = 'Rejected';
+                                    statusClass = 'label label-danger ion-close-round'
+                                    statusName = ' Rejected';
                                 }
 
                                 $("button[id='DetailVM_approve']").hide();
@@ -163,8 +186,8 @@
                             }
                             else
                             {
-                                statusClass = 'label label-warning';
-                                statusName = 'Waiting';
+                                statusClass = 'label label-warning ion-load-a';
+                                statusName = ' Waiting';
 
                                 // show button
                                 $("button[id='DetailVM_approve']").show();
@@ -185,6 +208,10 @@
 
                             $("label[id='DetailVM_state']").removeClass();
                             $("label[id='DetailVM_state']").addClass(statusClass);
+
+                            var curDate = $('#curDate').val();
+                            //var formattedDate = moment(curDate, "DD/MM/YYYY");
+                            $('#LeaveHandleVM_CurDate').val(curDate);
 
                             $('#DetailMD').modal('show');
                         }
@@ -211,13 +238,17 @@
 
     <!--Checkbox - Check All-->
     <script>
-        $('#cbCheckAll').click(function () {
-            if ($('#cbCheckAll').is(':checked')) {
-                $('input[name="subCheckbox"]').prop('checked', true);
-            }
-            else {
-                $('input[name="subCheckbox"]').prop('checked', false);
-            }
+        //$('#cbCheckAll').click(function () {
+        //    if ($('#cbCheckAll-table').is(':checked')) {
+        //        $('input[name="subCheckbox"]').prop('checked', true);
+        //    }
+        //    else {
+        //        $('input[name="subCheckbox"]').prop('checked', false);
+        //    }
+        //});
+
+        $("#cbCheckAll").click(function () {
+            $('#MainTable tbody input[type="checkbox"]').prop('checked', this.checked);
         });
     </script>
 
@@ -235,6 +266,11 @@
                 var result = 'Approved';
                 var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
                 $('#HandleMultipleRequests').append(str2);
+
+                var curDate = $('#curDate').val();
+               // var formattedDate = moment(curDate, "DD/MM/YYYY");
+                $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
+               
                 $('#HandleMultipleRequests').submit();
             });
 
@@ -251,6 +287,11 @@
                 var result = 'Approved';
                 var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
                 $('#HandleMultipleRequests').append(str2);
+
+                var curDate = $('#curDate').val();
+                //var formattedDate = moment(curDate, "DD/MM/YYYY");
+                $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
+
                 $('#HandleMultipleRequests').submit();
             });
 
@@ -266,6 +307,11 @@
                 var result = 'Rejected';
                 var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
                 $('#HandleMultipleRequests').append(str2);
+
+                var curDate = $('#curDate').val();
+             //   var formattedDate = moment(curDate, "DD/MM/YYYY");
+                $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
+
                 $('#HandleMultipleRequests').submit();
             });
         });
@@ -287,9 +333,9 @@
             </h1>
         </div>
     </div>
-
-
-    <form hidden role="form" id="HandleMultipleRequests" method="post" asp-controller="Manage" asp-action="HandleMultipleRequests"></form>
+    <form hidden role="form" id="HandleMultipleRequests" method="post" asp-controller="Manage" asp-action="HandleMultipleRequests">
+        <input hidden asp-for="LeaveHandleVM_Multiple.CurDate" />
+    </form>
 </section>
 <!-- Main content -->
 <section class="content">
@@ -297,16 +343,11 @@
         <div class="col-xs-12">
             <div class="box">
                 <div class="box-header">
-                    <!-- Assign time slider right here-->
-                    <div class="col-sm-12">
-                        <div class="pull-left">
-                            <button class="glyphicon glyphicon-menu-left" />
-                        </div>
-                        <div class="text-center">
-                            <label>12/12/1995</label>
-                        </div>
-                        <div class="pull-right">
-                            <button class="glyphicon glyphicon-menu-right" />
+                    <div class="container col-sm-12">
+                        <div class="row">
+                            <div class="col-sm-3 text-center"><button id="previousDate" class="btn btn-default pull-left">Previous</button></div>
+                            <div class="col-sm-6 text-center"><button id="curDate" class="btn btn-info" title="Click to go back to today" ></button></div>
+                            <div class="col-sm-3 text-center"><button id="nextDate" class="btn btn-default pull-right">Next</button></div>
                         </div>
                     </div>
                 </div>
@@ -372,17 +413,19 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <div class="modal-title">
-                        <h3 class="pull-left">
-                            <label>Leave Details</label>
-                            <label id="DetailVM_state"></label>
-                        </h3>
-                        <button type="button" class="close" data-dismiss="modal">x</button>
+                        <div class="col-sm-6">
+                            <h3>Leave Details</h3>
+                        </div>
+                        <div class="col-sm-6 pull-right">
+                            <h3><label id="DetailVM_state"></label></h3>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-body col-sm-12">
+                <div class="modal-body">
                     <form role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
                         <input hidden asp-for="LeaveHandleVM.LeaveID" />
                         <input hidden asp-for="LeaveHandleVM.Result" />
+                        <input hidden asp-for="LeaveHandleVM.CurDate"/>
                         <div class="row">
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.UserName)
@@ -445,13 +488,13 @@
 
                         <div class="row">
                             <div class="form-group col-sm-6">
-                                @Html.LabelFor(Model => Model.LeaveVMForDisplay.DefaultAnnualLeave)
+                                @Html.LabelFor(Model => Model.LeaveVMForDisplay.NAnnualLeave)
                                 <div>
                                     <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_AnnualLeave">
                                 </div>
                             </div>
                             <div class="form-group col-sm-6">
-                                @Html.LabelFor(Model => Model.LeaveVMForDisplay.DefaultSickLeave)
+                                @Html.LabelFor(Model => Model.LeaveVMForDisplay.NSickLeave)
                                 <div>
                                     <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_SickLeave">
                                 </div>
@@ -482,6 +525,9 @@
                             <div class="pull-right">
                                 <button id="DetailVM_approve" onclick="HandleSingleRequest('Approved')" type="button" class="btn btn-success">&nbsp;Approve</button>
                                 <button id="DetailVM_reject" onclick="HandleSingleRequest('Rejected')" type="button" class="btn btn-danger">&nbsp;Reject&nbsp;</button>
+                            </div>
+                            <div class="pull-left">
+                                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
                             </div>
                         </div>
                     </div>

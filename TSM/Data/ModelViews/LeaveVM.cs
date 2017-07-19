@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using TSM.Data.Models;
 namespace TSM.Data.ModelViews
 {
@@ -42,13 +43,13 @@ namespace TSM.Data.ModelViews
         [Display(Name = "Default Annual Leave")]
         public int DefaultAnnualLeave { get; set; }
 
-        [Display(Name = "Sick Leave Left")]
+        [Display(Name = "Sick Leaves")]
         public int NSickLeave { get; set; }
 
-        [Display(Name = "Annual Leave Left")]
+        [Display(Name = "Annual Leaves")]
         public int NAnnualLeave { get; set; }
 
-        [Display(Name = "Other Leave")]
+        [Display(Name = "Other Leaves")]
         public int NOtherLeave { get; set; }
     }
 }

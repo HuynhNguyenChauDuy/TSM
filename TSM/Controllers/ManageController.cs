@@ -18,7 +18,6 @@ using TSM.DataAccess;
 using TSM.Models;
 using TSM.Models.ManageViewModels;
 using TSM.Services;
-
 namespace TSM.Controllers
 {
     [Authorize]
@@ -123,6 +122,7 @@ namespace TSM.Controllers
                 LeaveVM = leaveVM
             };
 
+            ViewData["curDate"] = date != null ? date.Value.ToString("dd/MM/yyyy") : DateTime.Today.ToString("dd/MM/yyyy"); 
             return View(viewContext);
         }
 
@@ -175,7 +175,6 @@ namespace TSM.Controllers
 
             return RedirectToAction(nameof(GetTimesheet));
         }
-
 
         [HttpPost]
         public async Task<IActionResult> EditLeave(LeaveWrapper submit)
@@ -341,7 +340,7 @@ namespace TSM.Controllers
             _toastNotification.AddToastMessage(
             messageTitle, message, messageType);
 
-            return RedirectToAction(nameof(GetTimesheetManager));
+            return RedirectToAction(nameof(GetTimesheetManager), new { date = request.LeaveHandleVM.CurDate });
         }
 
         [HttpPost]
@@ -379,7 +378,7 @@ namespace TSM.Controllers
             _toastNotification.AddToastMessage(
            messageTitle, message, messageType);
 
-            return RedirectToAction(nameof(GetTimesheetManager));
+            return RedirectToAction(nameof(GetTimesheetManager), new { date = request.LeaveHandleVM_Multiple.CurDate });
 
         }
 

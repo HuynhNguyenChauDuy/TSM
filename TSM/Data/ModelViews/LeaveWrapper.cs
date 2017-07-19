@@ -10,6 +10,7 @@ namespace TSM.Data.ModelViews
     {
         public IEnumerable<string> LeaveID { get; set; }
         public Leave.eState Result { get; set; }
+        public DateTime? CurDate { get; set; }
     }
 
     public class LeaveWrapper

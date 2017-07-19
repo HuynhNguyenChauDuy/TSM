@@ -57,7 +57,7 @@ namespace TSM.DataAccess
                     leaves = await _context.Leaves
                                                  .Include(item => item.User)
                                                  .Include(item => item.LeaveType)
-                                                 .Where(item => (item.FromDate <= date && date >= item.ToDate))
+                                                 .Where(item => (item.FromDate <= date && date <= item.ToDate))
                                                  .OrderBy(item => item.FromDate)
                                                  .ThenBy(item => item.ToDate)
                                                  .ToListAsync();

@@ -18,28 +18,9 @@
     <link href="~/toastr-master/toastr.css" rel="stylesheet" />
 
     <style>
-        .table {
-            text-align: center
-        }
-
-        .horizontal {
-            display: inline;
-            border-left: 2px solid;
-            padding-left: 0.3em;
-        }
-
-        #cke_editor1 {
-            width: 550px;
-            margin-left: -73px;
-        }
-
-        .cke_inner cke_reset {
-            width: 585px;
-        }
-
-        .center {
-            margin-top: 50px;
-        }
+        /*.table {
+            text-align: center;
+        }*/
 
         .boxsizingBorder {
             -webkit-box-sizing: border-box;
@@ -51,10 +32,16 @@
             margin-left: 50px;
         }
 
-
         form {
             margin-right: 10px;
             margin-left: 10px;
+        }
+        .input_displayOnly {
+            text-align: center;
+            margin-left: 50px;
+            /*border-radius: 10px;
+           border: 2px solid #ff00bf;
+            padding: 5px;*/
         }
     </style>
 }
@@ -64,6 +51,50 @@
     <script src="~/DataTables-1.10.15/media/js/jquery.dataTables.js"></script>
     <script src="~/ckeditor/ckeditor.js"></script>
     <script src="~/toastr-master/toastr.min.js"></script>
+    <script src="~/momentjs/moment.js"></script>
+    <script>
+        $(document).ready(function () {
+            var curDate = '@ViewData["curDate"]';
+            $("button[id='curDate']").val(curDate);
+            $("button[id='curDate']").html(curDate);
+            moment().format();
+        });
+
+        $(document).ready(function () {
+            $('#previousDate').click(function () {
+                var curDate = $('#curDate').val();
+                var previousDate = moment(curDate, "DD/MM/YYYY");
+                previousDate.add(-1, 'day');
+
+                GetTimeSheetManagerOfDate(previousDate.format('MM-DD-YYYY'));
+            });
+        });
+        
+
+        $(document).ready(function () {
+            $('#nextDate').click(function () {
+                var curDate = $('#curDate').val();
+                var nextDate = moment(curDate, "DD/MM/YYYY");
+                nextDate.add(1, 'day');
+
+                GetTimeSheetManagerOfDate(nextDate.format('MM-DD-YYYY'));
+            });
+        });
+
+        function GetTimeSheetManagerOfDate(data) {
+            var targetUrl = '@Url.Action("GetTimesheetManager","Manage")?date=' + data;
+            window.location.href = targetUrl;
+        }
+
+        $(document).ready(function () {
+            $('#curDate').click(function () {
+                var today = new Date();
+                var _today = moment(curDate, "DD/MM/YYYY");
+
+                GetTimeSheetManagerOfDate(_today.format('MM-DD-YYYY'));
+            });
+        });
+    </script>
 
     <!--DatePicker-->
     <script>
@@ -102,7 +133,7 @@
                 var leaveId = $(this).closest('tr').find('td:last').html().toString();
                 $('#LeaveHandleVM_LeaveID').val(leaveId);
 
-                var targetUrl = '@Url.Action("GetLeaveDetail", "Manage")?leaveId=' + leaveId;
+                var targetUrl = '@Url.Action("GetLeaveDetailForManager", "Manage")?leaveId=' + leaveId;
                 $.ajax({
                     url: targetUrl,
                     type: "GET",
@@ -112,16 +143,27 @@
                         if (result != null)
                         {
                             $('#DetailVM_leaveID').val(result['leaveID']);
-                            $("label[id='DetailVM_employeeName']").html(result['userName']);
-                            $("label[id='DetailVM_submittedDate']").html(result['submittedDate']);
-                            $("label[id='DetailVM_fromDate']").html(result['fromDate']);
-                            $("label[id='DetailVM_toDate']").html(result['toDate']);
-                            $("label[id='DetailVM_leaveType']").html(result['leaveType']);
-                            $("label[id='DetailVM_approvedDate']").html(result['approvedDate']);
+                            $("input[id='DetailVM_employeeName']").val(result['userName']);
+                            $("input[id='DetailVM_submittedDate']").val(result['submittedDate']);
+                            $("input[id='DetailVM_fromDate']").val(result['fromDate']);
+                            $("input[id='DetailVM_toDate']").val(result['toDate']);
+                            $("input[id='DetailVM_leaveType']").val(result['leaveType']);
+                            $("input[id='DetailVM_approvedDate']").val(result['approvedDate']);
+                            $("input[id='DetailVM_Approver']").val(result['approver']);
                             $("text[id='DetailVM_note']").html(result['note']);
-                            $("label[id='DetailVM_Approver']").html(result['approver']);
-                            $('#DetailVM_note').val(result['note']);
 
+                            // handle Leave data
+                            var defaulAnnualLeave = result['defaultAnnualLeave'];
+                            var nAnnualLeave = result['nAnnualLeave'];
+                            var defaulSickLeave = result['defaultSickLeave'];
+                            var nSickLeave = result['nSickLeave'];
+                            var otherLeave = result['nOtherLeave'];
+                        
+                            $("input[id='DetailVM_AnnualLeave']").val(nAnnualLeave + "/" + defaulAnnualLeave);
+                            $("input[id='DetailVM_SickLeave']").val(nSickLeave + "/" + defaulSickLeave);
+                            $("input[id='DetailVM_OtherLeave']").val(otherLeave);
+
+                            // handle State label
                             var statusClass = '';
                             var statusName = '';
 
@@ -130,13 +172,13 @@
                             {
                                 if (state == '0')
                                 {
-                                    statusClass = 'label label-success'
-                                    statusName = 'Approved';
+                                    statusClass = 'label label-success ion-checkmark-round'
+                                    statusName = ' Approved';
                                 }
                                 else
                                 {
-                                    statusClass = 'label label-danger'
-                                    statusName = 'Rejected';
+                                    statusClass = 'label label-danger ion-close-round'
+                                    statusName = ' Rejected';
                                 }
 
                                 $("button[id='DetailVM_approve']").hide();
@@ -144,13 +186,15 @@
                             }
                             else
                             {
-                                statusClass = 'label label-warning';
-                                statusName = 'Waiting';
+                                statusClass = 'label label-warning ion-load-a';
+                                statusName = ' Waiting';
 
+                                // show button
                                 $("button[id='DetailVM_approve']").show();
                                 $("button[id='DetailVM_reject']").show();
                             }
 
+                            // handle workshift label
                             var workShiftName = 'All Day';
                             var workShift = result['workShift'];
                             if (workShift == '1')
@@ -158,9 +202,16 @@
                             else if (workShift == '2')
                                  {workShiftName = 'Afternoon'}
 
+                            // assign value to elements
                             $("label[id='DetailVM_state']").html(statusName);
-                            $("label[id='DetailVM_workShift']").html(workShiftName);
+                            $("input[id='DetailVM_workShift']").val(workShiftName);
+
+                            $("label[id='DetailVM_state']").removeClass();
                             $("label[id='DetailVM_state']").addClass(statusClass);
+
+                            var curDate = $('#curDate').val();
+                            //var formattedDate = moment(curDate, "DD/MM/YYYY");
+                            $('#LeaveHandleVM_CurDate').val(curDate);
 
                             $('#DetailMD').modal('show');
                         }
@@ -187,13 +238,17 @@
 
     <!--Checkbox - Check All-->
     <script>
-        $('#cbCheckAll').click(function () {
-            if ($('#cbCheckAll').is(':checked')) {
-                $('input[name="subCheckbox"]').prop('checked', true);
-            }
-            else {
-                $('input[name="subCheckbox"]').prop('checked', false);
-            }
+        //$('#cbCheckAll').click(function () {
+        //    if ($('#cbCheckAll-table').is(':checked')) {
+        //        $('input[name="subCheckbox"]').prop('checked', true);
+        //    }
+        //    else {
+        //        $('input[name="subCheckbox"]').prop('checked', false);
+        //    }
+        //});
+
+        $("#cbCheckAll").click(function () {
+            $('#MainTable tbody input[type="checkbox"]').prop('checked', this.checked);
         });
     </script>
 
@@ -211,6 +266,11 @@
                 var result = 'Approved';
                 var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
                 $('#HandleMultipleRequests').append(str2);
+
+                var curDate = $('#curDate').val();
+               // var formattedDate = moment(curDate, "DD/MM/YYYY");
+                $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
+               
                 $('#HandleMultipleRequests').submit();
             });
 
@@ -227,6 +287,11 @@
                 var result = 'Approved';
                 var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
                 $('#HandleMultipleRequests').append(str2);
+
+                var curDate = $('#curDate').val();
+                //var formattedDate = moment(curDate, "DD/MM/YYYY");
+                $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
+
                 $('#HandleMultipleRequests').submit();
             });
 
@@ -242,6 +307,11 @@
                 var result = 'Rejected';
                 var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
                 $('#HandleMultipleRequests').append(str2);
+
+                var curDate = $('#curDate').val();
+             //   var formattedDate = moment(curDate, "DD/MM/YYYY");
+                $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
+
                 $('#HandleMultipleRequests').submit();
             });
         });
@@ -263,9 +333,9 @@
             </h1>
         </div>
     </div>
-
-
-    <form hidden role="form" id="HandleMultipleRequests" method="post" asp-controller="Manage" asp-action="HandleMultipleRequests"></form>
+    <form hidden role="form" id="HandleMultipleRequests" method="post" asp-controller="Manage" asp-action="HandleMultipleRequests">
+        <input hidden asp-for="LeaveHandleVM_Multiple.CurDate" />
+    </form>
 </section>
 <!-- Main content -->
 <section class="content">
@@ -273,9 +343,15 @@
         <div class="col-xs-12">
             <div class="box">
                 <div class="box-header">
-                    <h3 class="box-title">Leave Of Absence</h3>
+                    <div class="container col-sm-12">
+                        <div class="row">
+                            <div class="col-sm-3 text-center"><button id="previousDate" class="btn btn-default pull-left">Previous</button></div>
+                            <div class="col-sm-6 text-center"><button id="curDate" class="btn btn-info" title="Click to go back to today" ></button></div>
+                            <div class="col-sm-3 text-center"><button id="nextDate" class="btn btn-default pull-right">Next</button></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="box-body" style="overflow:auto">
+                <div class="box-body">
                     <table id="MainTable" class="table table-bordered table-hover">
                         <thead>
                             <tr>
@@ -337,66 +413,107 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <div class="modal-title">
-                        <h3 class="pull-left">
-                            <label>Leave Details</label>s
-                            <label id="DetailVM_state"></label>
-                        </h3>
-                        <button type="button" class="close" data-dismiss="modal">x</button>
+                        <div class="col-sm-6">
+                            <h3>Leave Details</h3>
+                        </div>
+                        <div class="col-sm-6 pull-right">
+                            <h3><label id="DetailVM_state"></label></h3>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-body col-sm-12">
+                <div class="modal-body">
                     <form role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
                         <input hidden asp-for="LeaveHandleVM.LeaveID" />
                         <input hidden asp-for="LeaveHandleVM.Result" />
+                        <input hidden asp-for="LeaveHandleVM.CurDate"/>
                         <div class="row">
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.UserName)
-                                <div class="cus_left">
-                                    <label id="DetailVM_employeeName"></label>
+                                <div>
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_employeeName">
                                 </div>
                             </div>
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.LeaveType)
-                                <div class="cus_left"><label class="" id="DetailVM_leaveType"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly disabled type="text"  id="DetailVM_leaveType">
+                                </div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.FromDate)
-                                <div class="cus_left"><label class="" id="DetailVM_fromDate"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_fromDate">
+                                </div>
                             </div>
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.ToDate)
-                                <div class="cus_left"><label class="" id="DetailVM_toDate"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_toDate">
+                                </div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.SubmittedDate)
-                                <div class="cus_left"><label class="" id="DetailVM_submittedDate"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_submittedDate">
+                                </div>
                             </div>
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.WorkShift)
-                                <div class="cus_left"><label class="" id="DetailVM_workShift"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_workShift">
+                                </div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.Approver)
-                                <div class="cus_left"><label class="" id="DetailVM_Approver"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_Approver">
+                                </div>
                             </div>
                             <div class="form-group col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.ApprovedDate)
-                                <div class="cus_left"><label class="" id="DetailVM_approvedDate"></label></div>
+                                <div>
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_approvedDate">
+                                </div>
                             </div>
                         </div>
+
+                        <div class="row">
+                            <div class="form-group col-sm-6">
+                                @Html.LabelFor(Model => Model.LeaveVMForDisplay.NAnnualLeave)
+                                <div>
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_AnnualLeave">
+                                </div>
+                            </div>
+                            <div class="form-group col-sm-6">
+                                @Html.LabelFor(Model => Model.LeaveVMForDisplay.NSickLeave)
+                                <div>
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_SickLeave">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="form-group col-sm-6">
+                                @Html.LabelFor(Model => Model.LeaveVMForDisplay.NOtherLeave)
+                                <div>
+                                    <input class="input_displayOnly" readonly disabled type="text" id="DetailVM_OtherLeave">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="form-group col-sm-12">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.Note)
-                                <div class="cus_leftai"><text class="" id="DetailVM_note"></text></div>
+                                <div><text id="DetailVM_note"></text></div>
                             </div>
                         </div>
                     </form>
@@ -408,6 +525,9 @@
                             <div class="pull-right">
                                 <button id="DetailVM_approve" onclick="HandleSingleRequest('Approved')" type="button" class="btn btn-success">&nbsp;Approve</button>
                                 <button id="DetailVM_reject" onclick="HandleSingleRequest('Rejected')" type="button" class="btn btn-danger">&nbsp;Reject&nbsp;</button>
+                            </div>
+                            <div class="pull-left">
+                                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
                             </div>
                         </div>
                     </div>

@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using TSM.DataAccess;
 using TSM.Models;
 using TSM.Models.AccountViewModels;
 using TSM.Services;
-using TSM.DataAccess;
-using TSM.Data.ModelViews;
-using TSM.Data.Models;
-using TSM.Data;
-using TSM.Data.Models.AccountViewModels;
 
 namespace TSM.Controllers
 {

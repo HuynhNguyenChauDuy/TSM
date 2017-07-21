@@ -46,30 +46,49 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<IEnumerable<LeaveVM>> GetAllLeavesAsync()
+        public async Task<IEnumerable<LeaveVM>> GetAllLeavesAsync(DateTime? date = null)
         {
             try
             {
-                IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
+                IEnumerable<Leave> leaves = null;
+
+                if(date != null)
+                {
+                    leaves = await _context.Leaves
                                                  .Include(item => item.User)
                                                  .Include(item => item.LeaveType)
+                                                 .Where(item => (item.FromDate <= date && date <= item.ToDate))
                                                  .OrderBy(item => item.FromDate)
-                                                 .ThenBy(item => item.ToDate)).ToListAsync()
-                                               select new LeaveVM()
-                                               {
-                                                   LeaveID = item.ID,
-                                                   UserName = item.User.UserName,
-                                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
-                                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
-                                                   SubmittedDate = null,
-                                                   ApprovedDate = null,
-                                                   WorkShift = item.WorkShift,
-                                                   LeaveType = item.LeaveType.LeaveName,
-                                                   State = item.State,
-                                                   Note = null
-                                               });
+                                                 .ThenBy(item => item.ToDate)
+                                                 .ToListAsync();
+                }
+                else
+                {
+                    leaves = await _context.Leaves
+                                                 .Include(item => item.User)
+                                                 .Include(item => item.LeaveType)
+                                                 .Where(item => (item.FromDate <= DateTime.Today && DateTime.Today <= item.ToDate))
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)
+                                                 .ToListAsync();
+                }
 
-                return leaves;
+                var leavevms = from item in leaves
+                               select new LeaveVM()
+                               {
+                                   LeaveID = item.ID,
+                                   UserName = item.User.UserName,
+                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
+                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
+                                   SubmittedDate = null,
+                                   ApprovedDate = null,
+                                   WorkShift = item.WorkShift,
+                                   LeaveType = item.LeaveType.LeaveName,
+                                   State = item.State,
+                                   Note = null
+                               };
+
+                return leavevms;
             }
             catch (Exception)
             {
@@ -139,25 +158,111 @@ namespace TSM.DataAccess
             }
         }
 
-        public LeaveVM GetLeaveDetail(string leaveId)
+        private async Task<int> CountLeavesByUserId(string userId, string LeaveType)
         {
             try
             {
-                Leave leave =  _context.Leaves
+                int count = 0;
+
+                foreach(var item in (_context.Leaves
+                                           .Include(item => item.LeaveType)
+                                           .Where(item => item.ApplicationUserID.CompareTo(userId) == 0
+                                           && item.LeaveType.LeaveName.CompareTo(LeaveType) == 0
+                                           && item.State == Leave.eState.Approved)))
+                {
+                    count += (item.ToDate - item.FromDate).Days == 0 ? 1 : (item.ToDate - item.FromDate).Days + 1;
+                }
+
+                return count;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        public async Task<LeaveVM> GetLeaveDetailForManager(string leaveId)
+        {
+            try
+            {
+                // get current leave
+                Leave leave = await _context.Leaves
                     .Include(item => item.User)
                     .Include(item => item.LeaveType)
                     .Where(item => item.ID.CompareTo(leaveId) == 0)
-                    .FirstOrDefault();
+                    .FirstOrDefaultAsync();
 
                 // approved/reject date
-                var approvedDate = leave.State == Leave.eState.OnQueue ? "--/--/---" : leave.ApprovedDate.ToString("dd/MM/yyy");
+                var approvedDate = leave.State == Leave.eState.OnQueue ?
+                                            "--/--/----" : leave.ApprovedDate.ToString("dd/MM/yyy");
 
-                var approverName = "-----";
+                // get approver's name
+                var approverName = "---------";
                 if(leave.ApproverID != null)
                 {
-                    approverName = (_context.Users
+                    approverName = (await _context.Users
                    .Where(item => item.Id.CompareTo(leave.ApproverID) == 0)
-                   .FirstOrDefault()).UserName;
+                   .FirstOrDefaultAsync()).UserName;
+                }
+
+                // get leave owner
+                var user = _context.Users.Find(leave.ApplicationUserID);
+
+                // get leave count
+                var nSickleave = await CountLeavesByUserId(user.Id, "Sick Leave");
+                var nAnnualLeave = await CountLeavesByUserId(user.Id, "Annual Leave");
+                var nOtherLeave = await CountLeavesByUserId(user.Id, "Other");
+
+                LeaveVM leaveVM = new LeaveVM()
+                {
+                    LeaveID = leave.ID,
+                    UserName = leave.User.UserName,
+                    FromDate = leave.FromDate.ToString("dd/MM/yyyy"),
+                    ToDate = leave.ToDate.ToString("dd/MM/yyyy"),
+                    SubmittedDate = leave.SubmittedDate.ToString("dd/MM/yyyy"),
+                    ApprovedDate = approvedDate,
+                    WorkShift = leave.WorkShift,
+                    LeaveType = leave.LeaveType.LeaveName,
+                    State = leave.State,
+                    Note = System.Net.WebUtility.HtmlDecode(leave.Note),
+                    Approver = approverName,
+                    DefaultAnnualLeave = user.DefaultAnnualLeave,
+                    DefaultSickLeave = user.DefaultSickLeave,
+                    NAnnualLeave = nAnnualLeave,
+                    NOtherLeave = nOtherLeave,
+                    NSickLeave = nSickleave
+                };
+
+                return leaveVM;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<LeaveVM> GetLeaveDetail(string leaveId)
+        {
+            try
+            {
+                // get current leave
+                Leave leave = await _context.Leaves
+                    .Include(item => item.User)
+                    .Include(item => item.LeaveType)
+                    .Where(item => item.ID.CompareTo(leaveId) == 0)
+                   .FirstOrDefaultAsync();
+
+                // approved/reject date
+                var approvedDate = leave.State == Leave.eState.OnQueue ?
+                                            "--/--/----" : leave.ApprovedDate.ToString("dd/MM/yyy");
+
+                // get approver's name
+                var approverName = "---------";
+                if(leave.ApproverID != null)
+                {
+                    approverName = (await _context.Users
+                   .Where(item => item.Id.CompareTo(leave.ApproverID) == 0)
+                   .FirstOrDefaultAsync()).UserName;
                 }
 
                 LeaveVM leaveVM = new LeaveVM()
@@ -177,14 +282,13 @@ namespace TSM.DataAccess
 
                 return leaveVM;
             }
-            catch (Exception ex)
+            catch
             {
-                var k = ex.Message;
                 return null;
             }
         }
 
-        private async Task<bool> DateInputIsValid(DateTime fromDate, DateTime toDate, string userId)
+        private async Task<bool> DateInputIsValidAsync(DateTime fromDate, DateTime toDate, string userId)
         {
             foreach (var item in _context.Leaves
                 .Where(item => item.ApplicationUserID
@@ -199,39 +303,39 @@ namespace TSM.DataAccess
             return true;
         }
 
-        public async Task<bool> SubmitLeaveAsync(Leave data, ApplicationUser user)
+        public async Task<Leave> SubmitLeaveAsync(Leave leave, ApplicationUser user)
         {
             try
             {
-                if(!(await DateInputIsValid(data.FromDate, data.ToDate, user.Id)))
+                if(!(await DateInputIsValidAsync(leave.FromDate, leave.ToDate, user.Id)))
                 {
-                    return false;
+                    return null;
                 }
 
                 IList<string> userRoles = await _userManager.GetRolesAsync(user);
                 if (userRoles.Contains("Project Manager"))
                 {
-                    data.State = Leave.eState.Approved;
-                    data.ApproverID = user.Id;
+                    leave.State = Leave.eState.Approved;
+                    leave.ApproverID = user.Id;
                 }
                 else
                 {
-                    data.State = Leave.eState.OnQueue;
-                    data.ApproverID = null;
+                    leave.State = Leave.eState.OnQueue;
+                    leave.ApproverID = null;
                 }
 
-                data.ApplicationUserID = user.Id;
-                data.SubmittedDate = DateTime.Now;
-                data.ApprovedDate = DateTime.Now;
+                leave.ApplicationUserID = user.Id;
+                leave.SubmittedDate = DateTime.Now;
+                leave.ApprovedDate = DateTime.Now;
 
-                await _context.Leaves.AddAsync(data);
+                await _context.Leaves.AddAsync(leave);
                 await _context.SaveChangesAsync();
 
-                return true;
+                return leave;
             }
             catch
             {
-                return false;
+                return null;
             }
         }
 
@@ -324,15 +428,18 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<bool> HandleMultipleRequestsAsync(LeaveHandleVM_Multiple requests, string userId)
+        public async Task<List<string>> HandleMultipleRequestsAsync(LeaveHandleVM_Multiple requests, string userId)
         {
             try
             {
+                var leaveIdList = new List<string>();
                 foreach(var item in requests.LeaveID)
                 {
                     var currentleave = await _context.Leaves.FindAsync(item);
                     if (currentleave.State == Leave.eState.OnQueue)
                     {
+                        leaveIdList.Add(item);
+
                         currentleave.ApproverID = userId;
                         currentleave.State = requests.Result;
                         currentleave.ApprovedDate = DateTime.Now;
@@ -341,11 +448,11 @@ namespace TSM.DataAccess
                 }
                 await _context.SaveChangesAsync();
 
-                return true;
+                return leaveIdList;
             }
             catch (Exception)
             {
-                return false;
+                return null;
             }
         }
     }

@@ -11,5 +11,6 @@ namespace TSM.Data.ModelViews
         public string ApproverID{ get; set; }
         public string ApproveDate { get; set; }
         public Models.Leave.eState Result { get; set; }
+        public DateTime? CurDate { get; set; }
     }
 }

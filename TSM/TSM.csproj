@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="wwwroot\emailTemplate\editleave.html" />
     <Content Include="wwwroot\jquery-validation\demo\ajaxSubmit-integration-demo.html" />
     <Content Include="wwwroot\jquery-validation\demo\bootstrap\index.html" />
     <Content Include="wwwroot\jquery-validation\demo\captcha\captcha.js" />
@@ -365,6 +366,7 @@
     <PackageReference Include="AutoMapper" Version="6.1.1" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="2.0.1" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="7.1.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.27.1" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore" Version="1.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="1.1.2" />
@@ -380,6 +382,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="1.1.2" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="1.1.1" PrivateAssets="All" />
     <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="1.1.2" />
+    <PackageReference Include="Moment.js" Version="2.18.2" />
+    <PackageReference Include="NETCore.MailKit" Version="1.1.1" />
     <PackageReference Include="NToastNotify" Version="2.0.3" />
   </ItemGroup>
   <ItemGroup>

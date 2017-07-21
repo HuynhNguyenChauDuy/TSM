@@ -248,7 +248,6 @@ namespace TSM.DataAccess
                 // get current leave
                 Leave leave = await _context.Leaves
                     .Include(item => item.User)
-                    .Include(item => item.LeaveType)
                     .Where(item => item.ID.CompareTo(leaveId) == 0)
                    .FirstOrDefaultAsync();
 
@@ -274,9 +273,9 @@ namespace TSM.DataAccess
                     SubmittedDate = leave.SubmittedDate.ToString("dd/MM/yyyy"),
                     ApprovedDate = approvedDate,
                     WorkShift = leave.WorkShift,
-                    LeaveType = leave.LeaveType.LeaveName,
+                    LeaveType = leave.LeaveTypeID,
                     State = leave.State,
-                    Note = System.Net.WebUtility.HtmlDecode(leave.Note),
+                    Note = leave.Note,
                     Approver = approverName
                 };
 

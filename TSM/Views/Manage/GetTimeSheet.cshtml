@@ -47,14 +47,6 @@
             box-sizing: border-box;
         }
 
-        .input_displayOnly {
-            text-align: center;
-            margin-left: 50px;
-            /*border-radius: 10px;
-           border: 2px solid #ff00bf;
-            padding: 5px;*/
-        }
-
         .textarea {
             white-space: normal;
             text-align: justify;
@@ -110,8 +102,8 @@
 
             $('#MainTable tbody').on('click', 'tr', function (event) {
                 var leaveId = $(this).closest('tr').find('td:last').html().toString();
-                $('#LeaveHandleVM_LeaveID').val(leaveId);
-                $('#txtLeaveId').val(leaveId);
+                //$('#LeaveHandleVM_LeaveID').val(leaveId);
+                //$('#txtLeaveId').val(leaveId);
 
                 var targetUrl = '@Url.Action("GetLeaveDetail", "Manage")?leaveId=' + leaveId;
                 $.ajax({
@@ -120,67 +112,37 @@
                     dataType: 'json',
                     contentType: "application/json; charset=utf-8",
                     success: function (result) {
-                        if (result != null)
-                        {
-                            $('#DetailVM_leaveID').val(result['leaveID']);
-                            $('#LeaveFormVM_ID').val(result['leaveID']);
-
-                            $("input[id='DetailVM_employeeName']").val(result['userName']);
-                            $("input[id='DetailVM_submittedDate']").val(result['submittedDate']);
-                            $("input[id='DetailVM_fromDate']").val(result['fromDate']);
-                            $("input[id='DetailVM_toDate']").val(result['toDate']);
-                            $("input[id='DetailVM_leaveType']").val(result['leaveType']);
-                            $("input[id='DetailVM_approvedDate']").val(result['approvedDate']);
-                            $("input[id='DetailVM_note']").val(result['note']);
-                            $("input[id='DetailVM_Approver']").val(result['approver']);
-                            $('#DetailVM_note').val(result['note']);
-
-                            var statusClass = '';
-                            var statusName = '';
-
+                        if (result != null) {
                             var state = result['state'];
-                            if (state != '2')
-                            {
-                                if (state == '0')
-                                {
-                                    statusClass = 'label label-success'
-                                    statusName = 'Approved';
-                                }
-                                else
-                                {
-                                    statusClass = 'label label-danger'
-                                    statusName = 'Rejected';
-                                }
 
-                                $("button[id='EditButton']").hide();
-                                $("button[id='DeleteButton']").hide();
+                            $('#EditLeaveFormMD').find('[name="LeaveFormVM.ID"]').val(leaveId);
+                            $('#EditLeaveFormMD').find('[name="LeaveFormVM.FromDate"]').val(result['fromDate']).prop("disabled", true);
+                            $('#EditLeaveFormMD').find('[name="LeaveFormVM.ToDate"]').val(result['toDate']).prop("disabled", true);
+                            $('#EditLeaveFormMD').find('[name="LeaveFormVM.LeaveTypeID"]').val(result['leaveType']).change().prop("disabled", true);
+                            $('#EditLeaveFormMD').find('[name="LeaveFormVM.WorkShift"]').val(result['workShift']).prop("disabled", true);
+                            CKEDITOR.instances['ckeditor_Edit'].setReadOnly(true);
+                            CKEDITOR.instances['ckeditor_Edit'].setData(result['note']);
+                            $('#lblEditPopupHeader').html("Leave Details");
 
+                            if (state == '2') {
+                                $('#ApprovingInfo').hide();
+                                $('#btnEdit').show();
+                                $('#btnSubmit').hide();
+                                $('#btnDelete').show();
+                               
                             }
-                            else
-                            {
-                                statusClass = 'label label-warning';
-                                statusName = 'Waiting';
-
-                                $("button[id='EditButton']").show();
-								$("button[id='DeleteButton']").show();
+                            else {
+                                $('#EditLeaveFormMD').find('[name="ApproverDetail"]').val(result['approver']);
+                                $('#EditLeaveFormMD').find('[name="ResultDetail"]').val(result['approvedDate']);   
+                                $('#ApprovingInfo').show();
+                                $('#btnEdit').hide();
+                                $('#btnSubmit').hide();
+                                $('#btnDelete').hide();
                             }
 
-                            var workShiftName = 'All Day';
-                            var workShift = result['workShift'];
-                            if (workShift == '1')
-                            { workShiftName = 'Morning' }
-                            else if (workShift == '2')
-                            { workShiftName = 'Afternoon' }
-
-                            $("input[id='DetailVM_state']").val(statusName);
-                            $("input[id='DetailVM_workShift']").val(workShiftName);
-                            $("label[id='DetailVM_state']").removeClass();
-                            $("input[id='DetailVM_state']").addClass(statusClass);
-
-							$('#DetailMD').modal('show');
+                            $('#EditLeaveFormMD').modal('show');
                         }
-                        else
-                        {
+                        else {
                             alert('Something goes wrong, please refresh the page');
                         }
                     },
@@ -192,14 +154,25 @@
         });
     </script>
 
-    <!--Edit button-->
     <script>
-        $("#EditButton").click(function () {
-            $('#DetailMD').modal('hide');
+        $('#btnEdit').click(function () {
+            $('#EditLeaveFormMD').find('[name="LeaveFormVM.FromDate"]').prop("disabled", false);
+            $('#EditLeaveFormMD').find('[name="LeaveFormVM.ToDate"]').prop("disabled", false);
+            $('#EditLeaveFormMD').find('[name="LeaveFormVM.LeaveTypeID"]').prop("disabled", false);
+            $('#EditLeaveFormMD').find('[name="LeaveFormVM.WorkShift"]').prop("disabled", false);
+            $('#EditLeaveFormMD').find('[name="LeaveFormVM.Note"]').prop("disabled", false);
+            CKEDITOR.instances['ckeditor_Edit'].setReadOnly(false);
+            $('#lblEditPopupHeader').html("Edit Leave");
+
+            $('#btnEdit').hide();
+            $('#btnSubmit').show();
+            $('#btnDelete').hide();
         });
 
-        $('#DeleteButton').click(function () {
-            $('#DeleteForm').submit();
+        $('#btnDelete').click(function () {
+            var leaveID = $('#EditLeaveFormMD').find('[name="LeaveFormVM.ID"]').val();
+            var targetUrl = '@Url.Action("DeleteLeave", "Manage")?leaveID=' + leaveID;
+            window.location.href = targetUrl;
         });
     </script>
 }
@@ -245,30 +218,30 @@
                                 int i = 1;
                                 foreach (var item in Model.LeaveVM)
                                 {
-                                    <tr>
-                                        <td>@i.ToString()</td>
-                                        <td>@Html.DisplayFor(m => item.UserName)</td>
-                                        <td>@Html.DisplayFor(m => item.LeaveType)</td>
-                                        <td>@Html.DisplayFor(m => item.WorkShift)</td>
-                                        <td>@Html.DisplayFor(m => item.FromDate)</td>
-                                        <td>@Html.DisplayFor(m => item.ToDate)</td>
-                                        @if (item.State == TSM.Data.Models.Leave.eState.OnQueue)
+                            <tr>
+                                <td>@i.ToString()</td>
+                                <td>@Html.DisplayFor(m => item.UserName)</td>
+                                <td>@Html.DisplayFor(m => item.LeaveType)</td>
+                                <td>@Html.DisplayFor(m => item.WorkShift)</td>
+                                <td>@Html.DisplayFor(m => item.FromDate)</td>
+                                <td>@Html.DisplayFor(m => item.ToDate)</td>
+                                @if (item.State == TSM.Data.Models.Leave.eState.OnQueue)
                                         {
-                                            <td><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
+                                        <td><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
                                         }
                                         else
                                         {
                                             if (item.State == TSM.Data.Models.Leave.eState.Approved)
                                             {
-                                                <td><label class="label label-success">Approved</label></td>
+                                        <td><label class="label label-success">Approved</label></td>
                                             }
                                             else
                                             {
-                                                <td><label class="label label-danger">Rejected</label></td>
+                                        <td><label class="label label-danger">Rejected</label></td>
                                             }
                                         }
-                                        <td hidden>@item.LeaveID</td>
-                                    </tr>
+                                <td hidden>@item.LeaveID</td>
+                                 </tr>
                                     i++;
                                 }
                             }
@@ -364,7 +337,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
-                    <h3 class="modal-title" id="lineModalLabel">Leave of absence submit</h3>
+                    <h3 class="modal-title" id="lineModalLabel"><label id="lblEditPopupHeader"></label></h3>
                 </div>
                 <div class="modal-body">
                     <!-- content goes here -->
@@ -419,120 +392,34 @@
                             </div>
                         </div>
 
+                        <div id="ApprovingInfo" class="row">
+                           <div class="col-sm-6">
+                               <label>Approver</label>
+                               <input name="ApproverDetail" type="text" disabled class="form-control"/>
+                           </div>
+                            <div class="col-sm-6">
+                                <label>Approved/Rejected Date</label>
+                                <input name="ResultDetail" type="text" disabled class="form-control" />
+                            </div>
+                        </div>
+
                         <div class="row form-group">
                             <div class="col-sm-12">
                                 <label>Note</label>
-                                <textarea class="form-control ckeditor" asp-for="LeaveFormVM.Note"></textarea>
+                                <textarea class="form-control ckeditor" id="ckeditor_Edit" name="LeaveFormVM.Note"></textarea>
                             </div>
                         </div>
 
-                        <div class="row form-group">
-                            <div class="col-sm-10"></div>
-                            <div class="col-sm-2">
-                                <button type="submit" value="submit" class="btn btn-primary">Submit</button>
+                        <div class="modal-footer">
+                            <div class="btn-group btn-group-justified" role="group" aria-label="group button">
+                                <div class="pull-right">
+                                    <button type="button" id="btnEdit" class="btn btn-bitbucket">Edit</button>
+                                    <button type="submit" id="btnSubmit" class="btn btn-primary">Submit</button>
+                                    <button type="button" id="btnDelete" class="btn btn-danger">Delete</button>
+                                </div>
                             </div>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Detail pop-up -->
-    <div class="modal fade" id="DetailMD" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <div class="modal-title">
-                        <h3 class="pull-left">
-                            <label>Leave Details</label>
-                            <label id="DetailVM_state"></label>
-                        </h3>
-                        <button type="button" class="close" data-dismiss="modal">x</button>
-                    </div>
-                </div>
-                <div class="modal-body col-sm-12">
-                    <div class="row">
-                        <div class="form-group col-sm-6">
-                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.UserName)
-                            <div>
-                                <input class="input_displayOnly" readonly type="text"  id="DetailVM_employeeName">
-                            </div>
-                        </div>
-                        <div class="form-group col-sm-6">
-                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.LeaveType)
-                            <div>
-                                <input class="input_displayOnly" readonly type="text"  id="DetailVM_leaveType">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="form-group col-sm-6">
-                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.FromDate)
-                            <div>
-                            <input class="input_displayOnly" readonly type="text" id="DetailVM_fromDate">
-                            </div>
-                        </div>
-                        <div class="form-group col-sm-6">
-                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.ToDate)
-                            <div>
-                                <input class="input_displayOnly" readonly type="text" id="DetailVM_toDate">
-                                </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="form-group col-sm-6">
-                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.SubmittedDate)
-                            <div>
-                                <input class="input_displayOnly" readonly type="text" id="DetailVM_submittedDate">
-                                </div>
-                        </div>
-                        <div class="form-group col-sm-6">
-                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.WorkShift)
-                            <div>
-                                <input class="input_displayOnly" readonly type="text" id="DetailVM_workShift">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="form-group col-sm-6">
-                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.Approver)
-                            <div>
-                            <input class="input_displayOnly" readonly type="text" id="DetailVM_Approver">
-                            </div>
-                        </div>
-                        <div class="form-group col-sm-6">
-                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.ApprovedDate)
-                            <div><input class="input_displayOnly" readonly type="text" id="DetailVM_approvedDate">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="form-group col-sm-12">
-                            @Html.LabelFor(Model => Model.LeaveVMForDisplay.Note)
-                            <div><text id="DetailVM_note"></text></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <div class="btn-group btn-group-justified" role="group" aria-label="group button">
-                        <div class="col-sm-12">
-                            <div class="col-sm-10">
-                                <button id="EditButton" data-toggle="modal" data-target="#EditLeaveFormMD" type="button" class="btn btn-primary">&nbsp;Edit</button>
-                            </div>
-                            <form id="DeleteForm" method="post" asp-controller="Manage" asp-action="DeleteLeave">
-                                <div class="pull-right">
-                                    <input id="txtLeaveId" name="LeaveHandleVM.LeaveID" hidden>
-                                    <button id="DeleteButton" type="button" class="btn btn-danger">&nbsp;Delete&nbsp;</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

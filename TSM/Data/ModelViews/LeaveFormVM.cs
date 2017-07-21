@@ -26,6 +26,7 @@ namespace TSM.Data.ModelViews
 
         [Display(Name = "Note")]
         public string Note { get; set; }
+
     }
 
     public class LeaveFormVMValidator : AbstractValidator<LeaveFormVM>

@@ -10,6 +10,7 @@ namespace TSM.Models
     // Add profile data for application users by adding properties to the ApplicationUser class
     public class ApplicationUser : IdentityUser
     {
+       
         public int DefaultSickLeave { get; set; }
         public int DefaultAnnualLeave { get; set; }
 

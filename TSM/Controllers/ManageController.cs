@@ -180,9 +180,9 @@ namespace TSM.Controllers
         public async Task<IActionResult> EditLeave(LeaveWrapper submit)
         {
             // toast message properties
-            string messageTitle;
-            string message;
-            ToastEnums.ToastType messageType;
+                string messageTitle;
+                string message;
+                ToastEnums.ToastType messageType;
 
             if (ModelState.IsValid)
             {

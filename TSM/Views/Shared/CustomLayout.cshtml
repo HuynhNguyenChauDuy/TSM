@@ -1,5 +1,8 @@
-﻿@inject UserManager<ApplicationUser> _userManager
+﻿@using Microsoft.AspNetCore.Hosting
+
+@inject UserManager<ApplicationUser> _userManager
 @inject SignInManager<ApplicationUser> SignInManager
+@inject IHostingEnvironment _env
 
 <!DOCTYPE html>
 
@@ -53,7 +56,21 @@
                                             <!-- start message -->
                                             <a href="#">
                                                 <div class="pull-left">
-                                                    <img src="~/userImage/Octocat.png" class="img-circle" alt="User Image">
+                                                    @{
+                                                        var userID = _userManager.GetUserId(User);
+                                                        var path = "/userImage/" + userID + ".jpg";
+                                                        var Absolutepath = _env.WebRootPath + path;
+                                                        if (System.IO.File.Exists(Absolutepath))
+                                                        {
+                                                            <img class="profile-user-img img-responsive img-circle" src=@path />
+                                                        }
+                                                        else
+                                                        {
+                                                            <img class="profile-user-img img-responsive img-circle" src="/userImage/default.jpg" />
+                                                        }
+
+                                                    }
+                                                  
                                                 </div>
                                                 <h4>
                                                     Support Team
@@ -244,15 +261,43 @@
                         <li class="dropdown user user-menu">
                             @{
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                    <img src="~/userImage/Octocat.png" class="user-image" alt="User Image">
+                                      @{
+                                          var userID1 = _userManager.GetUserId(User);
+                                          var path1 = "/userImage/" + userID + ".jpg";
+                                          var Absolutepath1 = _env.WebRootPath + path;
+                                          if (System.IO.File.Exists(Absolutepath1))
+                                          {
+                                            <img src=@path class="user-image" alt="User Image">
+                                          }
+                                          else
+                                          {
+                                            <img src="~/userImage/default.jpg" class="user-image" alt="User Image">
+
+                                          }
+                                    }
+                                   
                                     <span class="hidden-xs">@_userManager.GetUserName(User)</span>
                                 </a>
                                 <ul class="dropdown-menu">
                                     <!-- User image -->
                                     <li class="user-header">
-                                        <img src="~/userImage/Octocat.png" class="img-circle" alt="User Image">
+                                        @{
+                                            var userID3 = _userManager.GetUserId(User);
+                                            var path3 = "/userImage/" + userID3 + ".jpg";
+                                            var Absolutepath3 = _env.WebRootPath + path3;
+                                            if (System.IO.File.Exists(Absolutepath))
+                                            {
+                                                <img src=@path3 class="img-circle" alt="User Image">
+                                            }
+                                            else
+                                            {
+                                                <img class="img-circle" src="~/userImage/default.jpg" />
+
+                                            }
+                                        }
                                         <p>
                                             @_userManager.GetUserName(User)
+                                           
                                             <small>Member since 2017</small>
                                         </p>
                                     </li>
@@ -274,7 +319,7 @@
                                     <!-- Menu Footer-->
                                     <li class="user-footer">
                                         <div class="pull-left">
-                                            <a href="http://localhost:64623/Account/GetProFile" class="btn btn-default btn-flat">Profile</a>
+                                            <a asp-controller="Account" asp-action="GetProfile" class="btn btn-default btn-flat">Profile</a>
                                         </div>
                                         <div class="pull-right">
                                             <form asp-controller="Account" asp-action="Logout" method="post">
@@ -303,14 +348,30 @@
                 <!-- Sidebar user panel -->
 				
                 <div class="user-panel">
-						<div class="pull-left image">
-							<img src="~/userImage/Octocat.png" class="img-circle" alt="User Image">
-						</div>
+                    <div class="pull-left image">
+                        @{
+                            var userID2 = _userManager.GetUserId(User);
+                            var path2 = "/userImage/" + userID2 + ".jpg";
+                            var Absolutepath2 = _env.WebRootPath + path2;
+
+                            if (System.IO.File.Exists(Absolutepath2))
+                            {
+							        <img src=@path2 class="img-circle" alt="User Image">
+                            }
+                            else
+                            { 
+                                   <img src = "/userImage/default.jpg" />
+
+                            }
+                        }
+                    </div>
                     <div class="pull-left info">
                         <p>@_userManager.GetUserName(User)</p>
                         <i class="fa fa-circle text-success"></i> Online</a>
                     </div>
                 </div>
+
+
 	
                 <!-- search form -->
                 <form action="#" method="get" class="sidebar-form">
@@ -572,7 +633,10 @@
              immediately after the control sidebar -->
         <div class="control-sidebar-bg"></div>
 
-    </div>
+
+        </div>
+
+
 
     <script src="~/bower_components/jquery/dist/jquery.js"></script>
     <script src="~/bower_components/bootstrap/dist/js/bootstrap.js"></script>

@@ -97,6 +97,13 @@ namespace TSM.Controllers
                 LeaveVM = await _leaveManager.GetLeavebyUserIdsAsync(userID)
             };
 
+            var user = await _context.Users
+                .Include(item => item.Team)
+                .Where(item => item.Id.CompareTo(userID) == 0)
+                .FirstOrDefaultAsync();
+
+            ViewData["userTeam"] = user.Team != null ? user.Team.TeamName : "";
+
             return View(viewContext);
         }
 

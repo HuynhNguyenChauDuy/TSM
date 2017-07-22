@@ -1,15 +1,13 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TSM.Data;
+using TSM.Data.Models;
 using TSM.Data.ModelViews;
 using TSM.Models;
-using Microsoft.EntityFrameworkCore;
-using TSM.Data.Models;
-using System.IO;
 
 namespace TSM.DataAccess
 {

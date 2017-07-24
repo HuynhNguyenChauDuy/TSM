@@ -97,6 +97,13 @@ namespace TSM.Controllers
                 LeaveVM = await _leaveManager.GetLeavebyUserIdsAsync(userID)
             };
 
+            var user = await _context.Users
+                .Include(item => item.Team)
+                .Where(item => item.Id.CompareTo(userID) == 0)
+                .FirstOrDefaultAsync();
+
+            ViewData["userTeam"] = user.Team != null ? user.Team.TeamName : "";
+
             return View(viewContext);
         }
 
@@ -114,7 +121,7 @@ namespace TSM.Controllers
             }
             else
             {
-                leaveVM = await _leaveManager.GetLeavesByTeamIdAsync(user.TeamID);
+                leaveVM = await _leaveManager.GetLeavesByTeamIdAsync(user.TeamID, date);
             }
 
             var viewContext = new LeaveWrapper
@@ -237,45 +244,39 @@ namespace TSM.Controllers
             return Json(leaveVM);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> DeleteLeave(LeaveWrapper delete)
+        [HttpGet]
+        public async Task<IActionResult> DeleteLeave(string leaveID)
         {
-            // toast message properties
-            string messageTitle;
-            string message;
-            ToastEnums.ToastType messageType;
+            string messageTitle = "Error";
+            string message = "Unable to delete your request";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
 
-            var leaveID = delete.LeaveHandleVM.LeaveID;
-           
-            var user = await GetCurrentUserAsync();
+            bool result = false;
 
-            var leave = await _context.Leaves.Include(item => item.User).Include(item => item.LeaveType)
-                .Where(item => item.ID.CompareTo(leaveID) == 0).FirstOrDefaultAsync();
-
-            bool result = await _leaveManager.DeleteLeaveAsync(leaveID, user.Id);
-
-            // assign message properties
-            if (result)
+            if (leaveID != null && leaveID != "")
             {
-                messageTitle = "Successful";
-                message = "Your request deleted";
-                messageType = ToastEnums.ToastType.Success;
+                var user = await GetCurrentUserAsync();
 
-                // email setup
-                MimeMessage email = _mailKit.SetUpEmailInfo(user.Email, null, "Your leave request was deleted");
-                email.Body = await _mailKit.SetUpEmailBody_DeleteLeave(leave);
+                var leave = await _context.Leaves.Include(item => item.User).Include(item => item.LeaveType)
+                    .Where(item => item.ID.CompareTo(leaveID) == 0).FirstOrDefaultAsync();
 
-                _mailKit.Send(email);
-            }
-            else
-            {
-                messageTitle = "Error";
-                message = "Unable to delete your request";
-                messageType = ToastEnums.ToastType.Error;
+                result = await _leaveManager.DeleteLeaveAsync((string)leaveID, user.Id);
+
+                if (result)
+                {
+                    messageTitle = "Successful";
+                    message = "Your request deleted";
+                    messageType = ToastEnums.ToastType.Success;
+
+                    // email setup
+                    MimeMessage email = _mailKit.SetUpEmailInfo(user.Email, null, "Your leave request was deleted");
+                    email.Body = await _mailKit.SetUpEmailBody_DeleteLeave(leave);
+
+                    _mailKit.Send(email);
+                }
             }
 
-            _toastNotification.AddToastMessage(
-             messageTitle, message, messageType);
+            _toastNotification.AddToastMessage(messageTitle, message, messageType);
 
             return RedirectToAction(nameof(GetTimesheet));
         }

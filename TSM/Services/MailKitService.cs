@@ -50,12 +50,6 @@ namespace TSM.Services
             emailMessage.To.Add(new MailboxAddress("", ToEmail));
             emailMessage.Subject = subject;
 
-            //// for CC
-            //if(ccEmails != null && ccEmails.Count != 0)
-            //{
-               
-            //}
-
             return emailMessage;
         }
 

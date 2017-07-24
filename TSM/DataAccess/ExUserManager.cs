@@ -64,20 +64,24 @@ namespace TSM.DataAccess
                 return null;
             }
         }
+
         private async Task<int> CountLeaveByUserId(string userId, string LeaveType)
         {
             try
             {
-                return await _context.Leaves
-                    .Include(item => item.LeaveType)
-                    .Where(item => item.ApplicationUserID.CompareTo(userId) == 0
-                                        && item.LeaveType.LeaveName.CompareTo(LeaveType) == 0
-                                        && item.State == Leave.eState.Approved)
-                    .CountAsync();
+                int count = 0;
+                foreach(var item in _context.Leaves.Include(item => item.LeaveType)
+                    .Where(item => item.ApplicationUserID.CompareTo(userId) == 0 && item.LeaveType.LeaveName.CompareTo(LeaveType) == 0 && item.State == Leave.eState.Approved))
+                {
+                    int days = (item.ToDate - item.FromDate).Days;
+                    count += days == 0 ?  1 : (days + 1); 
+                }
+
+                return count;
             }
             catch
             {
-                return 0;
+                return -1;
             }
         } 
         

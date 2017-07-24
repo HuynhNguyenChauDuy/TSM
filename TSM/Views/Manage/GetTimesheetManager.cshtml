@@ -55,11 +55,12 @@
     <script src="~/ckeditor/ckeditor.js"></script>
     <script src="~/toastr-master/toastr.min.js"></script>
     <script src="~/momentjs/moment.js"></script>
+
     <script>
+
         $(document).ready(function () {
             var curDate = '@ViewData["curDate"]';
             $('#lblCurDate').html(curDate);
-            
         });
 
         $(document).ready(function () {
@@ -99,7 +100,7 @@
     <script>
         $(document).ready(function () {
             $('.datepicker').datepicker({
-                format: 'dd-mm-yyyy',
+                format: 'dd-mm-yyyy'
             });
         });
 
@@ -153,7 +154,7 @@
                             $("input[id='DetailVM_leaveType']").val(result['leaveType']);
                             $("input[id='DetailVM_approvedDate']").val(result['approvedDate']);
                             $("input[id='DetailVM_Approver']").val(result['approver']);
-                            $("text[id='DetailVM_note']").html(result['note']);
+                            $('#DetailVM_note').html(result['note']);
 
                             // handle Leave data
                             var defaulAnnualLeave = result['defaultAnnualLeave'];
@@ -175,12 +176,12 @@
                             {
                                 if (state == '0')
                                 {
-                                    statusClass = 'label label-success ion-checkmark-round'
+                                    statusClass = 'label label-success'
                                     statusName = ' Approved';
                                 }
                                 else
                                 {
-                                    statusClass = 'label label-danger ion-close-round'
+                                    statusClass = 'label label-danger'
                                     statusName = ' Rejected';
                                 }
 
@@ -189,7 +190,7 @@
                             }
                             else
                             {
-                                statusClass = 'label label-warning ion-load-a';
+                                statusClass = 'label label-warning';
                                 statusName = ' Waiting';
 
                                 var curDate = $('#lblCurDate').html();
@@ -412,11 +413,15 @@
         </div>
     </div>
 
+    <!--Detail pop-up -->
     <div class="modal fade" id="DetailMD" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title" id="lineModalLabel"><label>Leave Details</label></h3>
+                    <div class="row col-sm-12">
+                        <div class="col-sm-6"><h3 class="modal-title" id="lineModalLabel"><label>Leave Details</label></h3></div>
+                        <div class="col-sm-6"><h3 class="modal-title" id="lineModalLabel"><label id="DetailVM_state"></label></h3></div>
+                    </div>
                 </div>
                 <div class="modal-body">
                     <!-- content goes here -->
@@ -489,7 +494,7 @@
                         <div class="row form-group">
                             <div class="col-sm-12">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.Note)
-                                <div><text class="form-control" id="DetailVM_note"></text></div>
+                                <div disabled id="DetailVM_note"><</div>
                             </div>
                         </div>
 

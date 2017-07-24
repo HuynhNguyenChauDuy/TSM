@@ -121,7 +121,7 @@ namespace TSM.Controllers
             }
             else
             {
-                leaveVM = await _leaveManager.GetLeavesByTeamIdAsync(user.TeamID);
+                leaveVM = await _leaveManager.GetLeavesByTeamIdAsync(user.TeamID, date);
             }
 
             var viewContext = new LeaveWrapper

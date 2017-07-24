@@ -96,30 +96,50 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<IEnumerable<LeaveVM>> GetLeavesByTeamIdAsync(string teamID)
+        public async Task<IEnumerable<LeaveVM>> GetLeavesByTeamIdAsync(string teamID, DateTime? date = null)
         {
             try
             {
-                IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
-                                                 .Include(item => item.User).Where(item => item.User.TeamID.CompareTo(teamID) == 0)
-                                                 .Include(item => item.LeaveType)
-                                                 .OrderBy(item => item.FromDate)
-                                                 .ThenBy(item => item.ToDate)).ToListAsync()
-                                               select new LeaveVM()
-                                               {
-                                                   LeaveID = item.ID,
-                                                   UserName = item.User.UserName,
-                                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
-                                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
-                                                   SubmittedDate = null,
-                                                   ApprovedDate = null,
-                                                   WorkShift = item.WorkShift,
-                                                   LeaveType = item.LeaveType.LeaveName,
-                                                   State = item.State,
-                                                   Note = null
-                                               });
+                IEnumerable<Leave> leaves = null;
 
-                return leaves;
+                if (date != null)
+                {
+                    leaves = await _context.Leaves
+                                                 .Include(item => item.User)
+                                                 .Include(item => item.LeaveType)
+                                                 .Where(item => (item.FromDate <= date && date <= item.ToDate) && item.User.TeamID.CompareTo(teamID) == 0)
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)
+                                                 .ToListAsync();
+                }
+                else
+                {
+                    leaves = await _context.Leaves
+                                                 .Include(item => item.User)
+                                                 .Include(item => item.LeaveType)
+                                                 .Where(item => (item.FromDate <= DateTime.Today && DateTime.Today <= item.ToDate) && item.User.TeamID.CompareTo(teamID) == 0)
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)
+                                                 .ToListAsync();
+                }
+
+                var leavevms = from item in leaves
+                               select new LeaveVM()
+                               {
+                                   LeaveID = item.ID,
+                                   UserName = item.User.UserName,
+                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
+                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
+                                   SubmittedDate = null,
+                                   ApprovedDate = null,
+                                   WorkShift = item.WorkShift,
+                                   LeaveType = item.LeaveType.LeaveName,
+                                   State = item.State,
+                                   Note = null
+                               };
+
+                return leavevms;
+
             }
             catch (Exception)
             {
@@ -256,7 +276,7 @@ namespace TSM.DataAccess
                                             "--/--/----" : leave.ApprovedDate.ToString("dd/MM/yyy");
 
                 // get approver's name
-                var approverName = "---------";
+                var approverName = "--------------";
                 if(leave.ApproverID != null)
                 {
                     approverName = (await _context.Users

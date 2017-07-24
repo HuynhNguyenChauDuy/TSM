@@ -116,13 +116,15 @@ namespace TSM.Controllers
                 LeaveVM = await _leaveManager.GetLeavebyUserIdsAsync(userID, state)
             };
 
+            var user = await _context.Users
+                .Include(item => item.Team)
+                .Where(item => item.Id.CompareTo(userID) == 0)
+                .FirstOrDefaultAsync();
+
+            ViewData["userTeam"] = user.Team != null ? user.Team.TeamName : "";
+
             return View("GetTimesheet", viewContext);
         }
-
-
-        
-
-        
 
         [HttpGet]
         [Authorize(Roles = ("Project Manager,Team Leader"))]

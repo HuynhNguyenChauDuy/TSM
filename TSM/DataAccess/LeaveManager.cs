@@ -16,6 +16,7 @@ namespace TSM.DataAccess
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        
         private readonly IMapper _mapper;
         public LeaveManager(ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
@@ -24,6 +25,7 @@ namespace TSM.DataAccess
             _context = context;
             _userManager = userManager;
             _mapper = mapper;
+           
         }
 
         public async Task<IEnumerable<LeaveTypeVM>> GetLeaveTypeAsync()
@@ -127,6 +129,102 @@ namespace TSM.DataAccess
             }
         }
 
+        public async Task<IEnumerable<LeaveVM>> GetApproveList(string userId)
+        {
+            try
+            {
+                IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
+                                                 .Include(item => item.User).Where(item => item.ApplicationUserID.CompareTo(userId) == 0)
+                                                 .Where(item => item.State == Leave.eState.Approved)
+                                                 .Include(item => item.LeaveType)
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)).ToListAsync()
+                                               select new LeaveVM()
+                                               {
+                                                   LeaveID = item.ID,
+                                                   UserName = item.User.UserName,
+                                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
+                                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
+                                                   SubmittedDate = null,
+                                                   ApprovedDate = null,
+                                                   WorkShift = item.WorkShift,
+                                                   LeaveType = item.LeaveType.LeaveName,
+                                                   State = item.State,
+                                                   Note = null
+                                               });
+
+                return leaves;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<LeaveVM>> GetWaitingList(string userId)
+        {
+            try
+            {
+                IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
+                                                 .Include(item => item.User).Where(item => item.ApplicationUserID.CompareTo(userId) == 0)
+                                                 .Where(item => item.State == Leave.eState.OnQueue)
+                                                 .Include(item => item.LeaveType)
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)).ToListAsync()
+                                               select new LeaveVM()
+                                               {
+                                                   LeaveID = item.ID,
+                                                   UserName = item.User.UserName,
+                                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
+                                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
+                                                   SubmittedDate = null,
+                                                   ApprovedDate = null,
+                                                   WorkShift = item.WorkShift,
+                                                   LeaveType = item.LeaveType.LeaveName,
+                                                   State = item.State,
+                                                   Note = null
+                                               });
+
+                return leaves;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<LeaveVM>> GetRejectList(string userId)
+        {
+            try
+            {
+                IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
+                                                 .Include(item => item.User).Where(item => item.ApplicationUserID.CompareTo(userId) == 0)
+                                                 .Where(item => item.State == Leave.eState.Rejected)
+                                                 .Include(item => item.LeaveType)
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)).ToListAsync()
+                                               select new LeaveVM()
+                                               {
+                                                   LeaveID = item.ID,
+                                                   UserName = item.User.UserName,
+                                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
+                                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
+                                                   SubmittedDate = null,
+                                                   ApprovedDate = null,
+                                                   WorkShift = item.WorkShift,
+                                                   LeaveType = item.LeaveType.LeaveName,
+                                                   State = item.State,
+                                                   Note = null
+                                               });
+
+                return leaves;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         public async Task<IEnumerable<LeaveVM>> GetLeavebyUserIdsAsync(string userId)
         {
             try
@@ -134,6 +232,39 @@ namespace TSM.DataAccess
                 IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
                                                  .Include(item => item.User).Where(item => item.ApplicationUserID.CompareTo(userId) == 0)
                                                  .Include(item => item.LeaveType)
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)).ToListAsync()
+                                               select new LeaveVM()
+                                               {
+                                                   LeaveID = item.ID,
+                                                   UserName = item.User.UserName,
+                                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
+                                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
+                                                   SubmittedDate = null,
+                                                   ApprovedDate = null,
+                                                   WorkShift = item.WorkShift,
+                                                   LeaveType = item.LeaveType.LeaveName,
+                                                   State = item.State,
+                                                   Note = null
+                                               });
+
+                return leaves;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<LeaveVM>> GetLeavebyUserIdsAsync(string userId, Leave.eState state)
+        {
+            try
+            {
+                IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
+                                                 .Include(item => item.User).Where(item => item.ApplicationUserID.CompareTo(userId) == 0)
+                                                
+                                                 .Include(item => item.LeaveType)
+                                                 .Where(item => item.State == state)
                                                  .OrderBy(item => item.FromDate)
                                                  .ThenBy(item => item.ToDate)).ToListAsync()
                                                select new LeaveVM()

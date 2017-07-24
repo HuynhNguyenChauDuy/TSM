@@ -1,23 +1,65 @@
 ﻿
 @{
-	ViewData["Title"] = "GetProfile";
-	Layout = "~/Views/Shared/CustomLayout.cshtml";
+    ViewData["Title"] = "GetProfile";
+    Layout = "~/Views/Shared/CustomLayout.cshtml";
 }
 @using TSM.Data.ModelViews
 @using TSM.DataAccess
 @using TSM.Services
 @using Microsoft.AspNetCore.Hosting;
 
+@await Component.InvokeAsync("NToastNotify.Toastr")
 @model ProfileVM
 
 @inject ExUserManager _exUserManager
 @inject UserManager<ApplicationUser> _userManager
 @inject IHostingEnvironment _env
-<h2>GetProfile</h2>
+
+
+
+
+
+@section Customcss
+{
+    <link href="~/kartik-v-bootstrap-fileinput-9f3fe0e/css/fileinput.css" rel="stylesheet" />
+
+    <link href="~/kartik-v-bootstrap-fileinput-9f3fe0e/css/fileinput-rtl.css" rel="stylesheet" />
+
+    <link href="~/kartik-v-bootstrap-fileinput-9f3fe0e/themes/explorer/theme.css" rel="stylesheet" />
+}
+
+@section jvscript
+{
+    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/js/plugins/sortable.js"></script>
+    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/js/fileinput.min.js"></script>
+    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/js/locales/fr.js"></script>
+    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/js/locales/es.js"></script>
+    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/themes/explorer/theme.min.js"></script>
+
+    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/js/plugins/piexif.js"></script>
+    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/js/plugins/purify.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $("#input-8").fileinput({
+                rtl: true,
+                allowedFileExtensions: ["jpg", "png", "gif"]
+            });
+        });
+    </script>
+}
+
+
+
+
+
+
+<h2>My Profile</h2>
+
 
 <section class="content">
     <div class="row">
-        <div class="col-md-2">
+        <div class="col-lg-3 col-xs-6">
             <!-- Profile Image -->
             <div class="box box-primary">
                 <div class="box-body box-profile">
@@ -27,22 +69,26 @@
                         var path = "/userImage/" + userID + ".jpg";
                         var Absolutepath = _env.WebRootPath + path;
 
-                        if (System.IO.File.Exists(Absolutepath))
-                        {
-                            <img class="profile-user-img img-responsive img-circle" src=@path />
-                        }
-                        else
-                        {
-                            <img class="profile-user-img img-responsive img-circle" src="/userImage/default.jpg" />
-                        }
+                        <div class="show-image">
+                            @{
+                                if (System.IO.File.Exists(Absolutepath))
+                                {
+                                    <img id="Avatar" role="button" class="profile-user-img img-responsive img-circle" data-toggle="modal" data-target="#ChangeAvatarPopup" src=@path />
+                                }
+                                else
+                                {
+                                    <img id="Avatar" role="button" class="profile-user-img img-responsive img-circle" data-target="#ChangeAvatarPopup" data-toggle="modal" src="/userImage/default.jpg" />
+                                }
+                            }
 
+                        </div>
                     }
-                   
+
                     <h3 class="profile-username text-center">@Model.UserName</h3>
-                    <form method="post" asp-controller="Account" asp-action="LoadImage" enctype="multipart/form-data">
-                        <input asp-for="AvatarImage" type="file">
-                        <input type="submit" value="submit">
-                    </form>
+                    @*<form method="post" asp-controller="Account" asp-action="LoadImage" enctype="multipart/form-data">
+                            <input asp-for="AvatarImage" type="file">
+                            <input type="submit" value="submit">
+                        </form>*@
                 </div>
                 <!-- /.box-body -->
             </div>
@@ -55,92 +101,136 @@
                 <!-- /.box-header -->
                 <div class="box-body">
 
-                   
-                 
-                    <strong><i class="fa ion-email margin-r-5"></i> Email : </strong>
-                    <p class="text-muted">@Model.Email</p>
+                    <form role="form" asp-controller="Account" asp-action="EditProfile" method="post">
 
-                    <hr>
+                        <strong><i class="fa ion-email margin-r-5"></i> Email : </strong>
+                        <input asp-for="Email" type="text" class="form-control" value="@Model.Email">
 
-                    <strong><i class="fa ion-android-call margin-r-5"></i> Phone Number : </strong>
-                    <p>@Model.PhoneNumber</p>
+                        <hr>
 
-                    <hr>
-                    <strong><i class="fa ion-android-contact margin-r-5"></i> Position : </strong>
-                    <p>@Model.Position</p>
+                        <strong><i class="fa ion-android-call margin-r-5"></i> Phone Number : </strong>
+                        <input asp-for="PhoneNumber" type="text" class="form-control" value="@Model.PhoneNumber">
 
-                    <hr>
-                    <strong><i class="fa ion-android-contacts margin-r-5"></i> Team : </strong>
-                    <p>@Model.TeamName</p>
+                        <hr>
+                        <strong><i class="fa ion-android-contact margin-r-5"></i> Position : </strong>
+                        <input readonly="readonly" type="text" class="form-control" value="@Model.Position">
 
-                    <hr>
-                    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#ProfileForm">
-                      Edit Profile
-                    </button>
+                        <hr>
+                        <strong><i class="fa ion-android-contacts margin-r-5"></i> Team : </strong>
+                        <input readonly="readonly" type="text" class="form-control" value="@Model.TeamName">
 
+                        <hr>
+                        <input class="pull-right" type="submit" value="Save">
+                    </form>
                 </div>
                 <!-- /.box-body -->
             </div>
             <!-- /.box -->
         </div>
         <!-- /.col -->
-       
-            <div class="row">
-                <div class="col-lg-3 col-xs-6">
-                    <!-- small box -->
-                    <div class="small-box bg-aqua">
-                        <div class="inner">
-                            <h3>@Model.NSickLeave</h3>
-                            <p>Sick Leaves</p>
-                        </div>
-                        <div class="icon">
-                            <i class="fa ion-medkit"></i>
-                        </div>
-                       
-                        <a href="#" class="small-box-footer" role="button" data-target="#SickLeavePopup" data-toggle="modal">
-                            More info <i class="fa fa-arrow-circle-right"></i>
-                        </a>
-                           
-                    </div>
+        @*<div class="row">*@
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-aqua">
+                <div class="inner">
+                    <h3>@Model.NSickLeave</h3>
+                    <p>Sick Leaves</p>
                 </div>
-                <!-- ./col -->
-                <div class="col-lg-3 col-xs-6">
-                    <!-- small box -->
-                    <div class="small-box bg-green">
-                        <div class="inner">
-                            <h3>@Model.NAnnualLeave</h3>
-                            <p>Annual Leaves</p>
-                        </div>
-                        <div class="icon">
-                            <i class="ion ion-clock"></i>
-                        </div>
-                        <a href="#" class="small-box-footer" role="button" data-target="#AnnualLeavePopup" data-toggle="modal">
-                            More info <i class="fa fa-arrow-circle-right"></i>
-                        </a>
-                    </div>
+                <div class="icon">
+                    <i class="fa ion-medkit"></i>
                 </div>
-                <!-- ./col -->
-                <div class="col-lg-3 col-xs-6">
-                    <!-- small box -->
-                    <div class="small-box bg-yellow">
-                        <div class="inner">
-                            <h3>@Model.NOther</h3>
-                            <p>Other</p>
-                        </div>
-                        <div class="icon">
-                            <i class="ion ion-calculator"></i>
-                        </div>
-                        <a href="#" class="small-box-footer">
-                            More info <i class="fa fa-arrow-circle-right"></i>
-                        </a>
-                    </div>
-                </div>
-               
-                <!-- ./col -->
+
+                <a href="#" class="small-box-footer" role="button" data-target="#SickLeavePopup" data-toggle="modal">
+                    More info <i class="fa fa-arrow-circle-right"></i>
+                </a>
+
             </div>
-            <!-- /.row -->
         </div>
-        <!-- /.col -->
+        <!-- ./col -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-green">
+                <div class="inner">
+                    <h3>@Model.NAnnualLeave</h3>
+                    <p>Annual Leaves</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-ios-time-outline"></i>
+                </div>
+                <a href="#" class="small-box-footer" role="button" data-target="#AnnualLeavePopup" data-toggle="modal">
+                    More info <i class="fa fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+        <!-- ./col -->
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-yellow">
+                <div class="inner">
+                    <h3>@Model.NOther</h3>
+                    <p>Other</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-calculator"></i>
+                </div>
+                <a href="#" class="small-box-footer" role="button" data-target="#OtherLeavePopup" data-toggle="modal">
+                    More info <i class="fa fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-fuchsia">
+                <div class="inner">
+                    <h3>@Model.NOther</h3>
+                    <p>Approve List</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-checkmark"></i>
+                </div>
+                <a href="@Url.Action("GetTimesheetByState","Manage", new { state = "Approved"})" class="small-box-footer" role="button" data-target="" data-toggle="modal">
+                    More info <i class="fa fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-red">
+                <div class="inner">
+                    <h3>@Model.NOther</h3>
+                    <p>Reject List</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-close"></i>
+                </div>
+                <a href="@Url.Action("GetTimesheetByState","Manage", new { state = "Rejected"})" class="small-box-footer" role="button" data-target="" data-toggle="modal">
+                    More info <i class="fa fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-xs-6">
+            <!-- small box -->
+            <div class="small-box bg-purple-active">
+                <div class="inner">
+                    <h3>@Model.NOther</h3>
+                    <p>Waiting List</p>
+                </div>
+                <div class="icon">
+                    <i class="ion ion-clock"></i>
+                </div>
+                <a href="@Url.Action("GetTimesheetByState","Manage", new { state = "OnQueue"})" class="small-box-footer" role="button" data-target="" data-toggle="modal">
+                    More info <i class="fa fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+        <!-- ./col -->
+    </div>
+    <!-- /.row -->
+    @*</div>*@
+    <!-- /.col -->
     <div class="modal fade" id="ProfileForm" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -150,9 +240,9 @@
                 </div>
                 <div class="modal-body">
                     <!-- content goes here -->
-                    <form role="form" asp-controller="Account" asp-action="EditProfile"  method="post" >
+                    <form role="form" asp-controller="Account" asp-action="EditProfile" method="post">
                         <div class="form-group">
-                         
+
                             <label>Email</label>
                             <div class="input-group input-daterange">
                                 <input asp-for="Email" value="@Model.Email" type="text" class="form-control">
@@ -163,7 +253,7 @@
 
                         <div class="form-group">
                             <label>Phone Number</label>
-                            <div  class="input-group input-daterange">
+                            <div class="input-group input-daterange">
                                 <input asp-for="PhoneNumber" value="@Model.PhoneNumber" type="text" class="form-control">
                             </div>
                         </div>
@@ -184,7 +274,7 @@
                             </div>
                         </div>
 
-                     
+
                         <div class="row form-group">
                             <div class="col-sm-10"></div>
                             <div class="col-sm-2">
@@ -244,10 +334,47 @@
                 </div>
                 <div class="modal-body">
                     <!-- content goes here -->
-                    <p style="text-align:center; color:blue"></p>
+                    <p style="text-align:center; color:blue">
+                        <ul style="color:blue">
+                            <li>
+                                Eceptlly 2 cases above, you can absenece another day if you report to HR 1 week before you leave.
+                            </li>
+                            <li>
+                                <span style="color:red">Mindfully</span>, If you have "Another Leave", your salary will be decrease according to the law.
+                            </li>
+                        </ul>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="ChangeAvatarPopup" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">x</span><span class="sr-only">Close</span></button>
+                    <h3 class="modal-title" id="lineModalLabel" style="color:red">Update your avatar</h3>
+                </div>
+                <div class="modal-body">
+                    <!-- content goes here -->
+                    <form method="post" asp-controller="Account" asp-action="LoadImage" enctype="multipart/form-data">
+                        <input id="input-8" name="AvatarImage" type="file" class="file-input">
+                        <div></div>
+                        <div class="row form-group">
+                            <div class="col-sm-10"></div>
+                            <div class="col-sm-2" style="bottom:-12px">
+                                
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
     <!-- /.row -->
 </section>

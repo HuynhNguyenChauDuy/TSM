@@ -19,7 +19,20 @@
     @RenderSection("Customcss", false)
     <title>@ViewBag.Title</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+    
+    
+    
+    <style>
+        .user-panel > .image > img {
+            width: 100%;
+            max-width: 45px;
+            height: 32px;
+        }
+    </style>
 </head>
+
+
+
 <body class="hold-transition skin-blue sidebar-mini">
     <div class="wrapper">
         <header class="main-header">
@@ -356,11 +369,11 @@
 
                             if (System.IO.File.Exists(Absolutepath2))
                             {
-							        <img src=@path2 class="img-circle" alt="User Image">
-                            }
+							        <img role="button" onclick="LoadProfile()" src=@path2 class="img-circle" alt="User Image">
+                            }   
                             else
                             { 
-                                   <img src = "/userImage/default.jpg" />
+                                   <img  role="button" onclick="LoadProfile()" src= "/userImage/default.jpg" class="img-circle" />
 
                             }
                         }
@@ -646,8 +659,28 @@
     <script src="~/bower_components/chart.js/Chart.js"></script>
     <script src="~/dist/js/pages/dashboard2.js"></script>
     <script src="~/dist/js/demo.js"></script>
+    
+
+    <script src="~/jQuery-File-Upload-9.18.0/js/app.js"></script>
+    <script src="~/jQuery-File-Upload-9.18.0/js/jquery.fileupload.js"></script>
+
+
+   
+ 
+    
+ 
 
     @RenderSection("jvscript", false)
 
 </body>
 </html>
+
+<script>
+
+    function LoadProfile()
+    {
+        var targetUrl = '@Url.Action("GetProfile", "Account")';
+        window.location = targetUrl;
+    }
+  
+</script>

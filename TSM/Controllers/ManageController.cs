@@ -302,16 +302,25 @@ namespace TSM.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetCCRecommend(string term, int page)
+        public async Task<IActionResult> GetCCRecommend(string query)
         {
-            var result = from cc in (_context.Users.Where(item => item.Email.Contains(term)).ToList())
-                         select new
-                         {
-                             value = cc.Email,
-                             date = cc.Id
-                         };
+            var teamID = (await GetCurrentUserAsync()).TeamID;
+            var team = await _context.Teams.Include(item => item.Users).Where(item => item.ID.CompareTo(teamID) == 0).FirstOrDefaultAsync();
 
-            return Json(result);
+            var emailList = new List<CCVM>();
+
+            if(team != null)
+            {
+                foreach(var item in team.Users)
+                {
+                    if (item.Email.Contains(query))
+                    {
+                        emailList.Add(new CCVM { Id = item.Id, Email = item.Email });
+                    }
+                }
+            }
+
+            return Json(emailList);
         }
 
         private Task<ApplicationUser> GetCurrentUserAsync()

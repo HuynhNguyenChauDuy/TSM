@@ -17,7 +17,7 @@
     <link href="~/DataTables-1.10.15/media/css/jquery.dataTables.css" rel="stylesheet" />
     <link href="~/select2-master/dist/css/select2.css" rel="stylesheet" />
     <link href="~/toastr-master/toastr.css" rel="stylesheet" />
-    <link href="~/bootstrap-tagsinput-master/src/bootstrap-tagsinput.css" rel="stylesheet" />
+    <link href="~/bootstrap-tagsinput-latest/dist/bootstrap-tagsinput.css" rel="stylesheet" />
     
     <style>
         .table_align_center {
@@ -77,8 +77,8 @@
     <script src="~/ckeditor/ckeditor.js"></script>
     <script src="~/select2-master/dist/js/select2.js"></script>
     <script src="~/toastr-master/toastr.min.js"></script>
+    <script src="~/bootstrap-tagsinput-latest/dist/bootstrap-tagsinput.js"></script>
     <script src="~/Bootstrap-3-Typeahead-master/bootstrap3-typeahead.js"></script>
-    <script src="~/bootstrap-tagsinput-master/src/bootstrap-tagsinput.js"></script>
     <!--DatePicker setup-->
     <script>
         var curDate = new Date();
@@ -187,7 +187,27 @@
     </script>
     
     <script>
-       
+        $(document).ready(function () { 
+            var input = $('#CC').tagsinput({
+                itemValue: 'id',
+                itemText: 'email',
+                typeahead: {
+                    minLength: 3,
+                    displayKey: 'email',
+                    valueKey: 'id',
+                    afterSelect: function (val) { this.$element.val(""); },
+                    source: function (query) {
+                        var targetUrl = '@Url.Action("GetCCRecommend", "Manage")?query=' + query ;
+                       return $.ajax({
+                            url: targetUrl,
+                            type: "GET",
+                            dataType: 'json',
+                            contentType: "application/json; charset=utf-8"
+                        });
+                    }
+                }
+            });
+        });
     </script>
 }
 <section class="content-header" style="position:relative">
@@ -327,7 +347,7 @@
                             <div class="col-sm-12">
                                 <label>CC</label>
                                 <div>
-                                    <input id="CC" type="text" data-role="tagsinput"  autocomplete="off" class="form-control" />
+                                    <input id="CC" type="text" autocomplete="off" class="form-control" />
                                 </div>
                             </div>
                         </div>

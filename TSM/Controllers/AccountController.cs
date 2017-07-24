@@ -92,6 +92,8 @@ namespace TSM.Controllers
             return View(userDetail);
         }
 
+       
+
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> LoadImage(ProfileVM profile)

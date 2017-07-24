@@ -108,12 +108,30 @@ namespace TSM.Controllers
         }
 
         [HttpGet]
+        public async Task<ActionResult> GetTimesheetByState(Leave.eState state)
+        {
+            var userID = (await GetCurrentUserAsync()).Id;
+            var viewContext = new LeaveWrapper
+            {
+                LeaveVM = await _leaveManager.GetLeavebyUserIdsAsync(userID, state)
+            };
+
+            return View("GetTimesheet", viewContext);
+        }
+
+
+        
+
+        
+
+        [HttpGet]
         [Authorize(Roles = ("Project Manager,Team Leader"))]
         public async Task<ActionResult> GetTimesheetManager(DateTime? date = null)
         {
             var user = await GetCurrentUserAsync();
 
             var userRoles = await _userManager.GetRolesAsync(user);
+           
             IEnumerable<LeaveVM> leaveVM = null;
             if (userRoles.Contains("Project Manager"))
             {

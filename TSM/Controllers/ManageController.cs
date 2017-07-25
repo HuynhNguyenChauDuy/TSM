@@ -141,7 +141,7 @@ namespace TSM.Controllers
             }
             else
             {
-                leaveVM = await _leaveManager.GetLeavesByTeamIdAsync(user.TeamID, date);
+                leaveVM = await _leaveManager.GetLeavesByTeamIdAsync(user.Id, user.TeamID, date);
             }
 
             var viewContext = new LeaveWrapper
@@ -175,13 +175,7 @@ namespace TSM.Controllers
                     message = "Your request submitted";
                     messageType = ToastEnums.ToastType.Success;
 
-                    var leaveType = (_context.LeaveTypes.Find(newLeave.LeaveTypeID).LeaveName);
-
-                    // email setup
-                    MimeMessage email = _mailKit.SetUpEmailInfo(user.Email, null, "Your leave request is being handled");
-                    email.Body = await _mailKit.SetUpEmailBody_LeaveSubmit(newLeave.ID);
-
-                    _mailKit.Send(email);
+                    var ret = await _mailKit.SendEmail_LeaveSubmitAsync(result.ID, submit.LeaveFormVM.CCId);
                 }
                 else
                 {
@@ -225,11 +219,7 @@ namespace TSM.Controllers
                     message = "Your request edited";
                     messageType = ToastEnums.ToastType.Success;
 
-                    // email setup
-                    MimeMessage email = _mailKit.SetUpEmailInfo(user.Email, null, "Your leave request is being handled");
-                    email.Body = await _mailKit.SetUpEmailBody_EditLeave(changes.ID);
-
-                    _mailKit.Send(email);
+                    await _mailKit.SendEmail_UpdateRequestAsync(changes.ID);
                 }
                 else
                 {
@@ -280,7 +270,7 @@ namespace TSM.Controllers
                 var leave = await _context.Leaves.Include(item => item.User).Include(item => item.LeaveType)
                     .Where(item => item.ID.CompareTo(leaveID) == 0).FirstOrDefaultAsync();
 
-                result = await _leaveManager.DeleteLeaveAsync((string)leaveID, user.Id);
+                result = await _leaveManager.DeleteLeaveAsync(leaveID, user.Id);
 
                 if (result)
                 {
@@ -288,11 +278,7 @@ namespace TSM.Controllers
                     message = "Your request deleted";
                     messageType = ToastEnums.ToastType.Success;
 
-                    // email setup
-                    MimeMessage email = _mailKit.SetUpEmailInfo(user.Email, null, "Your leave request was deleted");
-                    email.Body = await _mailKit.SetUpEmailBody_DeleteLeave(leave);
-
-                    _mailKit.Send(email);
+                  await _mailKit.SendEmail_DeleteRequestAsync(leave);
                 }
             }
 
@@ -304,19 +290,23 @@ namespace TSM.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCCRecommend(string query)
         {
-            var teamID = (await GetCurrentUserAsync()).TeamID;
-            var team = await _context.Teams.Include(item => item.Users).Where(item => item.ID.CompareTo(teamID) == 0).FirstOrDefaultAsync();
-
+            var user = await GetCurrentUserAsync();
+            var userTeamId = user.TeamID;
+            var userRoles = await _userManager.GetRolesAsync(user);
             var emailList = new List<CCVM>();
 
-            if(team != null)
+            if(userRoles.Contains("Project Manager"))
             {
-                foreach(var item in team.Users)
+                foreach (var item in _context.Users)
                 {
-                    if (item.Email.Contains(query))
-                    {
-                        emailList.Add(new CCVM { Id = item.Id, Email = item.Email });
-                    }
+                    emailList.Add(new CCVM { Email = item.Email, Id = item.Id });
+                }
+            }
+            else
+            {
+                foreach (var item in _context.Users.Where(item => item.TeamID == userTeamId))
+                {
+                    emailList.Add(new CCVM { Email = item.Email, Id = item.Id });
                 }
             }
 
@@ -349,16 +339,7 @@ namespace TSM.Controllers
                 messageTitle = "Successful";
                 messageType = ToastEnums.ToastType.Success;
 
-                var employeeEmail = (await _context.Leaves
-                                        .Include(item => item.User)
-                                        .Where(item => item.ID.CompareTo(request.LeaveHandleVM.LeaveID) == 0)
-                                        .FirstOrDefaultAsync()).User.Email;
-
-                // email setup
-                MimeMessage email = _mailKit.SetUpEmailInfo(employeeEmail, null, "Your leave request handled");
-                email.Body = await _mailKit.SetUpEmailBody_HandleRequest(request.LeaveHandleVM.LeaveID, request.LeaveHandleVM.Result);
-
-                _mailKit.Send(email);
+               await _mailKit.SendEmail_RequestHandledAsync(request.LeaveHandleVM.LeaveID);
             }
             else
             {
@@ -394,9 +375,7 @@ namespace TSM.Controllers
                 messageTitle = "Successful";
                 messageType = ToastEnums.ToastType.Success;
 
-                // send email
-
-                await _mailKit.SendMultipleEmail(result, request.LeaveHandleVM_Multiple.Result);
+                await _mailKit.SendEmail_MultippleRequestHandledAsync(result);
             }
             else
             {

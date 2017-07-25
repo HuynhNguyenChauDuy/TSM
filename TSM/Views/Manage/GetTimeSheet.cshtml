@@ -66,6 +66,10 @@
         .text_align_center {
             text-align: center;
         }
+
+        .bootstrap-tagsinput {
+            width: 100% !important;
+        }
     </style>
 }
 
@@ -188,7 +192,7 @@
     
     <script>
         $(document).ready(function () { 
-            var input = $('#CC').tagsinput({
+            $('#LeaveFormVM_CCId').tagsinput({
                 itemValue: 'id',
                 itemText: 'email',
                 typeahead: {
@@ -347,7 +351,7 @@
                             <div class="col-sm-12">
                                 <label>CC</label>
                                 <div>
-                                    <input id="CC" type="text" autocomplete="off" class="form-control" />
+                                    <input asp-for="LeaveFormVM.CCId" type="text" autocomplete="off" class="form-control" />
                                 </div>
                             </div>
                         </div>

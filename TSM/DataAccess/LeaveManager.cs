@@ -147,6 +147,7 @@ namespace TSM.DataAccess
             }
         }
 
+
         public async Task<IEnumerable<LeaveVM>> GetLeavebyUserIdsAsync(string userId)
         {
             try
@@ -232,6 +233,25 @@ namespace TSM.DataAccess
                 return 0;
             }
         }
+        private async Task<int> CountLeavesByState(string userId, string State)
+        {
+            try
+            {
+                int count = 0;
+                foreach (var item in _context.Leaves.Include(item => item.State)
+                    .Where(item => item.ApplicationUserID.CompareTo(userId) == 0 && item.State.CompareTo(State) == 0))
+                {
+                    count++;
+                }
+
+                return count;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
 
         public async Task<LeaveVM> GetLeaveDetailForManager(string leaveId)
         {
@@ -246,6 +266,7 @@ namespace TSM.DataAccess
 
                 // approved/reject date
                 var approvedDate = leave.State == Leave.eState.OnQueue ?
+
                                             "--------------" : leave.ApprovedDate.ToString("dd/MM/yyy");
 
                 // get approver's name

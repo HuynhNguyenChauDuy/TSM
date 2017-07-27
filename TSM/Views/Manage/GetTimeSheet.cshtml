@@ -124,6 +124,7 @@
                             $('#EditLeaveFormMD').find('[name="LeaveFormVM.ToDate"]').val(result['toDate']).prop("disabled", true);
                             $('#EditLeaveFormMD').find('[name="LeaveFormVM.LeaveTypeID"]').val(result['leaveType']).change().prop("disabled", true);
                             $('#EditLeaveFormMD').find('[name="LeaveFormVM.WorkShift"]').val(result['workShift']).prop("disabled", true);
+                            $('#EditLeaveFormMD').find('[name="LeaveFormVM.CCId"]').val(result['ccId']).prop("disabled", true);
                             CKEDITOR.instances['ckeditor_Edit'].setReadOnly(true);
                             CKEDITOR.instances['ckeditor_Edit'].setData(result['note']);
                             $('#lblEditPopupHeader').html("Leave Details");
@@ -165,6 +166,9 @@
             $('#EditLeaveFormMD').find('[name="LeaveFormVM.LeaveTypeID"]').prop("disabled", false);
             $('#EditLeaveFormMD').find('[name="LeaveFormVM.WorkShift"]').prop("disabled", false);
             $('#EditLeaveFormMD').find('[name="LeaveFormVM.Note"]').prop("disabled", false);
+
+            $('#EditLeaveFormMD').find('[name="LeaveFormVM.CCId"]').prop("disabled", false);
+
             CKEDITOR.instances['ckeditor_Edit'].setReadOnly(false);
             $('#lblEditPopupHeader').html("Edit Leave");
 
@@ -182,7 +186,7 @@
     
     <script>
         $(document).ready(function () { 
-            $('#LeaveFormVM_CCId').tagsinput({
+            $('input[name="LeaveFormVM.CCId"]').tagsinput({
                 itemValue: 'id',
                 itemText: 'email',
                 typeahead: {
@@ -425,6 +429,15 @@
                             <div class="col-sm-6">  
                                 <label>Approved/Rejected Date</label>
                                 <input name="ResultDetail" type="text" disabled class="form-control text_align_center" />
+                            </div>
+                        </div>
+
+                        <div class="row form-group">
+                            <div class="col-sm-12">
+                                <label>CC</label>
+                                <div>
+                                    <input asp-for="LeaveFormVM.CCId" type="text" autocomplete="off" class="form-control" />
+                                </div>
                             </div>
                         </div>
                          

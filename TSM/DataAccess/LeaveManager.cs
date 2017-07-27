@@ -354,7 +354,8 @@ namespace TSM.DataAccess
                     LeaveType = leave.LeaveTypeID,
                     State = leave.State,
                     Note = leave.Note,
-                    Approver = approverName
+                    Approver = approverName,
+                    CCId = leave.CCId
                 };
 
                 return leaveVM;

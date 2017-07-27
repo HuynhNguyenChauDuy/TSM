@@ -51,5 +51,8 @@ namespace TSM.Data.ModelViews
 
         [Display(Name = "Other Leaves")]
         public int NOtherLeave { get; set; }
+
+        [Display(Name = "CC")]
+        public string CCId { get; set; }
     }
 }

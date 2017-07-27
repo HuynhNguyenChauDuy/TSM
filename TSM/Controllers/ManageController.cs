@@ -175,7 +175,7 @@ namespace TSM.Controllers
                     message = "Your request submitted";
                     messageType = ToastEnums.ToastType.Success;
 
-                    var ret = await _mailKit.SendEmail_LeaveSubmitAsync(result.ID, submit.LeaveFormVM.CCId);
+                    var ret = await _mailKit.SendEmail_LeaveSubmitAsync(result.ID);
                 }
                 else
                 {
@@ -238,6 +238,7 @@ namespace TSM.Controllers
         public async Task<IActionResult> GetLeaveDetail(string leaveId)
         {
             LeaveVM leaveVM = await _leaveManager.GetLeaveDetail(leaveId);
+            leaveVM.CCId = (await _mailKit.CcIdToEmailAsync(leaveVM.CCId)).ToString();
             return Json(leaveVM);
         }
 

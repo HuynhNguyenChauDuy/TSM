@@ -10,8 +10,6 @@ namespace TSM.Data.ModelViews
     public class ProfileVM
     {
         public IFormFile AvatarImage { get; set; }
-        
-
         public string Email { get; set; }
 		public string UserName { get; set; }
 		public string PhoneNumber { get; set; }
@@ -24,8 +22,6 @@ namespace TSM.Data.ModelViews
         public int NSickLeave { get; set; }
         public int NAnnualLeave { get; set; }
         public int NOther { get; set; }
-
-        
 
         public static implicit operator ProfileVM(ApplicationUser v)
         {

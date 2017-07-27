@@ -96,6 +96,10 @@
         });
     </script>
 
+    <script>
+        sessionStorage["curPage"] = "TimesheetManager";
+    </script>
+
     <!--DatePicker-->
     <script>
         $(document).ready(function () {
@@ -167,29 +171,37 @@
                             $("input[id='DetailVM_SickLeave']").val(nSickLeave + "/" + defaulSickLeave);
                             $("input[id='DetailVM_OtherLeave']").val(otherLeave);
 
+                            $("input[id='DetailVM_AnnualLeave']").removeClass();
+                            $("input[id='DetailVM_SickLeave']").removeClass();
+                            if (defaulAnnualLeave <= nAnnualLeave) {
+                                $("input[id='DetailVM_AnnualLeave']").addClass("form-control text_align_center label-danger");
+                            } else {
+                                $("input[id='DetailVM_AnnualLeave']").addClass("form-control text_align_center");
+                            }
+
+                            if (defaulSickLeave <= nSickLeave) {
+                                $("input[id='DetailVM_SickLeave']").addClass("form-control text_align_center label-danger");
+                            } else {
+                                $("input[id='DetailVM_SickLeave']").addClass("form-control text_align_center");
+                            }
+                            
                             // handle State label
                             var statusClass = '';
                             var statusName = '';
 
                             var state = result['state'];
-                            if (state != '2')
-                            {
-                                if (state == '0')
-                                {
+                            if (state != '2'){
+                                if (state == '0'){
                                     statusClass = 'label label-success'
                                     statusName = ' Approved';
-                                }
-                                else
-                                {
+                                } else {
                                     statusClass = 'label label-danger'
                                     statusName = ' Rejected';
                                 }
 
                                 $("button[id='DetailVM_approve']").hide();
                                 $("button[id='DetailVM_reject']").hide();
-                            }
-                            else
-                            {
+                            } else {
                                 statusClass = 'label label-warning';
                                 statusName = ' Waiting';
 
@@ -204,10 +216,8 @@
                             // handle workshift label
                             var workShiftName = 'All Day';
                             var workShift = result['workShift'];
-                            if (workShift == '1')
-                                 {workShiftName = 'Morning'}
-                            else if (workShift == '2')
-                                 {workShiftName = 'Afternoon'}
+                            if (workShift == '1') {workShiftName = 'Morning'}
+                            else if (workShift == '2') {workShiftName = 'Afternoon'}
 
                             // assign value to elements
                             $("label[id='DetailVM_state']").html(statusName);

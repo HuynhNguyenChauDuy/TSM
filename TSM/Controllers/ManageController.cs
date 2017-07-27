@@ -157,9 +157,9 @@ namespace TSM.Controllers
         public async Task<IActionResult> LeaveSubmit(LeaveWrapper submit)
         {
             // toast message properties
-            string messageTitle;
-            string message;
-            ToastEnums.ToastType messageType;
+            string messageTitle = "Validation error";
+            string message = "Please check your leave form again";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
 
             if (ModelState.IsValid)
             {
@@ -184,13 +184,7 @@ namespace TSM.Controllers
                     messageType = ToastEnums.ToastType.Error;
                 }
             }
-            else
-            {
-                messageTitle = "Validation error";
-                message = "Please check your leave form again";
-                messageType = ToastEnums.ToastType.Error;
-            }
-
+           
             _toastNotification.AddToastMessage(
               messageTitle, message, messageType);
 
@@ -201,9 +195,9 @@ namespace TSM.Controllers
         public async Task<IActionResult> EditLeave(LeaveWrapper submit)
         {
             // toast message properties
-                string messageTitle;
-                string message;
-                ToastEnums.ToastType messageType;
+            string messageTitle = "Validation errors";
+            string message = "Please check your request again";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
 
             if (ModelState.IsValid)
             {
@@ -228,12 +222,6 @@ namespace TSM.Controllers
                     messageType = ToastEnums.ToastType.Error;
                 }
             }
-            else
-            {
-                messageTitle = "Validation errors";
-                message = "Please check your request again";
-                messageType = ToastEnums.ToastType.Error;
-            }
 
             _toastNotification.AddToastMessage(
               messageTitle, message, messageType);
@@ -244,8 +232,7 @@ namespace TSM.Controllers
         [HttpGet]
         public async Task<IActionResult> GetLeaveDetailForManager(string leaveId)
         {
-            LeaveVM leaveVM = await _leaveManager.GetLeaveDetailForManager(leaveId);
-            return Json(leaveVM);
+            return Json(await _leaveManager.GetLeaveDetailForManager(leaveId));
         }
 
         public async Task<IActionResult> GetLeaveDetail(string leaveId)
@@ -323,9 +310,9 @@ namespace TSM.Controllers
         public async Task<IActionResult> HandleSingleRequest(LeaveWrapper request)
         {
             // toast message properties
-            string messageTitle;
-            string message;
-            ToastEnums.ToastType messageType;
+            string messageTitle = "Error";
+            string message = "Unable to handle this request";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
 
             var approverId = (await GetCurrentUserAsync()).Id;
             var result = await _leaveManager.HandleSingleRequestAysnc(request.LeaveHandleVM, approverId);
@@ -341,13 +328,7 @@ namespace TSM.Controllers
 
                await _mailKit.SendEmail_RequestHandledAsync(request.LeaveHandleVM.LeaveID);
             }
-            else
-            {
-                messageTitle = "Error";
-                message = "Unable to handle this request";
-                messageType = ToastEnums.ToastType.Error;
-            }
-
+        
             _toastNotification.AddToastMessage(
             messageTitle, message, messageType);
 
@@ -359,9 +340,9 @@ namespace TSM.Controllers
         public async Task<IActionResult> HandleMultipleRequests(LeaveWrapper request)
         {
             // toast message properties
-            string messageTitle;
-            string message;
-            ToastEnums.ToastType messageType;
+            string messageTitle = "Error";
+            string message = "Unable to handle these requests";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
 
             var userId = (await GetCurrentUserAsync()).Id;
             List<string> result = await _leaveManager.HandleMultipleRequestsAsync(request.LeaveHandleVM_Multiple, userId);
@@ -377,13 +358,7 @@ namespace TSM.Controllers
 
                 await _mailKit.SendEmail_MultippleRequestHandledAsync(result);
             }
-            else
-            {
-                messageTitle = "Error";
-                message = "Unable to handle these requests";
-                messageType = ToastEnums.ToastType.Error;
-            }
-
+           
             _toastNotification.AddToastMessage(
            messageTitle, message, messageType);
 

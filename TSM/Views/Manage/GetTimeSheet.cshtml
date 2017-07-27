@@ -34,15 +34,6 @@
             padding-left: 0.3em;
         }
 
-        #cke_editor1 {
-            width: 550px;
-            margin-left: -73px;
-        }
-
-        .cke_inner cke_reset {
-            width: 585px;
-        }
-
         .center {
             margin-top: 50px;
         }
@@ -51,11 +42,6 @@
             -webkit-box-sizing: border-box;
             -moz-box-sizing: border-box;
             box-sizing: border-box;
-        }
-
-        .textarea {
-            white-space: normal;
-            text-align: justify;
         }
 
         form {
@@ -92,6 +78,10 @@
                 startDate: curDate
             });
         });
+    </script>
+
+    <script>
+        sessionStorage["curPage"] = "Timesheet";
     </script>
 
     <!--DataTable row click-->
@@ -423,15 +413,6 @@
                                             }
                                         }
                                     </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row form-group">
-                            <div class="col-sm-12">
-                                <label>CC</label>
-                                <div>
-                                    <input name="CC" disabled class="form-control" type="text" />
                                 </div>
                             </div>
                         </div>

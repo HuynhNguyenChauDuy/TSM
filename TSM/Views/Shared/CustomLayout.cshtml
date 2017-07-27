@@ -19,9 +19,7 @@
     @RenderSection("Customcss", false)
     <title>@ViewBag.Title</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
-    
-    
-    
+
     <style>
         .user-panel > .image > img {
             width: 100%;
@@ -83,7 +81,7 @@
                                                         }
 
                                                     }
-                                                  
+
                                                 </div>
                                                 <h4>
                                                     Support Team
@@ -274,21 +272,21 @@
                         <li class="dropdown user user-menu">
                             @{
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                                      @{
-                                          var userID1 = _userManager.GetUserId(User);
-                                          var path1 = "/userImage/" + userID + ".jpg";
-                                          var Absolutepath1 = _env.WebRootPath + path;
-                                          if (System.IO.File.Exists(Absolutepath1))
-                                          {
+                                    @{
+                                        var userID1 = _userManager.GetUserId(User);
+                                        var path1 = "/userImage/" + userID + ".jpg";
+                                        var Absolutepath1 = _env.WebRootPath + path;
+                                        if (System.IO.File.Exists(Absolutepath1))
+                                        {
                                             <img src=@path class="user-image" alt="User Image">
-                                          }
-                                          else
-                                          {
+                                        }
+                                        else
+                                        {
                                             <img src="~/userImage/default.jpg" class="user-image" alt="User Image">
 
-                                          }
+                                        }
                                     }
-                                   
+
                                     <span class="hidden-xs">@_userManager.GetUserName(User)</span>
                                 </a>
                                 <ul class="dropdown-menu">
@@ -310,7 +308,7 @@
                                         }
                                         <p>
                                             @_userManager.GetUserName(User)
-                                           
+
                                             <small>Member since 2017</small>
                                         </p>
                                     </li>
@@ -352,14 +350,14 @@
 
             </nav>
         </header>
-		
-		
+
+
         <!-- Left side column. contains the logo and sidebar -->
         <aside class="main-sidebar">
             <!-- sidebar: style can be found in sidebar.less -->
             <section class="sidebar">
                 <!-- Sidebar user panel -->
-				
+
                 <div class="user-panel">
                     <div class="pull-left image">
                         @{
@@ -369,11 +367,11 @@
 
                             if (System.IO.File.Exists(Absolutepath2))
                             {
-							        <img role="button" onclick="LoadProfile()" src=@path2 class="img-circle" alt="User Image">
-                            }   
+                                <img role="button" onclick="LoadProfile()" src=@path2 class="img-circle" alt="User Image">
+                            }
                             else
-                            { 
-                                   <img  role="button" onclick="LoadProfile()" src= "/userImage/default.jpg" class="img-circle" />
+                            {
+                                <img role="button" onclick="LoadProfile()" src="/userImage/default.jpg" class="img-circle" />
 
                             }
                         }
@@ -385,7 +383,7 @@
                 </div>
 
 
-	
+
                 <!-- search form -->
                 <form action="#" method="get" class="sidebar-form">
                     <div class="input-group">
@@ -409,13 +407,13 @@
                             </span>
                         </a>
                         <ul class="treeview-menu">
-                            <li><a asp-controller="Manage" asp-action="GetTimesheet"><i class="fa fa-circle-o"></i> Personal Timesheet</a></li>
+                            <li id="personal"><a asp-controller="Manage" asp-action="GetTimesheet"><i class="fa fa-circle-o"></i> Personal Timesheet</a></li>
                             @{
                                 var user = await _userManager.GetUserAsync(User);
                                 var userRoles = await _userManager.GetRolesAsync(user);
                                 if (userRoles.Contains("Project Manager") || userRoles.Contains("Team Leader"))
                                 {
-                                    <li><a asp-controller="Manage" asp-action="GetTimesheetManager"><i class="fa fa-circle-o"></i> Timesheet Manager</a></li>
+                                    <li id="manager"><a asp-controller="Manage" asp-action="GetTimesheetManager"><i class="fa fa-circle-o"></i> Timesheet Manager</a></li>
                                 }
                             }
                         </ul>
@@ -647,7 +645,7 @@
         <div class="control-sidebar-bg"></div>
 
 
-        </div>
+    </div>
     <script src="~/bower_components/jquery/dist/jquery.js"></script>
     <script src="~/bower_components/bootstrap/dist/js/bootstrap.js"></script>
     <script src="~/bower_components/fastclick/lib/fastclick.js"></script>
@@ -656,19 +654,27 @@
     <script src="~/bower_components/chart.js/Chart.js"></script>
     <script src="~/dist/js/pages/dashboard2.js"></script>
     <script src="~/dist/js/demo.js"></script>
-    
+
 
     <script src="~/jQuery-File-Upload-9.18.0/js/app.js"></script>
     <script src="~/jQuery-File-Upload-9.18.0/js/jquery.fileupload.js"></script>
 
-
-   
- 
-    
- 
-
     @RenderSection("jvscript", false)
 
+    <script>
+        $(document).ready(function () { 
+            var currentPage = sessionStorage["curPage"];
+            if (currentPage != null) {
+                if (currentPage == "TimesheetManager") {
+                    $('#manager').addClass('active');
+                } else if (currentPage == "Timesheet") {
+                    $('#personal').addClass('active');
+                }
+            } else {
+
+            }
+        });
+    </script>
 </body>
 </html>
 
@@ -679,5 +685,5 @@
         var targetUrl = '@Url.Action("GetProfile", "Account")';
         window.location = targetUrl;
     }
-  
+
 </script>

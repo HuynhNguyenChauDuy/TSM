@@ -75,7 +75,7 @@
                                                         var Absolutepath = _env.WebRootPath + path;
                                                         if (System.IO.File.Exists(Absolutepath))
                                                         {
-                                                            <img class="profile-user-img img-responsive img-circle" src=@path />
+                                                            <img  class="profile-user-img img-responsive img-circle" src=@path />
                                                         }
                                                         else
                                                         {
@@ -96,7 +96,7 @@
                                         <li>
                                             <a href="#">
                                                 <div class="pull-left">
-                                                    <img src="~/userImage/Octocat.png" class="img-circle" alt="User Image">
+                                                    <img src="~/userImage/default.jpg" class="img-circle" alt="User Image" />
                                                 </div>
                                                 <h4>
                                                     AdminLTE Design Team
@@ -108,7 +108,7 @@
                                         <li>
                                             <a href="#">
                                                 <div class="pull-left">
-                                                    <img src="~/userImage/Octocat.png" class="img-circle" alt="User Image">
+                                                    <img src="~/userImage/default.jpg" class="img-circle" alt="User Image" />
                                                 </div>
                                                 <h4>
                                                     Developers
@@ -120,7 +120,7 @@
                                         <li>
                                             <a href="#">
                                                 <div class="pull-left">
-                                                    <img src="~/userImage/Octocat.png" class="img-circle" alt="User Image">
+                                                    <img src="~/userImage/default.jpg" class="img-circle" alt="User Image" />
                                                 </div>
                                                 <h4>
                                                     Sales Department
@@ -132,7 +132,7 @@
                                         <li>
                                             <a href="#">
                                                 <div class="pull-left">
-                                                    <img src="~/userImage/Octocat.png" class="img-circle" alt="User Image">
+                                                    <img src="~/userImage/default.jpg" class="img-circle" alt="User Image" />
                                                 </div>
                                                 <h4>
                                                     Reviewers
@@ -369,11 +369,11 @@
 
                             if (System.IO.File.Exists(Absolutepath2))
                             {
-							        <img role="button" onclick="LoadProfile()" src=@path2 class="img-circle" alt="User Image">
+							        <a href="@Url.Action("GetProfile", "Account")"><img style="width:52px; height:52px" role="button"  src=@path2 class="img-circle" alt="User Image"></a>
                             }   
                             else
                             { 
-                                   <img  role="button" onclick="LoadProfile()" src= "/userImage/default.jpg" class="img-circle" />
+                                  <a href="@Url.Action("GetProfile", "Account")"><img style="width:52px; height:52px" role="button"  src= "/userImage/default.jpg" class="img-circle" /></a>
 
                             }
                         }
@@ -658,8 +658,8 @@
     <script src="~/dist/js/demo.js"></script>
     
 
-    <script src="~/jQuery-File-Upload-9.18.0/js/app.js"></script>
-    <script src="~/jQuery-File-Upload-9.18.0/js/jquery.fileupload.js"></script>
+    @*<script src="~/jQuery-File-Upload-9.18.0/js/app.js"></script>
+    <script src="~/jQuery-File-Upload-9.18.0/js/jquery.fileupload.js"></script>*@
 
 
    
@@ -672,7 +672,7 @@
 </body>
 </html>
 
-<script>
+@*<script>
 
     function LoadProfile()
     {
@@ -680,4 +680,4 @@
         window.location = targetUrl;
     }
   
-</script>
+</script>*@

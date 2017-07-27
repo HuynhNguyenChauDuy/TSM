@@ -37,8 +37,13 @@ namespace TSM.DataAccess
                     .Where(item => item.Id.CompareTo(userId) == 0).FirstOrDefaultAsync();
 
                 var nSickleave = await CountLeaveByUserId(userId, "Sick Leave");
-                var nAnnualLeave = await CountLeaveByUserId(userId, "AnnualLeave");
+                var nAnnualLeave = await CountLeaveByUserId(userId, "Annual Leave");
                 var nOtherLeave = await CountLeaveByUserId(userId, "Other");
+
+                var nApprovedList = await CountLeavesByState(userId, 0);
+                var nRejectedList = await CountLeavesByState(userId, 1);
+                var nWaitingList = await CountLeavesByState(userId, 2);
+
 
                 var userRoles = await _userManager.GetRolesAsync(user);
 
@@ -53,7 +58,11 @@ namespace TSM.DataAccess
                     DefaultSickLeave = user.DefaultSickLeave,
                     NAnnualLeave = nAnnualLeave,
                     NOther = nOtherLeave,
-                    NSickLeave = nSickleave
+                    NSickLeave = nSickleave,
+
+                    NApprovedLeaves = nApprovedList,
+                    NWaitingLeaves = nWaitingList,
+                    NRejectedLeaves = nRejectedList
                 };
 
                 
@@ -83,8 +92,51 @@ namespace TSM.DataAccess
             {
                 return -1;
             }
-        } 
-        
+        }
+
+        private async Task<int> CountLeavesByState(string userId, int state)
+        {
+            int count = 0;
+            try
+            {
+                if(state == 0)
+                {
+                   
+                    foreach (var item in _context.Leaves
+                        .Where(item => item.ApplicationUserID.CompareTo(userId) == 0 && item.State == Leave.eState.Approved))
+                    {
+                        count++;
+                    }
+                    return  count;
+                }
+                if (state == 1)
+                {
+                    
+                    foreach (var item in _context.Leaves
+                        .Where(item => item.ApplicationUserID.CompareTo(userId) == 0 && item.State == Leave.eState.Rejected))
+                    {
+                        count++;
+                    }
+                    return count;
+                }
+                if (state == 2)
+                {
+                   
+                    foreach (var item in _context.Leaves
+                        .Where(item => item.ApplicationUserID.CompareTo(userId) == 0 && item.State == Leave.eState.OnQueue))
+                    {
+                        count++;
+                    }
+                    return count;
+                }
+                return count;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
         public async Task<bool> EditProfile(ProfileVM submit, string userId)
         {
             try

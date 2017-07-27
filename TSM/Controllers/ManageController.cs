@@ -126,6 +126,9 @@ namespace TSM.Controllers
             return View("GetTimesheet", viewContext);
         }
 
+
+
+
         [HttpGet]
         [Authorize(Roles = ("Project Manager,Team Leader"))]
         public async Task<ActionResult> GetTimesheetManager(DateTime? date = null)

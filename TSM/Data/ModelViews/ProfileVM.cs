@@ -25,7 +25,9 @@ namespace TSM.Data.ModelViews
         public int NAnnualLeave { get; set; }
         public int NOther { get; set; }
 
-        
+        public int NApprovedLeaves { get; set; }
+        public int NRejectedLeaves { get; set; }
+        public int NWaitingLeaves { get; set; }
 
         public static implicit operator ProfileVM(ApplicationUser v)
         {

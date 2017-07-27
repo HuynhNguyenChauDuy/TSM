@@ -1,4 +1,6 @@
 ﻿
+<link href="~/toastr-master/toastr.css" rel="stylesheet" />
+@await Component.InvokeAsync("NToastNotify.Toastr")
 @{
     ViewData["Title"] = "GetProfile";
     Layout = "~/Views/Shared/CustomLayout.cshtml";
@@ -8,9 +10,9 @@
 @using TSM.Services
 @using Microsoft.AspNetCore.Hosting;
 
-@await Component.InvokeAsync("NToastNotify.Toastr")
-@model ProfileVM
 
+@model ProfileVM
+      
 @inject ExUserManager _exUserManager
 @inject UserManager<ApplicationUser> _userManager
 @inject IHostingEnvironment _env
@@ -19,7 +21,7 @@
 
 
 
-@section Customcss
+@*@section Customcss
 {
     <link href="~/kartik-v-bootstrap-fileinput-9f3fe0e/css/fileinput.css" rel="stylesheet" />
 
@@ -47,12 +49,30 @@
             });
         });
     </script>
-}
+}*@
 
 
 
+@section jvscript{
+   <script src="~/jquery-3.1.0.js"></script>
+    <script src="~/toastr-master/toastr.js"></script>
+<script>
+        function getFilename() {
+
+            $('#ChangeAvatarForm').submit();
+        }
+
+        function ChangeAvatar() {
+            $("#InputFile").click();
+        }
 
 
+</script>
+    }
+
+@section Customcss{
+    <link href="~/toastr-master/toastr.css" rel="stylesheet" />
+    }
 
 <h2>My Profile</h2>
 
@@ -73,7 +93,7 @@
                             @{
                                 if (System.IO.File.Exists(Absolutepath))
                                 {
-                                    <img id="Avatar" role="button" class="profile-user-img img-responsive img-circle" data-toggle="modal" data-target="#ChangeAvatarPopup" src=@path />
+                                    <img id="Avatar" role="button" class="profile-user-img img-responsive img-circle" onclick="ChangeAvatar()" src=@path />
                                 }
                                 else
                                 {
@@ -120,7 +140,7 @@
                         <input readonly="readonly" type="text" class="form-control" value="@Model.TeamName">
 
                         <hr>
-                        <input class="pull-right" type="submit" value="Save">
+                        <input class="pull-right btn btn-primary" type="submit" value="Save">
                     </form>
                 </div>
                 <!-- /.box-body -->
@@ -133,7 +153,7 @@
             <!-- small box -->
             <div class="small-box bg-aqua">
                 <div class="inner">
-                    <h3>@Model.NSickLeave</h3>
+                    <h3>@Model.NSickLeave / @Model.DefaultSickLeave</h3>
                     <p>Sick Leaves</p>
                 </div>
                 <div class="icon">
@@ -151,7 +171,7 @@
             <!-- small box -->
             <div class="small-box bg-green">
                 <div class="inner">
-                    <h3>@Model.NAnnualLeave</h3>
+                    <h3>@Model.NAnnualLeave / @Model.DefaultAnnualLeave</h3>
                     <p>Annual Leaves</p>
                 </div>
                 <div class="icon">
@@ -183,7 +203,7 @@
             <!-- small box -->
             <div class="small-box bg-fuchsia">
                 <div class="inner">
-                    <h3>@Model.NOther</h3>
+                    <h3>@Model.NApprovedLeaves</h3>
                     <p>Approve List</p>
                 </div>
                 <div class="icon">
@@ -199,7 +219,7 @@
             <!-- small box -->
             <div class="small-box bg-red">
                 <div class="inner">
-                    <h3>@Model.NOther</h3>
+                    <h3>@Model.NRejectedLeaves</h3>
                     <p>Reject List</p>
                 </div>
                 <div class="icon">
@@ -215,7 +235,7 @@
             <!-- small box -->
             <div class="small-box bg-purple-active">
                 <div class="inner">
-                    <h3>@Model.NOther</h3>
+                    <h3>@Model.NWaitingLeaves</h3>
                     <p>Waiting List</p>
                 </div>
                 <div class="icon">
@@ -296,11 +316,13 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">x</span><span class="sr-only">Close</span></button>
-                    <h3 class="modal-title" style="color:red" id="lineModalLabel">Sick Leave</h3>
+                    <h3 class="modal-title"  id="lineModalLabel">Sick Leave</h3>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" style="text-align:left; ">
                     <!-- content goes here -->
-                    <p style="text-align:center; color:blue">If you have sick, you can absent. But your salary wouldn't be deacreased. </p>
+                    <p >Traditionally, sick leave is paid time off of work that an organization has voluntarily provided for employees as a benefit. Increasingly, however, in recent years, jurisdictions both state and local, are mandating that employers provide paid sick days. </p>
+                    <p>Number of days off : @Model.NSickLeave days</p> 
+                    <p>Default days of Sick Leave : @Model.DefaultSickLeave days</p> 
                 </div>
             </div>
         </div>
@@ -313,11 +335,26 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">x</span><span class="sr-only">Close</span></button>
-                    <h3 class="modal-title" style="color:red" id="lineModalLabel">Annual Leave</h3>
+                    <h3 class="modal-title" id="lineModalLabel">Annual Leave</h3>
                 </div>
                 <div class="modal-body">
                     <!-- content goes here -->
-                    <p style="text-align:center; color:blue">Annually, each employee has 12 days of leave. But, you should report to HR 1 week before you have leave.</p>
+                    <p style="text-align:left">Annual leave (also known as holiday pay) allows an employee to be paid while having time off from work.
+
+                        The entitlement to annual leave comes from the National Employment Standards (NES).
+
+                        Awards, enterprise agreements and other registered agreements can't offer less than the NES but they can give more annual leave.
+
+                        Who is entitled to annual leave?
+
+                        All employees (except for casual employees) get paid annual leave.
+
+                        How much annual leave does an employee get?
+
+                        Full-time and part-time employees get 4 weeks of annual leave, based on their ordinary hours of work.
+                    </p>    
+                    <p>Number of days off : @Model.NAnnualLeave days</p>
+                    <p>Default days of Annual Leave : @Model.DefaultAnnualLeave days</p> 
                 </div>
             </div>
         </div>
@@ -349,32 +386,25 @@
         </div>
     </div>
 
-    <div class="modal fade" id="ChangeAvatarPopup" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">x</span><span class="sr-only">Close</span></button>
-                    <h3 class="modal-title" id="lineModalLabel" style="color:red">Update your avatar</h3>
-                </div>
-                <div class="modal-body">
-                    <!-- content goes here -->
-                    <form method="post" asp-controller="Account" asp-action="LoadImage" enctype="multipart/form-data">
-                        <input id="input-8" name="AvatarImage" type="file" class="file-input">
-                        <div></div>
-                        <div class="row form-group">
-                            <div class="col-sm-10"></div>
-                            <div class="col-sm-2" style="bottom:-12px">
-                                
-                                <button type="submit" class="btn btn-primary">Save</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+
+
+    <form hidden id="ChangeAvatarForm" method="post" asp-controller="Account" asp-action="LoadImage" autocomplete="on" enctype="multipart/form-data">
+        @*<input id="input-8" name="AvatarImage" type="file" class="file-input">*@
+        <input type="file" name="AvatarImage" id="InputFile" onchange='getFilename()'>
+        <div></div>
+        <div class="row form-group">
+            <div class="col-sm-10"></div>
+            <div class="col-sm-2" style="bottom:-12px">
+              <input type="submit" value="Save">  
             </div>
         </div>
-    </div>
+    </form>
+    
 
 
 
     <!-- /.row -->
 </section>
+
+
+

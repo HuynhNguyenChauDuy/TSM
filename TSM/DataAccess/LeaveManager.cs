@@ -233,6 +233,7 @@ namespace TSM.DataAccess
                 return 0;
             }
         }
+
         private async Task<int> CountLeavesByState(string userId, string State)
         {
             try

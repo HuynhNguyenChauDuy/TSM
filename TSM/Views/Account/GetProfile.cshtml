@@ -1,7 +1,4 @@
-﻿
-<link href="~/toastr-master/toastr.css" rel="stylesheet" />
-@await Component.InvokeAsync("NToastNotify.Toastr")
-@{
+﻿@{
     ViewData["Title"] = "GetProfile";
     Layout = "~/Views/Shared/CustomLayout.cshtml";
 }
@@ -16,47 +13,19 @@
 @inject ExUserManager _exUserManager
 @inject UserManager<ApplicationUser> _userManager
 @inject IHostingEnvironment _env
+@await Component.InvokeAsync("NToastNotify.Toastr")
+    
 
-
-
-
-
-@*@section Customcss
-{
-    <link href="~/kartik-v-bootstrap-fileinput-9f3fe0e/css/fileinput.css" rel="stylesheet" />
-
-    <link href="~/kartik-v-bootstrap-fileinput-9f3fe0e/css/fileinput-rtl.css" rel="stylesheet" />
-
-    <link href="~/kartik-v-bootstrap-fileinput-9f3fe0e/themes/explorer/theme.css" rel="stylesheet" />
+@section Customcss{
+    <link href="~/toastr-master/toastr.css" rel="stylesheet" />
 }
-
-@section jvscript
-{
-    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/js/plugins/sortable.js"></script>
-    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/js/fileinput.min.js"></script>
-    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/js/locales/fr.js"></script>
-    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/js/locales/es.js"></script>
-    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/themes/explorer/theme.min.js"></script>
-
-    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/js/plugins/piexif.js"></script>
-    <script src="~/kartik-v-bootstrap-fileinput-9f3fe0e/js/plugins/purify.js"></script>
-
-    <script>
-        $(document).ready(function () {
-            $("#input-8").fileinput({
-                rtl: true,
-                allowedFileExtensions: ["jpg", "png", "gif"]
-            });
-        });
-    </script>
-}*@
-
 
 
 @section jvscript{
-   <script src="~/jquery-3.1.0.js"></script>
+    <script src="~/jquery-3.1.0.js"></script>
     <script src="~/toastr-master/toastr.js"></script>
-<script>
+
+    <script>
         function getFilename() {
 
             $('#ChangeAvatarForm').submit();
@@ -65,14 +34,8 @@
         function ChangeAvatar() {
             $("#InputFile").click();
         }
-
-
-</script>
-    }
-
-@section Customcss{
-    <link href="~/toastr-master/toastr.css" rel="stylesheet" />
-    }
+    </script>
+}
 
 <h2>My Profile</h2>
 
@@ -308,9 +271,6 @@
             </div>
         </div>
     </div>
-
-
-
     <div class="modal fade" id="SickLeavePopup" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -327,9 +287,6 @@
             </div>
         </div>
     </div>
-
-
-
     <div class="modal fade" id="AnnualLeavePopup" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -359,9 +316,6 @@
             </div>
         </div>
     </div>
-
-
-
     <div class="modal fade" id="OtherLeavePopup" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -385,9 +339,6 @@
             </div>
         </div>
     </div>
-
-
-
     <form hidden id="ChangeAvatarForm" method="post" asp-controller="Account" asp-action="LoadImage" autocomplete="on" enctype="multipart/form-data">
         @*<input id="input-8" name="AvatarImage" type="file" class="file-input">*@
         <input type="file" name="AvatarImage" id="InputFile" onchange='getFilename()'>
@@ -399,11 +350,6 @@
             </div>
         </div>
     </form>
-    
-
-
-
-    <!-- /.row -->
 </section>
 
 

@@ -23,8 +23,6 @@ namespace TSM.Controllers
     [Authorize]
     public class AccountController : Controller
     {
-       
-
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private IHostingEnvironment _environment;
@@ -36,8 +34,6 @@ namespace TSM.Controllers
         private readonly ExUserManager _exUserManager;
         private readonly IToastNotification _toastNotification;
        
-      
-
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
@@ -79,15 +75,12 @@ namespace TSM.Controllers
             return _userManager.GetUserAsync(HttpContext.User);
         }
 
-
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetProfile()
         {
             var userId = (await GetCurrentUserAsync()).Id;
-
             var userDetail = await _exUserManager.GetUserDetailById(userId);
-
 
             return View(userDetail);
         }
@@ -100,18 +93,15 @@ namespace TSM.Controllers
         {
            if(profile.AvatarImage != null)
             { 
-                var uploads = Path.Combine(_environment.WebRootPath, "userImage"); //~/userImage
+                var uploads = Path.Combine(_environment.WebRootPath, "userImage");
 
                 var userId = (await GetCurrentUserAsync()).Id;
 
                 var fileName = userId + ".jpg";
-                
-                var filePath = Path.Combine(uploads, fileName);  //  ~/userImage/userId.jpg
-
+                var filePath = Path.Combine(uploads, fileName);
                 if (System.IO.File.Exists(filePath))
                 {
                     System.IO.File.Delete(filePath);
-                    // xem xong xóa
                 }
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -119,52 +109,16 @@ namespace TSM.Controllers
                     await profile.AvatarImage.CopyToAsync(stream);
                 }
             }
-            //string proDirPath = Microsoft.AspNetCore.Server.MapPath("~/Img/ProImg"); // đường dẫn = root/Img/ProIMG + ID/1,2,3.jpg
-            //string targetDirPath = Path.Combine(proDirPath, Pro.ID.ToString());
-            //Directory.CreateDirectory(targetDirPath);
-
 
             return RedirectToAction("GetProfile","Account");
         }
 
-        //public static Image Resize(this Image current, int maxWidth, int maxHeight)
-        //{
-        //    int width, height;
-        //    #region reckon size 
-        //    if (current.Width > current.Height)
-        //    {
-        //        width = maxWidth;
-        //        height = Convert.ToInt32(current.Height * maxHeight / (double)current.Width);
-        //    }
-        //    else
-        //    {
-        //        width = Convert.ToInt32(current.Width * maxWidth / (double)current.Height);
-        //        height = maxHeight;
-        //    }
-        //    #endregion
-
-        //    #region get resized bitmap 
-        //    var canvas = new Bitmap(width, height);
-
-        //    using (var graphics = Graphics.FromImage(canvas))
-        //    {
-        //        graphics.CompositingQuality = CompositingQuality.HighSpeed;
-        //        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        //        graphics.CompositingMode = CompositingMode.SourceCopy;
-        //        graphics.DrawImage(current, 0, 0, width, height);
-        //    }
-
-        //    return canvas;
-        //    #endregion
-        //}
-
-
         public async Task<IActionResult> EditProfile(ProfileVM submit)
         {
             
-            string messageTitle;
-            string message;
-            ToastEnums.ToastType messageType;
+            string messageTitle = "Validation errors";
+            string message = "Please check your request again";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
 
             if (ModelState.IsValid)
             {
@@ -185,13 +139,7 @@ namespace TSM.Controllers
                     messageType = ToastEnums.ToastType.Error;
                 }
             }
-            else
-            {
-                messageTitle = "Validation errors";
-                message = "Please check your request again";
-                messageType = ToastEnums.ToastType.Error;
-            }
-
+           
             _toastNotification.AddToastMessage(
               messageTitle, message, messageType);
 

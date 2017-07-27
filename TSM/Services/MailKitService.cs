@@ -1,5 +1,6 @@
 ﻿using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MimeKit;
 using System;
@@ -8,18 +9,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using TSM.Data;
 using TSM.Data.Models;
+using TSM.Models;
 
 namespace TSM.Services
 {
     public class MailKitService
     {
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
         private IHostingEnvironment _env;
 
-        public MailKitService(ApplicationDbContext ctx, IHostingEnvironment env)
+        public MailKitService(ApplicationDbContext ctx, IHostingEnvironment env, UserManager<ApplicationUser> userManager )
         {
             _context = ctx;
             _env = env;
+            _userManager = userManager;
         }
 
         public void Send(MimeMessage Email)
@@ -30,8 +34,6 @@ namespace TSM.Services
                 {
                     client.Connect("smtp.gmail.com", 587);
                     client.AuthenticationMechanisms.Remove("XOAUTH2");
-
-                    // chuyển về file XML?
                     client.Authenticate("hremailtesting@gmail.com", "MatKhau1@3");
                     client.Send(Email);
                     client.Disconnect(true);
@@ -43,100 +45,107 @@ namespace TSM.Services
             }
         }
 
-        public  MimeMessage SetUpEmailInfo(string ToEmail, List<string> ccEmails, string subject)
+        public MimeMessage SetUpEmailInfo(string ToEmail, List<string> ccEmails, string subject)
         {
             var emailMessage = new MimeMessage();
             emailMessage.From.Add(new MailboxAddress("TSM", "hremailtesting@gmail.com"));
             emailMessage.To.Add(new MailboxAddress("", ToEmail));
+            
+            if(ccEmails != null)
+            {
+                foreach(var email in ccEmails)
+                {
+                    emailMessage.Cc.Add(new MailboxAddress("", email));
+                }
+            }
+
             emailMessage.Subject = subject;
 
             return emailMessage;
         }
 
-        public async Task<TextPart> SetUpEmailBody_LeaveSubmit(string leaveId)
+        public async Task<List<string>> CCStringToEmailAsync(string CC)
         {
             try
             {
-                var leave = await GetLeavebyID(leaveId);
-
-                string emailTemp = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leavesubmit.html");
-
-                emailTemp = ReplaceTemplateByKeyWords(emailTemp,leave.FromDate,leave.ToDate,leave.User.UserName,leave.LeaveType.LeaveName,leave.WorkShift);
-
-                var tpart = new TextPart("html")
+                var emailList = new List<string>();
+                if (CC != "" && CC != null)
                 {
-                    Text = emailTemp
-                };
-
-                return tpart;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public async Task<TextPart> SetUpEmailBody_DeleteLeave(Leave leave)
-        {
-            try
-            {
-                string emailTemp = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/deletedleave.html");
-
-                emailTemp = ReplaceTemplateByKeyWords(emailTemp, leave.FromDate, leave.ToDate, leave.User.UserName, leave.LeaveType.LeaveName, leave.WorkShift);
-
-                var tpart = new TextPart("html")
-                {
-                    Text = emailTemp
-                };
-
-                return tpart;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public async Task<TextPart> SetUpEmailBody_EditLeave(string leaveId)
-        {
-            try
-            {
-                var leave = await GetLeavebyID(leaveId);
-
-                string emailTemp = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/editleave.html");
-
-                emailTemp = ReplaceTemplateByKeyWords(emailTemp, leave.FromDate, leave.ToDate, leave.User.UserName, leave.LeaveType.LeaveName, leave.WorkShift);
-
-                var tpart = new TextPart("html")
-                {
-                    Text = emailTemp
-                };
-
-                return tpart;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public async Task<bool> SendMultipleEmail(List<string> leaveIdList, Leave.eState result)
-        {
-            try
-            {
-                foreach(var item in leaveIdList)
-                {
-                    var userEmail = (await _context.Leaves
-                                            .Include(item2 => item2.User)
-                                            .Where(item2 => item2.ID.CompareTo(item) == 0)
-                                            .FirstOrDefaultAsync()).User.Email;
-
-
-                    var email = this.SetUpEmailInfo(userEmail ,null, "Your leave request handled");
-                    email.Body = await this.SetUpEmailBody_HandleRequest(item, result);
-
-                    this.Send(email);
+                    var cc = CC.Split(new string[] { "," }, StringSplitOptions.None);
+                    foreach (var item in cc)
+                    {
+                        var userEmail = (await _context.Users.Where(m => m.Id == item).FirstOrDefaultAsync()).Email;
+                        if (userEmail != null)
+                        {
+                            emailList.Add(userEmail);
+                        }
+                    }
                 }
+                return emailList;
+            }
+            catch
+            {
+                return new List<string>();
+            }
+        }
+
+        public async Task<bool> SendEmail_LeaveSubmitAsync(string leaveId, string ccEmail)
+        {
+            try
+            {
+                var leave = await GetLeavebyIDAsync(leaveId);
+                var user = await _context.Users.FindAsync(leave.ApplicationUserID);
+                var userRoles =  await _userManager.GetRolesAsync(user);
+                var ccEmailList = await CCStringToEmailAsync(ccEmail);
+                var receiverName = "";
+
+                MimeMessage email = null;
+                if (userRoles.Contains("Project Manager"))
+                {
+                    // send email to cc only
+                    email = SetUpEmailInfo(user.Email, ccEmailList, "PM leave announcement");
+                    receiverName = user.UserName;
+                    email.Body = await SetUpEmailBody_LeaveSubmitAsync(leaveId, userRoles as List<string>, receiverName);
+
+                    Send(email);
+                }
+                else if(userRoles.Contains("Team Leader"))
+                {
+                    var projectManagerRole = (await _context.Roles.Include(item => item.Users)
+                                             .Where(item => item.Name == "Project Manager")
+                                            .FirstOrDefaultAsync()).Users.FirstOrDefault();
+
+                    var projectManager = await _context.Users.FindAsync(projectManagerRole.UserId);
+                    email = SetUpEmailInfo(projectManager.Email, ccEmailList, "Team Leader Leave Request");
+
+                    receiverName = projectManager.UserName;
+                    email.Body = await SetUpEmailBody_LeaveSubmitAsync(leaveId, userRoles as List<string>, receiverName);
+
+                    Send(email);
+                }
+                else 
+                {
+                    ApplicationUser teamLeader = null;
+                    foreach(var item in _context.Users.Where(item => item.TeamID == user.TeamID))
+                    {
+                        var roles = await _userManager.GetRolesAsync(item);
+                        if(roles.Contains("Team Leader"))
+                        {
+                            teamLeader = item;
+                            break;
+                        }
+                    }
+
+                    if (teamLeader != null)
+                    {
+                        email = SetUpEmailInfo(teamLeader.Email, ccEmailList, "DEV Leave Request");
+                        receiverName = teamLeader.UserName;
+                        email.Body = await SetUpEmailBody_LeaveSubmitAsync(leaveId, userRoles as List<string>, receiverName);
+
+                        Send(email);
+                    }
+                }
+
                 return true;
             }
             catch
@@ -145,29 +154,23 @@ namespace TSM.Services
             }
         }
 
-        public async Task<TextPart> SetUpEmailBody_HandleRequest(string leaveId, Leave.eState result)
+        public async Task<TextPart> SetUpEmailBody_LeaveSubmitAsync(string leaveId, List<string> userRoles, string receiverName)
         {
             try
             {
-                var leave = await GetLeavebyID(leaveId);
+                var leave = await GetLeavebyIDAsync(leaveId);
+                var userID = (await _context.Leaves.FindAsync(leaveId)).ApplicationUserID;
+                var userName = (await _context.Users.FindAsync(userID)).UserName;
 
-                var approver = (await _context.Users.FindAsync(leave.ApproverID)).UserName;
+                string emailTemp = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/LeaveRequest.html");
 
-                string emailTemp = "";
-
-                if(result == Leave.eState.Approved)
-                {
-                    emailTemp = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/approvedrequest.html");
-                }
-                else
-                {
-                    emailTemp = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/rejectedrequest.html");
-                }
-
-                emailTemp = ReplaceTemplateByKeyWords(emailTemp, leave.FromDate, leave.ToDate, leave.User.UserName, leave.LeaveType.LeaveName, leave.WorkShift);
-
-                emailTemp = emailTemp.Replace("APPROVER", approver);
-                emailTemp = emailTemp.Replace("APPROVEDTIME", leave.ApprovedDate.ToString("dd/MM/yyyy hh:mm:ss tt"));
+                emailTemp = emailTemp.Replace("RECEIVER", receiverName);
+                emailTemp = emailTemp.Replace("SENDER", userName);
+                emailTemp = emailTemp.Replace("FROMDATE", leave.FromDate.ToString("dd/MM/yyyy"));
+                emailTemp = emailTemp.Replace("TODATE", leave.ToDate.ToString("dd/MM/yyyy"));
+                emailTemp = emailTemp.Replace("LEAVETYPE", leave.LeaveType.LeaveName);
+                emailTemp = emailTemp.Replace("WORKSHIFT", leave.WorkShift.ToString());
+                emailTemp = emailTemp.Replace("NOTE", System.Net.WebUtility.HtmlDecode(leave.Note));
 
                 var tpart = new TextPart("html")
                 {
@@ -182,14 +185,109 @@ namespace TSM.Services
             }
         }
 
-        public async Task<Leave> GetLeavebyID(string leaveId)
+        public async Task<bool> SendEmail_RequestHandledAsync(string leaveId)
+        {
+            try
+            {
+                var leave = await GetLeavebyIDAsync(leaveId);
+                var Approver = (await _context.Users.FindAsync(leave.ApproverID)).UserName;
+                var result = leave.State;
+
+                var email = SetUpEmailInfo(leave.User.Email, null, "Your Leave Request Handled");
+
+                string emailTemplate = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leavehandled.html");
+
+                emailTemplate = emailTemplate.Replace("RECEIVER", leave.User.UserName);
+                emailTemplate = emailTemplate.Replace("FROMDATE", leave.FromDate.ToString("dd/MM/yyyy"));
+                emailTemplate = emailTemplate.Replace("TODATE", leave.ToDate.ToString("dd/MM/yyyy"));
+                emailTemplate = emailTemplate.Replace("LEAVETYPE", leave.LeaveType.LeaveName);
+                emailTemplate = emailTemplate.Replace("WORKSHIFT", leave.WorkShift.ToString());
+                emailTemplate = emailTemplate.Replace("APPROVEDDATE", leave.ApprovedDate.ToString("dd/MM/yyyy"));
+                emailTemplate = emailTemplate.Replace("APPROVER", Approver);
+                emailTemplate = emailTemplate.Replace("RESULT", result.ToString());
+
+                email.Body = new TextPart("html")
+                {
+                    Text = emailTemplate
+                };
+
+                Send(email);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> SendEmail_DeleteRequestAsync(Leave leave)
+        {
+            try
+            {
+                var email = SetUpEmailInfo(leave.User.Email, null, "Your Leave Request Deleted");
+
+                string emailTemplate = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leavedelete.html");
+
+                emailTemplate = emailTemplate.Replace("RECEIVER",leave.User.UserName);
+                emailTemplate = emailTemplate.Replace("FROMDATE", leave.FromDate.ToString("dd/MM/yyyy"));
+                emailTemplate = emailTemplate.Replace("TODATE", leave.ToDate.ToString("dd/MM/yyyy"));
+                emailTemplate = emailTemplate.Replace("LEAVETYPE", leave.LeaveType.LeaveName);
+                emailTemplate = emailTemplate.Replace("WORKSHIFT", leave.WorkShift.ToString());
+
+                email.Body = new TextPart("html")
+                {
+                    Text = emailTemplate
+                };
+
+                Send(email);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> SendEmail_UpdateRequestAsync(string leaveId)
+        {
+            try
+            {
+                var leave = await GetLeavebyIDAsync(leaveId);
+                var email = SetUpEmailInfo(leave.User.Email, null, "Your Leave Request Updated");
+
+                string emailTemplate = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/updatleave.html");
+
+                emailTemplate = emailTemplate.Replace("RECEIVER", leave.User.UserName);
+                emailTemplate = emailTemplate.Replace("FROMDATE", leave.FromDate.ToString("dd/MM/yyyy"));
+                emailTemplate = emailTemplate.Replace("TODATE", leave.ToDate.ToString("dd/MM/yyyy"));
+                emailTemplate = emailTemplate.Replace("LEAVETYPE", leave.LeaveType.LeaveName);
+                emailTemplate = emailTemplate.Replace("WORKSHIFT", leave.WorkShift.ToString());
+
+                email.Body = new TextPart("html")
+                {
+                    Text = emailTemplate
+                };
+
+                Send(email);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<Leave> GetLeavebyIDAsync(string leaveId)
         {
             try
             {
                 return await _context.Leaves
                     .Include(item => item.User)
                     .Include(item => item.LeaveType)
-                    .Where(item => item.ID.CompareTo(leaveId) == 0).FirstOrDefaultAsync();
+                    .Where(item => item.ID == leaveId).FirstOrDefaultAsync();
             }
             catch
             {
@@ -197,24 +295,24 @@ namespace TSM.Services
             }
         }
 
-        public string ReplaceTemplateByKeyWords(string emailTemp, DateTime fromDate, DateTime toDate, string userName, string leaveName, Leave.eWorkShift workShift)
+        public async Task<bool> SendEmail_MultippleRequestHandledAsync(List<string> leaveIdList)
         {
             try
             {
-                var result = emailTemp.Replace("USERNAME",userName);
-                result = result.Replace("LEAVETYPE", leaveName);
-                result = result.Replace("WORKSHIFT", workShift.ToString());
+                if(leaveIdList != null)
+                {
+                    foreach(var item in leaveIdList)
+                    {
+                       await SendEmail_RequestHandledAsync(item);
+                    }
+                }
 
-                string DateRange = "FROM " + fromDate.ToString("dd-MM-yyyy") + " TO " + toDate.ToString("dd-MM-yyyy");
-                result = result.Replace("DATEOFF", DateRange);
-
-                return result;
+                return true;
             }
             catch
             {
-                return null;
+                return false;
             }
         }
-
     }
 }

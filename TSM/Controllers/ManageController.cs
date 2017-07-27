@@ -144,7 +144,7 @@ namespace TSM.Controllers
             }
             else
             {
-                leaveVM = await _leaveManager.GetLeavesByTeamIdAsync(user.TeamID, date);
+                leaveVM = await _leaveManager.GetLeavesByTeamIdAsync(user.Id, user.TeamID, date);
             }
 
             var viewContext = new LeaveWrapper
@@ -160,9 +160,9 @@ namespace TSM.Controllers
         public async Task<IActionResult> LeaveSubmit(LeaveWrapper submit)
         {
             // toast message properties
-            string messageTitle;
-            string message;
-            ToastEnums.ToastType messageType;
+            string messageTitle = "Validation error";
+            string message = "Please check your leave form again";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
 
             if (ModelState.IsValid)
             {
@@ -178,13 +178,7 @@ namespace TSM.Controllers
                     message = "Your request submitted";
                     messageType = ToastEnums.ToastType.Success;
 
-                    var leaveType = (_context.LeaveTypes.Find(newLeave.LeaveTypeID).LeaveName);
-
-                    // email setup
-                    MimeMessage email = _mailKit.SetUpEmailInfo(user.Email, null, "Your leave request is being handled");
-                    email.Body = await _mailKit.SetUpEmailBody_LeaveSubmit(newLeave.ID);
-
-                    _mailKit.Send(email);
+                    var ret = await _mailKit.SendEmail_LeaveSubmitAsync(result.ID, submit.LeaveFormVM.CCId);
                 }
                 else
                 {
@@ -193,13 +187,7 @@ namespace TSM.Controllers
                     messageType = ToastEnums.ToastType.Error;
                 }
             }
-            else
-            {
-                messageTitle = "Validation error";
-                message = "Please check your leave form again";
-                messageType = ToastEnums.ToastType.Error;
-            }
-
+           
             _toastNotification.AddToastMessage(
               messageTitle, message, messageType);
 
@@ -210,9 +198,9 @@ namespace TSM.Controllers
         public async Task<IActionResult> EditLeave(LeaveWrapper submit)
         {
             // toast message properties
-                string messageTitle;
-                string message;
-                ToastEnums.ToastType messageType;
+            string messageTitle = "Validation errors";
+            string message = "Please check your request again";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
 
             if (ModelState.IsValid)
             {
@@ -228,11 +216,7 @@ namespace TSM.Controllers
                     message = "Your request edited";
                     messageType = ToastEnums.ToastType.Success;
 
-                    // email setup
-                    MimeMessage email = _mailKit.SetUpEmailInfo(user.Email, null, "Your leave request is being handled");
-                    email.Body = await _mailKit.SetUpEmailBody_EditLeave(changes.ID);
-
-                    _mailKit.Send(email);
+                    await _mailKit.SendEmail_UpdateRequestAsync(changes.ID);
                 }
                 else
                 {
@@ -240,12 +224,6 @@ namespace TSM.Controllers
                     message = "Unable to edit your request";
                     messageType = ToastEnums.ToastType.Error;
                 }
-            }
-            else
-            {
-                messageTitle = "Validation errors";
-                message = "Please check your request again";
-                messageType = ToastEnums.ToastType.Error;
             }
 
             _toastNotification.AddToastMessage(
@@ -257,8 +235,7 @@ namespace TSM.Controllers
         [HttpGet]
         public async Task<IActionResult> GetLeaveDetailForManager(string leaveId)
         {
-            LeaveVM leaveVM = await _leaveManager.GetLeaveDetailForManager(leaveId);
-            return Json(leaveVM);
+            return Json(await _leaveManager.GetLeaveDetailForManager(leaveId));
         }
 
         public async Task<IActionResult> GetLeaveDetail(string leaveId)
@@ -283,7 +260,7 @@ namespace TSM.Controllers
                 var leave = await _context.Leaves.Include(item => item.User).Include(item => item.LeaveType)
                     .Where(item => item.ID.CompareTo(leaveID) == 0).FirstOrDefaultAsync();
 
-                result = await _leaveManager.DeleteLeaveAsync((string)leaveID, user.Id);
+                result = await _leaveManager.DeleteLeaveAsync(leaveID, user.Id);
 
                 if (result)
                 {
@@ -291,11 +268,7 @@ namespace TSM.Controllers
                     message = "Your request deleted";
                     messageType = ToastEnums.ToastType.Success;
 
-                    // email setup
-                    MimeMessage email = _mailKit.SetUpEmailInfo(user.Email, null, "Your leave request was deleted");
-                    email.Body = await _mailKit.SetUpEmailBody_DeleteLeave(leave);
-
-                    _mailKit.Send(email);
+                  await _mailKit.SendEmail_DeleteRequestAsync(leave);
                 }
             }
 
@@ -305,16 +278,29 @@ namespace TSM.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetCCRecommend(string term, int page)
+        public async Task<IActionResult> GetCCRecommend(string query)
         {
-            var result = from cc in (_context.Users.Where(item => item.Email.Contains(term)).ToList())
-                         select new
-                         {
-                             value = cc.Email,
-                             date = cc.Id
-                         };
+            var user = await GetCurrentUserAsync();
+            var userTeamId = user.TeamID;
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var emailList = new List<CCVM>();
 
-            return Json(result);
+            if(userRoles.Contains("Project Manager"))
+            {
+                foreach (var item in _context.Users)
+                {
+                    emailList.Add(new CCVM { Email = item.Email, Id = item.Id });
+                }
+            }
+            else
+            {
+                foreach (var item in _context.Users.Where(item => item.TeamID == userTeamId))
+                {
+                    emailList.Add(new CCVM { Email = item.Email, Id = item.Id });
+                }
+            }
+
+            return Json(emailList);
         }
 
         private Task<ApplicationUser> GetCurrentUserAsync()
@@ -327,9 +313,9 @@ namespace TSM.Controllers
         public async Task<IActionResult> HandleSingleRequest(LeaveWrapper request)
         {
             // toast message properties
-            string messageTitle;
-            string message;
-            ToastEnums.ToastType messageType;
+            string messageTitle = "Error";
+            string message = "Unable to handle this request";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
 
             var approverId = (await GetCurrentUserAsync()).Id;
             var result = await _leaveManager.HandleSingleRequestAysnc(request.LeaveHandleVM, approverId);
@@ -343,24 +329,9 @@ namespace TSM.Controllers
                 messageTitle = "Successful";
                 messageType = ToastEnums.ToastType.Success;
 
-                var employeeEmail = (await _context.Leaves
-                                        .Include(item => item.User)
-                                        .Where(item => item.ID.CompareTo(request.LeaveHandleVM.LeaveID) == 0)
-                                        .FirstOrDefaultAsync()).User.Email;
-
-                // email setup
-                MimeMessage email = _mailKit.SetUpEmailInfo(employeeEmail, null, "Your leave request handled");
-                email.Body = await _mailKit.SetUpEmailBody_HandleRequest(request.LeaveHandleVM.LeaveID, request.LeaveHandleVM.Result);
-
-                _mailKit.Send(email);
+               await _mailKit.SendEmail_RequestHandledAsync(request.LeaveHandleVM.LeaveID);
             }
-            else
-            {
-                messageTitle = "Error";
-                message = "Unable to handle this request";
-                messageType = ToastEnums.ToastType.Error;
-            }
-
+        
             _toastNotification.AddToastMessage(
             messageTitle, message, messageType);
 
@@ -372,9 +343,9 @@ namespace TSM.Controllers
         public async Task<IActionResult> HandleMultipleRequests(LeaveWrapper request)
         {
             // toast message properties
-            string messageTitle;
-            string message;
-            ToastEnums.ToastType messageType;
+            string messageTitle = "Error";
+            string message = "Unable to handle these requests";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
 
             var userId = (await GetCurrentUserAsync()).Id;
             List<string> result = await _leaveManager.HandleMultipleRequestsAsync(request.LeaveHandleVM_Multiple, userId);
@@ -388,17 +359,9 @@ namespace TSM.Controllers
                 messageTitle = "Successful";
                 messageType = ToastEnums.ToastType.Success;
 
-                // send email
-
-                await _mailKit.SendMultipleEmail(result, request.LeaveHandleVM_Multiple.Result);
+                await _mailKit.SendEmail_MultippleRequestHandledAsync(result);
             }
-            else
-            {
-                messageTitle = "Error";
-                message = "Unable to handle these requests";
-                messageType = ToastEnums.ToastType.Error;
-            }
-
+           
             _toastNotification.AddToastMessage(
            messageTitle, message, messageType);
 

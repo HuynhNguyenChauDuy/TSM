@@ -17,15 +17,11 @@ namespace TSM.DataAccess
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         
-        private readonly IMapper _mapper;
         public LeaveManager(ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager,
-            IMapper mapper)
+            UserManager<ApplicationUser> userManager)
         {
             _context = context;
-            _userManager = userManager;
-            _mapper = mapper;
-           
+            _userManager = userManager;    
         }
 
         public async Task<IEnumerable<LeaveTypeVM>> GetLeaveTypeAsync()
@@ -98,7 +94,7 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<IEnumerable<LeaveVM>> GetLeavesByTeamIdAsync(string teamID, DateTime? date = null)
+        public async Task<IEnumerable<LeaveVM>> GetLeavesByTeamIdAsync(string userId, string teamID, DateTime? date = null)
         {
             try
             {
@@ -109,7 +105,8 @@ namespace TSM.DataAccess
                     leaves = await _context.Leaves
                                                  .Include(item => item.User)
                                                  .Include(item => item.LeaveType)
-                                                 .Where(item => (item.FromDate <= date && date <= item.ToDate) && item.User.TeamID.CompareTo(teamID) == 0)
+                                                 .Where(item => item.FromDate <= date && date <= item.ToDate
+                                                                 && item.User.TeamID == teamID && item.User.Id != userId)
                                                  .OrderBy(item => item.FromDate)
                                                  .ThenBy(item => item.ToDate)
                                                  .ToListAsync();
@@ -119,7 +116,8 @@ namespace TSM.DataAccess
                     leaves = await _context.Leaves
                                                  .Include(item => item.User)
                                                  .Include(item => item.LeaveType)
-                                                 .Where(item => (item.FromDate <= DateTime.Today && DateTime.Today <= item.ToDate) && item.User.TeamID.CompareTo(teamID) == 0)
+                                                 .Where(item => item.FromDate <= DateTime.Today && DateTime.Today <= item.ToDate
+                                                                    && item.User.TeamID == teamID && item.User.Id != userId)
                                                  .OrderBy(item => item.FromDate)
                                                  .ThenBy(item => item.ToDate)
                                                  .ToListAsync();
@@ -149,18 +147,13 @@ namespace TSM.DataAccess
             }
         }
 
-        
-
-       
-
-        
 
         public async Task<IEnumerable<LeaveVM>> GetLeavebyUserIdsAsync(string userId)
         {
             try
             {
                 IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
-                                                 .Include(item => item.User).Where(item => item.ApplicationUserID.CompareTo(userId) == 0)
+                                                 .Include(item => item.User).Where(item => item.ApplicationUserID == userId)
                                                  .Include(item => item.LeaveType)
                                                  .OrderBy(item => item.FromDate)
                                                  .ThenBy(item => item.ToDate)).ToListAsync()
@@ -191,8 +184,7 @@ namespace TSM.DataAccess
             try
             {
                 IEnumerable<LeaveVM> leaves = (from item in await (_context.Leaves
-                                                 .Include(item => item.User).Where(item => item.ApplicationUserID.CompareTo(userId) == 0)
-                                                
+                                                 .Include(item => item.User).Where(item => item.ApplicationUserID == userId)
                                                  .Include(item => item.LeaveType)
                                                  .Where(item => item.State == state)
                                                  .OrderBy(item => item.FromDate)
@@ -227,8 +219,8 @@ namespace TSM.DataAccess
 
                 foreach(var item in (_context.Leaves
                                            .Include(item => item.LeaveType)
-                                           .Where(item => item.ApplicationUserID.CompareTo(userId) == 0
-                                           && item.LeaveType.LeaveName.CompareTo(LeaveType) == 0
+                                           .Where(item => item.ApplicationUserID == userId
+                                           && item.LeaveType.LeaveName == LeaveType
                                            && item.State == Leave.eState.Approved)))
                 {
                     count += (item.ToDate - item.FromDate).Days == 0 ? 1 : (item.ToDate - item.FromDate).Days + 1;
@@ -269,19 +261,20 @@ namespace TSM.DataAccess
                 Leave leave = await _context.Leaves
                     .Include(item => item.User)
                     .Include(item => item.LeaveType)
-                    .Where(item => item.ID.CompareTo(leaveId) == 0)
+                    .Where(item => item.ID == leaveId)
                     .FirstOrDefaultAsync();
 
                 // approved/reject date
                 var approvedDate = leave.State == Leave.eState.OnQueue ?
-                                            "--/--/----" : leave.ApprovedDate.ToString("dd/MM/yyy");
-                
+
+                                            "--------------" : leave.ApprovedDate.ToString("dd/MM/yyy");
+
                 // get approver's name
-                var approverName = "---------";
+                var approverName = "--------------";
                 if(leave.ApproverID != null)
                 {
                     approverName = (await _context.Users
-                   .Where(item => item.Id.CompareTo(leave.ApproverID) == 0)
+                   .Where(item => item.Id== leave.ApproverID)
                    .FirstOrDefaultAsync()).UserName;
                 }
 
@@ -292,7 +285,11 @@ namespace TSM.DataAccess
                 var nSickleave = await CountLeavesByUserId(user.Id, "Sick Leave");
                 var nAnnualLeave = await CountLeavesByUserId(user.Id, "Annual Leave");
                 var nOtherLeave = await CountLeavesByUserId(user.Id, "Other");
-
+                var note = "--------------";
+                if (leave.Note != "" && leave.Note != null)
+                {
+                    note = System.Net.WebUtility.HtmlDecode(leave.Note);
+                }
                 LeaveVM leaveVM = new LeaveVM()
                 {
                     LeaveID = leave.ID,
@@ -304,7 +301,7 @@ namespace TSM.DataAccess
                     WorkShift = leave.WorkShift,
                     LeaveType = leave.LeaveType.LeaveName,
                     State = leave.State,
-                    Note = System.Net.WebUtility.HtmlDecode(leave.Note),
+                    Note = note,
                     Approver = approverName,
                     DefaultAnnualLeave = user.DefaultAnnualLeave,
                     DefaultSickLeave = user.DefaultSickLeave,
@@ -328,7 +325,7 @@ namespace TSM.DataAccess
                 // get current leave
                 Leave leave = await _context.Leaves
                     .Include(item => item.User)
-                    .Where(item => item.ID.CompareTo(leaveId) == 0)
+                    .Where(item => item.ID == leaveId)
                    .FirstOrDefaultAsync();
 
                 // approved/reject date
@@ -340,7 +337,7 @@ namespace TSM.DataAccess
                 if(leave.ApproverID != null)
                 {
                     approverName = (await _context.Users
-                   .Where(item => item.Id.CompareTo(leave.ApproverID) == 0)
+                   .Where(item => item.Id == leave.ApproverID)
                    .FirstOrDefaultAsync()).UserName;
                 }
 
@@ -370,8 +367,7 @@ namespace TSM.DataAccess
         private async Task<bool> DateInputIsValidAsync(DateTime fromDate, DateTime toDate, string userId)
         {
             foreach (var item in _context.Leaves
-                .Where(item => item.ApplicationUserID
-                .CompareTo(userId) == 0))
+                .Where(item => item.ApplicationUserID == userId))
             {
                 if ((fromDate >= item.FromDate && fromDate <= item.ToDate) || (toDate >= item.FromDate && toDate <= item.ToDate))
                 {
@@ -423,7 +419,7 @@ namespace TSM.DataAccess
             try
             {
                 Leave curLeave = await _context.Leaves
-                    .Where(item => item.ID.CompareTo(leave.ID) == 0 && item.ApplicationUserID.CompareTo(userId) == 0)
+                    .Where(item => item.ID == leave.ID && item.ApplicationUserID == userId)
                     .FirstOrDefaultAsync();
 
                 if(curLeave == null || curLeave.State != Leave.eState.OnQueue)
@@ -433,8 +429,7 @@ namespace TSM.DataAccess
 
                 // temporarily put this condition code snipps above, seperate it if possible
                 foreach(var item in _context.Leaves
-                        .Where(item => item.ApplicationUserID
-                        .CompareTo(userId) == 0 && item.ID.CompareTo(leave.ID) != 0))
+                        .Where(item => item.ApplicationUserID == userId && item.ID == leave.ID))
                 {
                     if ((leave.FromDate >= item.FromDate && leave.FromDate <= item.ToDate) || (leave.ToDate >= item.FromDate && leave.ToDate <= item.ToDate))
                     {
@@ -464,7 +459,7 @@ namespace TSM.DataAccess
 			try
 			{
                 Leave leave = await _context.Leaves
-                    .Where(s => s.ID.CompareTo(id) == 0 && s.ApplicationUserID.CompareTo(userid) == 0)
+                    .Where(s => s.ID == id && s.ApplicationUserID == userid)
                     .FirstOrDefaultAsync();
 				if (leave == null)
 				{

@@ -14,13 +14,14 @@
 
   <ItemGroup>
     <Compile Remove="wwwroot\AdminLTE-master\**" />
-    <Compile Remove="wwwroot\kartik-v-bootstrap-fileinput-9f3fe0e\**" />
+  <Compile Remove="wwwroot\bootstrap-tagsinput-master\**" />
     <Content Remove="wwwroot\AdminLTE-master\**" />
-    <Content Remove="wwwroot\kartik-v-bootstrap-fileinput-9f3fe0e\**" />
+    <Content Remove="wwwroot\bootstrap-tagsinput-master\**" />
     <EmbeddedResource Remove="wwwroot\AdminLTE-master\**" />
-    <EmbeddedResource Remove="wwwroot\kartik-v-bootstrap-fileinput-9f3fe0e\**" />
+    <EmbeddedResource Remove="wwwroot\bootstrap-tagsinput-master\**" />
     <None Remove="wwwroot\AdminLTE-master\**" />
-    <None Remove="wwwroot\kartik-v-bootstrap-fileinput-9f3fe0e\**" />
+    <None Remove="wwwroot\bootstrap-tagsinput-master\**" />
+
   </ItemGroup>
 
   <ItemGroup>

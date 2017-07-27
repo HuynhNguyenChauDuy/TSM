@@ -20,6 +20,5 @@ namespace TSM.Data.ModelViews
         public LeaveFormVM LeaveFormVM { get; set; }
         public IEnumerable<LeaveVM> LeaveVM { get; set; }
         public LeaveHandleVM_Multiple LeaveHandleVM_Multiple { get; set; }
-
     }
 }

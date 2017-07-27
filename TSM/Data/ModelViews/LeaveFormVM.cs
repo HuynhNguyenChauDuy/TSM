@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 namespace TSM.Data.ModelViews
 {
@@ -27,14 +28,17 @@ namespace TSM.Data.ModelViews
         [Display(Name = "Note")]
         public string Note { get; set; }
 
+        [Display(Name = "CC")]
+        public string CCId { get; set; }
+
     }
 
     public class LeaveFormVMValidator : AbstractValidator<LeaveFormVM>
     {
         public LeaveFormVMValidator()
         {
-            //RuleFor(reg => reg.FromDate)
-            //    .GreaterThanOrEqualTo(DateTime.Today)
+            //RuleFor(reg => reg.FromDate).GreaterThanOrEqualTo(DateTime.Today);
+            //RuleFor(reg => reg.ToDate).GreaterThanOrEqualTo(DateTime.Today);
         }
     }
 

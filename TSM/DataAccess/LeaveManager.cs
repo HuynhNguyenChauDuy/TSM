@@ -342,6 +342,20 @@ namespace TSM.DataAccess
                    .FirstOrDefaultAsync()).UserName;
                 }
 
+                List<CCVM> CCemails = new List<CCVM>();
+                if (leave.CCId != null)
+                {
+                   var CCTokens = leave.CCId.Split(new string[] { "," }, StringSplitOptions.None);
+                    foreach(var item in CCTokens)
+                    {
+                        var ccUser = await _context.Users.FindAsync(item);
+                        if(ccUser != null)
+                        {
+                            CCemails.Add(new CCVM { Id = ccUser.Id, Email = ccUser.Email });
+                        }
+                    }
+                }
+               
                 LeaveVM leaveVM = new LeaveVM()
                 {
                     LeaveID = leave.ID,
@@ -355,7 +369,7 @@ namespace TSM.DataAccess
                     State = leave.State,
                     Note = leave.Note,
                     Approver = approverName,
-                    CCId = leave.CCId
+                    CC = CCemails
                 };
 
                 return leaveVM;

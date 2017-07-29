@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using TSM.Data.Models;
 namespace TSM.Data.ModelViews
@@ -53,6 +54,6 @@ namespace TSM.Data.ModelViews
         public int NOtherLeave { get; set; }
 
         [Display(Name = "CC")]
-        public string CCId { get; set; }
+        public List<CCVM> CC { get; set; }
     }
 }

@@ -128,12 +128,12 @@ namespace TSM.Controllers
 
         [HttpGet]
         [Authorize(Roles = ("Project Manager,Team Leader"))]
-        public async Task<ActionResult> GetTimesheetManager(DateTime? date = null)
+        public async Task<ActionResult> GetTimesheetManager(string leaveId, DateTime? date = null)
         {
             var user = await GetCurrentUserAsync();
 
             var userRoles = await _userManager.GetRolesAsync(user);
-           
+
             IEnumerable<LeaveVM> leaveVM = null;
             if (userRoles.Contains("Project Manager"))
             {
@@ -148,8 +148,23 @@ namespace TSM.Controllers
             {
                 LeaveVM = leaveVM
             };
+             
+            if (leaveId != null)
+            {
+                if((await _context.Leaves.FindAsync(leaveId) != null))
+                {
+                    ViewData["leaveId"] = leaveId;
+                }
+                else
+                {
+                    ViewData["leaveId"] = "";
+                    _toastNotification.AddToastMessage(
+                 "Something went wrong", "This leave request doest not exist", ToastEnums.ToastType.Error);
+                }  
+            }
+         
+            ViewData["curDate"] = date != null ? date.Value.ToString("dd/MM/yyyy") : DateTime.Today.ToString("dd/MM/yyyy");
 
-            ViewData["curDate"] = date != null ? date.Value.ToString("dd/MM/yyyy") : DateTime.Today.ToString("dd/MM/yyyy"); 
             return View(viewContext);
         }
 
@@ -238,7 +253,7 @@ namespace TSM.Controllers
         public async Task<IActionResult> GetLeaveDetail(string leaveId)
         {
             LeaveVM leaveVM = await _leaveManager.GetLeaveDetail(leaveId);
-            leaveVM.CCId = (await _mailKit.CcIdToEmailAsync(leaveVM.CCId)).ToString();
+           
             return Json(leaveVM);
         }
 

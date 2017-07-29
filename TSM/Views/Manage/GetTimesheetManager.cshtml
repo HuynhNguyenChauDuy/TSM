@@ -57,7 +57,118 @@
     <script src="~/momentjs/moment.js"></script>
 
     <script>
+        $(document).ready(function () {
+            var leaveId = '@ViewData["leaveId"]';
+            if (leaveId != "") {
+                GetLeaveDetail(leaveId);
+            } 
+        });
 
+        function GetLeaveDetail(leaveId) {
+            var targetUrl = '@Url.Action("GetLeaveDetailForManager", "Manage")?leaveId=' + leaveId;
+             $.ajax({
+                url: targetUrl,
+                type: "GET",
+                dataType: 'json',
+                contentType: "application/json; charset=utf-8",
+                success: function (result) {
+                    SetUpElements(result);
+                    $('#DetailMD').modal('show');
+                },
+                error: function () {
+                    alert('Fail to connect to server, please contact IT department for support');
+                }
+            });
+        }
+
+        function SetUpElements(result) {
+            $('#LeaveHandleVM_LeaveID').val(result['leaveID']);
+            $('#DetailVM_leaveID').val(result['leaveID']);
+            $("input[id='DetailVM_employeeName']").val(result['userName']);
+            $("input[id='DetailVM_submittedDate']").val(result['submittedDate']);
+            $("input[id='DetailVM_fromDate']").val(result['fromDate']);
+            $("input[id='DetailVM_toDate']").val(result['toDate']);
+            $("input[id='DetailVM_leaveType']").val(result['leaveType']);
+            $("input[id='DetailVM_approvedDate']").val(result['approvedDate']);
+            $("input[id='DetailVM_Approver']").val(result['approver']);
+            $('#DetailVM_note').html(result['note']);
+
+            // handle Leave data
+            var defaulAnnualLeave = result['defaultAnnualLeave'];
+            var nAnnualLeave = result['nAnnualLeave'];
+            var defaulSickLeave = result['defaultSickLeave'];
+            var nSickLeave = result['nSickLeave'];
+            var otherLeave = result['nOtherLeave'];
+
+            $("input[id='DetailVM_AnnualLeave']").val(nAnnualLeave + "/" + defaulAnnualLeave);
+            $("input[id='DetailVM_SickLeave']").val(nSickLeave + "/" + defaulSickLeave);
+            $("input[id='DetailVM_OtherLeave']").val(otherLeave);
+
+            $("input[id='DetailVM_AnnualLeave']").removeClass();
+            $("input[id='DetailVM_SickLeave']").removeClass();
+            if (defaulAnnualLeave <= nAnnualLeave) {
+                $("input[id='DetailVM_AnnualLeave']").addClass("form-control text_align_center label-danger");
+            } else {
+                $("input[id='DetailVM_AnnualLeave']").addClass("form-control text_align_center");
+            }
+
+            if (defaulSickLeave <= nSickLeave) {
+                $("input[id='DetailVM_SickLeave']").addClass("form-control text_align_center label-danger");
+            } else {
+                $("input[id='DetailVM_SickLeave']").addClass("form-control text_align_center");
+            }
+
+            // handle CC emails
+
+
+            // handle State label
+            var statusClass = '';
+            var statusName = '';
+
+            var state = result['state'];
+            if (state != '2') {
+                if (state == '0') {
+                    statusClass = 'label label-success'
+                    statusName = ' Approved';
+                } else {
+                    statusClass = 'label label-danger'
+                    statusName = ' Rejected';
+                }
+
+                $("button[id='DetailVM_approve']").hide();
+                $("button[id='DetailVM_reject']").hide();
+            } else {
+                statusClass = 'label label-warning';
+                statusName = ' Waiting';
+
+                var curDate = $('#lblCurDate').html();
+                // var formattedDate = moment(curDate, "DD/MM/YYYY");
+                $('#LeaveHandleVM_CurDate').val(curDate);
+
+                $("button[id='DetailVM_approve']").show();
+                $("button[id='DetailVM_reject']").show();
+            }
+
+            // handle workshift label
+            var workShiftName = 'All Day';
+            var workShift = result['workShift'];
+            if (workShift == '1') { workShiftName = 'Morning' }
+            else if (workShift == '2') { workShiftName = 'Afternoon' }
+
+            // assign value to elements
+            $("label[id='DetailVM_state']").html(statusName);
+            $("input[id='DetailVM_workShift']").val(workShiftName);
+
+            $("label[id='DetailVM_state']").removeClass();
+            $("label[id='DetailVM_state']").addClass(statusClass);
+
+            var curDate = $('#lblCurDate').html();
+            //var formattedDate = moment(curDate, "DD/MM/YYYY");
+            $('#LeaveHandleVM_CurDate').val(curDate);
+        }
+    </script>
+
+    <script>
         $(document).ready(function () {
             var curDate = '@ViewData["curDate"]';
             $('#lblCurDate').html(curDate);
@@ -139,8 +250,6 @@
 
             $('#MainTable tbody').on('click', 'tr', function (event) {
                 var leaveId = $(this).closest('tr').find('td:last').html().toString();
-                $('#LeaveHandleVM_LeaveID').val(leaveId);
-
                 var targetUrl = '@Url.Action("GetLeaveDetailForManager", "Manage")?leaveId=' + leaveId;
                 $.ajax({
                     url: targetUrl,
@@ -148,92 +257,10 @@
                     dataType: 'json',
                     contentType: "application/json; charset=utf-8",
                     success: function (result) {
-                        if (result != null)
-                        {
-                            $('#DetailVM_leaveID').val(result['leaveID']);
-                            $("input[id='DetailVM_employeeName']").val(result['userName']);
-                            $("input[id='DetailVM_submittedDate']").val(result['submittedDate']);
-                            $("input[id='DetailVM_fromDate']").val(result['fromDate']);
-                            $("input[id='DetailVM_toDate']").val(result['toDate']);
-                            $("input[id='DetailVM_leaveType']").val(result['leaveType']);
-                            $("input[id='DetailVM_approvedDate']").val(result['approvedDate']);
-                            $("input[id='DetailVM_Approver']").val(result['approver']);
-                            $('#DetailVM_note').html(result['note']);
-
-                            // handle Leave data
-                            var defaulAnnualLeave = result['defaultAnnualLeave'];
-                            var nAnnualLeave = result['nAnnualLeave'];
-                            var defaulSickLeave = result['defaultSickLeave'];
-                            var nSickLeave = result['nSickLeave'];
-                            var otherLeave = result['nOtherLeave'];
-                        
-                            $("input[id='DetailVM_AnnualLeave']").val(nAnnualLeave + "/" + defaulAnnualLeave);
-                            $("input[id='DetailVM_SickLeave']").val(nSickLeave + "/" + defaulSickLeave);
-                            $("input[id='DetailVM_OtherLeave']").val(otherLeave);
-
-                            $("input[id='DetailVM_AnnualLeave']").removeClass();
-                            $("input[id='DetailVM_SickLeave']").removeClass();
-                            if (defaulAnnualLeave <= nAnnualLeave) {
-                                $("input[id='DetailVM_AnnualLeave']").addClass("form-control text_align_center label-danger");
-                            } else {
-                                $("input[id='DetailVM_AnnualLeave']").addClass("form-control text_align_center");
-                            }
-
-                            if (defaulSickLeave <= nSickLeave) {
-                                $("input[id='DetailVM_SickLeave']").addClass("form-control text_align_center label-danger");
-                            } else {
-                                $("input[id='DetailVM_SickLeave']").addClass("form-control text_align_center");
-                            }
-                            
-                            // handle State label
-                            var statusClass = '';
-                            var statusName = '';
-
-                            var state = result['state'];
-                            if (state != '2'){
-                                if (state == '0'){
-                                    statusClass = 'label label-success'
-                                    statusName = ' Approved';
-                                } else {
-                                    statusClass = 'label label-danger'
-                                    statusName = ' Rejected';
-                                }
-
-                                $("button[id='DetailVM_approve']").hide();
-                                $("button[id='DetailVM_reject']").hide();
-                            } else {
-                                statusClass = 'label label-warning';
-                                statusName = ' Waiting';
-
-                                var curDate = $('#lblCurDate').html();
-                                // var formattedDate = moment(curDate, "DD/MM/YYYY");
-                                $('#LeaveHandleVM_CurDate').val(curDate);
- 
-                                $("button[id='DetailVM_approve']").show();
-                                $("button[id='DetailVM_reject']").show();
-                            }
-
-                            // handle workshift label
-                            var workShiftName = 'All Day';
-                            var workShift = result['workShift'];
-                            if (workShift == '1') {workShiftName = 'Morning'}
-                            else if (workShift == '2') {workShiftName = 'Afternoon'}
-
-                            // assign value to elements
-                            $("label[id='DetailVM_state']").html(statusName);
-                            $("input[id='DetailVM_workShift']").val(workShiftName);
-
-                            $("label[id='DetailVM_state']").removeClass();
-                            $("label[id='DetailVM_state']").addClass(statusClass);
-
-                            var curDate = $('#lblCurDate').html();
-                            //var formattedDate = moment(curDate, "DD/MM/YYYY");
-                            $('#LeaveHandleVM_CurDate').val(curDate);
-
+                        if (result != null){
+                            SetUpElements(result);
                             $('#DetailMD').modal('show');
-                        }
-                        else
-                        {
+                        } else {
                             alert('Something went wrong, please refresh the page');
                         }
                     },

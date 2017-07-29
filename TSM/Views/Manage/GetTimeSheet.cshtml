@@ -145,6 +145,14 @@
                                 $('#btnDelete').hide();
                             }
 
+                            // taginput handle
+                            $('input[name="LeaveFormVM.CCId"]').tagsinput('removeAll');
+
+                            var ccList = result['cc'];
+                            $.each(ccList, function (idx, ob) {
+                                $('input[name="LeaveFormVM.CCId"]').tagsinput('add', { 'id': ob.id, 'email': ob.email });
+                            });
+
                             $('#EditLeaveFormMD').modal('show');
                         }
                         else {

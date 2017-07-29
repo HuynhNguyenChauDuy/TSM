@@ -1,5 +1,6 @@
 ﻿using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MimeKit;
@@ -11,19 +12,22 @@ using TSM.Data;
 using TSM.Data.Models;
 using TSM.Models;
 
+
 namespace TSM.Services
 {
     public class MailKitService
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _context;
-        private IHostingEnvironment _env;
+        private readonly IHostingEnvironment _env;
+        private readonly IHttpContextAccessor _contextAccessor;
 
-        public MailKitService(ApplicationDbContext ctx, IHostingEnvironment env, UserManager<ApplicationUser> userManager )
+        public MailKitService(ApplicationDbContext ctx, IHostingEnvironment env, UserManager<ApplicationUser> userManager, IHttpContextAccessor contextAccessor)
         {
             _context = ctx;
             _env = env;
             _userManager = userManager;
+            _contextAccessor = contextAccessor;
         }
 
         public void Send(MimeMessage Email)
@@ -64,11 +68,10 @@ namespace TSM.Services
             return emailMessage;
         }
 
-        public async Task<TextPart> Setup_EmailBody_RequestHandleForOwner(string template, Leave leave, string link)
+        public async Task<TextPart> Setup_EmailBody_ReplaceKeyword(string template, Leave leave)
         {
             try
             {
-                template = template.Replace("RECEIVER", leave.User.UserName);
                 template = template.Replace("FROMDATE", leave.FromDate.ToString("dd/MM/yyyy"));
                 template = template.Replace("TODATE", leave.ToDate.ToString("dd/MM/yyyy"));
                 template = template.Replace("LEAVETYPE", leave.LeaveType.LeaveName);
@@ -125,7 +128,7 @@ namespace TSM.Services
                 MimeMessage email = null;
                 if (userRoles.Contains("Project Manager"))
                 {
-                    await SendEmail_RequestHandledAsync(leaveId);
+                    await SendEmail_PMLeaveSubmitAsync(leaveId);
                 }
                 else if(userRoles.Contains("Team Leader"))
                 {
@@ -137,7 +140,7 @@ namespace TSM.Services
                     email = SetUpEmailInfo(projectManager.Email, null, "Team Leader Leave Request");
 
                     receiverName = projectManager.UserName;
-                    email.Body = await SetUpEmailBody_LeaveSubmitAsync(leaveId, userRoles as List<string>, receiverName);
+                    email.Body = await SetUpEmailBody_LeaveSubmitAsync(leaveId, receiverName);
 
                     Send(email);
                 }
@@ -158,7 +161,8 @@ namespace TSM.Services
                     {
                         email = SetUpEmailInfo(teamLeader.Email, null, "DEV Leave Request");
                         receiverName = teamLeader.UserName;
-                        email.Body = await SetUpEmailBody_LeaveSubmitAsync(leaveId, userRoles as List<string>, receiverName);
+                       
+                        email.Body = await SetUpEmailBody_LeaveSubmitAsync(leaveId, receiverName);
 
                         Send(email);
                     }
@@ -172,15 +176,41 @@ namespace TSM.Services
             }
         }
 
-        public async Task<TextPart> SetUpEmailBody_LeaveSubmitAsync(string leaveId, List<string> userRoles, string receiverName)
+        public async Task<bool> SendEmail_PMLeaveSubmitAsync(string leaveID)
+        {
+            try
+            {
+                var leave = await GetLeavebyIDAsync(leaveID);
+                var ccEmails = await CcIdToEmailAsync(leave.CCId);
+
+                var email = SetUpEmailInfo(leave.User.Email, ccEmails, "PM Leave Announcement");
+
+                var emailTemplate = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leaverequestPM.html");
+              
+                email.Body = await Setup_EmailBody_ReplaceKeyword(emailTemplate, leave);
+
+                Send(email);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<TextPart> SetUpEmailBody_LeaveSubmitAsync(string leaveId, string receiverName)
         {
             try
             {
                 var leave = await GetLeavebyIDAsync(leaveId);
                 var userID = (await _context.Leaves.FindAsync(leaveId)).ApplicationUserID;
                 var userName = (await _context.Users.FindAsync(userID)).UserName;
-
-                string emailTemp = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/LeaveRequest.html");
+                
+                var request = _contextAccessor.HttpContext.Request;
+                var absoluteUri = string.Concat(request.Scheme,"://",request.Host.ToUriComponent(),"/Request/",leaveId);
+               
+                string emailTemp = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leaverequest.html");
 
                 emailTemp = emailTemp.Replace("RECEIVER", receiverName);
                 emailTemp = emailTemp.Replace("SENDER", userName);
@@ -190,6 +220,7 @@ namespace TSM.Services
                 emailTemp = emailTemp.Replace("LEAVETYPE", leave.LeaveType.LeaveName);
                 emailTemp = emailTemp.Replace("WORKSHIFT", leave.WorkShift.ToString());
                 emailTemp = emailTemp.Replace("NOTE", System.Net.WebUtility.HtmlDecode(leave.Note));
+                emailTemp = emailTemp.Replace("LINK", absoluteUri);
 
                 var tpart = new TextPart("html")
                 {
@@ -210,18 +241,43 @@ namespace TSM.Services
             { 
                 // set up email for request owner
                 var leave = await GetLeavebyIDAsync(leaveId);
-                var ccEmails = await CcIdToEmailAsync(leave.CCId);
                 var result = leave.State;
+                var approver = await _context.Users.FindAsync(leave.ApproverID);
 
-                var ownerEmail = SetUpEmailInfo(leave.User.Email, ccEmails, "Your Leave Request Handled");
-                string emailTemplate = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leavehandled.html");
-                emailTemplate = emailTemplate.Replace("RESULT", result.ToString());
-                ownerEmail.Body = await Setup_EmailBody_RequestHandleForOwner(emailTemplate, leave, null);
+                MimeMessage ownerEmail = null;
+                if(result == Leave.eState.Approved)
+                {
+                    // include CC
+                    var ccEmails = await CcIdToEmailAsync(leave.CCId);
+                    var emailTitle = leave.User.UserName + "'s Leave Request Handled";
+                    ownerEmail = SetUpEmailInfo(leave.User.Email, ccEmails, emailTitle);
+                }
+                else
+                {
+                    // Not include CC
+                    ownerEmail = SetUpEmailInfo(leave.User.Email, null, "Your Leave Request Handled");
+                }
+
+                string emailTemplateForOwner = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leaveresult.html");
+
+                emailTemplateForOwner = emailTemplateForOwner.Replace("RECEIVER", leave.User.UserName);
+                emailTemplateForOwner = emailTemplateForOwner.Replace("RESULT", result.ToString());
+                emailTemplateForOwner = emailTemplateForOwner.Replace("APPROVEDDATE", leave.ApprovedDate.ToString("dd/MM/yyyy"));
+                emailTemplateForOwner = emailTemplateForOwner.Replace("APPROVER", approver.UserName);
+
+                ownerEmail.Body = await Setup_EmailBody_ReplaceKeyword(emailTemplateForOwner, leave);
 
                 // set up email for approver
-                var approver = await _context.Users.FindAsync(leave.ApproverID);
                 var approverEmail = SetUpEmailInfo(approver.Email, null, "You Handled A Leave Request");
-                approverEmail.Body = await Setup_EmailBody_RequestHandleForOwner(emailTemplate, leave, null);
+
+                string emailTemplateForApprover = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leavehandledapprover.html");
+
+                emailTemplateForApprover = emailTemplateForApprover.Replace("RECEIVER", approver.UserName);
+                emailTemplateForApprover = emailTemplateForApprover.Replace("SENDER", leave.User.UserName);
+                emailTemplateForApprover = emailTemplateForApprover.Replace("RESULT", result.ToString());
+                emailTemplateForApprover = emailTemplateForApprover.Replace("APPROVEDDATE", leave.ApprovedDate.ToString("dd/MM/yyyy"));
+
+                approverEmail.Body = await Setup_EmailBody_ReplaceKeyword(emailTemplateForApprover, leave);
 
                 Send(ownerEmail);
                 Send(approverEmail);
@@ -239,13 +295,19 @@ namespace TSM.Services
             try
             {
                 // set up email for request owner
-                var ownerEmail = SetUpEmailInfo(leave.User.Email, null, "Your Leave Request Deleted");
-                string emailTemplate = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leavedelete.html");
-                ownerEmail.Body = await Setup_EmailBody_RequestHandleForOwner(emailTemplate, leave, null);
+                var ownerEmail = SetUpEmailInfo(leave.User.Email, null, "Your Deleted Leave Request");
+                string emailTemplateForOwner = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leavedeleted.html");
+                emailTemplateForOwner = emailTemplateForOwner.Replace("RECEIVER", leave.User.UserName);
+                ownerEmail.Body = await Setup_EmailBody_ReplaceKeyword(emailTemplateForOwner, leave);
+
+                Send(ownerEmail);
+
+                // set up email for approver
+                var approverName = "";
+                var aproverEmail = "";
+                var emailTitle = "";
 
                 var userRoles = await _userManager.GetRolesAsync(leave.User);
-
-                MimeMessage approverEmail = null;
                 if (userRoles.Contains("Project Manager"))
                 {
                     Send(ownerEmail);
@@ -258,35 +320,39 @@ namespace TSM.Services
                                             .FirstOrDefaultAsync()).Users.FirstOrDefault();
 
                     var projectManager = await _context.Users.FindAsync(projectManagerID.UserId);
-                    approverEmail = SetUpEmailInfo(projectManager.Email, null, "Team Leader Leave Deleted");
 
-                    var receiverName = projectManager.UserName;
-                    approverEmail.Body = null;
+                    approverName = projectManager.UserName;
+                    aproverEmail = projectManager.Email;
+                    emailTitle = "Team Leader Leave Deleted";
                 }
                 else
                 {
-                    ApplicationUser teamLeader = null;
                     foreach (var item in _context.Users.Where(item => item.TeamID == leave.User.TeamID))
                     {
                         var roles = await _userManager.GetRolesAsync(item);
                         if (roles.Contains("Team Leader"))
                         {
-                            teamLeader = item;
+                            aproverEmail = item.Email;
+                            approverName = item.UserName;
+                            emailTitle = "DEV Leave Request Deleted";
                             break;
                         }
                     }
-
-                    if (teamLeader != null)
-                    {
-                        approverEmail = SetUpEmailInfo(teamLeader.Email, null, "DEV Leave Request Deleted");
-                        var receiverName = teamLeader.UserName;
-                        approverEmail.Body = null;
-                    }
                 }
 
-                // set up email for approver
-                Send(ownerEmail);
-                Send(approverEmail);
+                if (approverName != "" && aproverEmail != "")
+                {
+                    var mailForApprover = SetUpEmailInfo(aproverEmail, null, emailTitle);
+
+                    var emailTemplateForApprover = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leavedeletedForApprover.html");
+                    emailTemplateForApprover = emailTemplateForApprover.Replace("RECEIVER", approverName);
+                    emailTemplateForApprover = emailTemplateForApprover.Replace("SENDER", leave.User.UserName);
+
+                    mailForApprover.Body = await Setup_EmailBody_ReplaceKeyword(emailTemplateForApprover, leave);
+
+                    Send(mailForApprover);
+                }
+                    
                 return true;
             }
             catch
@@ -299,13 +365,70 @@ namespace TSM.Services
         {
             try
             {
-                // set up email for request owner
                 var leave = await GetLeavebyIDAsync(leaveId);
-                var email = SetUpEmailInfo(leave.User.Email, null, "Your Leave Request Updated");
-                string emailTemplate = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/updatleave.html");
-                email.Body = await Setup_EmailBody_RequestHandleForOwner(emailTemplate, leave, null);
+                // set up email for request owner
+                var ownerEmail = SetUpEmailInfo(leave.User.Email, null, "Your Updated Leave Request");
+                string emailTemplateForOwner = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leaveupdated.html");
+                emailTemplateForOwner = emailTemplateForOwner.Replace("RECEIVER", leave.User.UserName);
+                ownerEmail.Body = await Setup_EmailBody_ReplaceKeyword(emailTemplateForOwner, leave);
 
-                Send(email);
+                Send(ownerEmail);
+
+                // set up email for approver
+                var approverName = "";
+                var aproverEmail = "";
+                var emailTitle = "";
+
+                var userRoles = await _userManager.GetRolesAsync(leave.User);
+                if (userRoles.Contains("Project Manager"))
+                {
+                    Send(ownerEmail);
+                    return true;
+                }
+                else if (userRoles.Contains("Team Leader"))
+                {
+                    var projectManagerID = (await _context.Roles.Include(item => item.Users)
+                                             .Where(item => item.Name == "Project Manager")
+                                            .FirstOrDefaultAsync()).Users.FirstOrDefault();
+
+                    var projectManager = await _context.Users.FindAsync(projectManagerID.UserId);
+
+                    approverName = projectManager.UserName;
+                    aproverEmail = projectManager.Email;
+                    emailTitle = "Team Leader Leave Updated";
+                }
+                else
+                {
+                    foreach (var item in _context.Users.Where(item => item.TeamID == leave.User.TeamID))
+                    {
+                        var roles = await _userManager.GetRolesAsync(item);
+                        if (roles.Contains("Team Leader"))
+                        {
+                            aproverEmail = item.Email;
+                            approverName = item.UserName;
+                            emailTitle = "DEV Leave Request Updated";
+                            break;
+                        }
+                    }
+                }
+
+                if (approverName != "" && aproverEmail != "")
+                {
+                    var mailForApprover = SetUpEmailInfo(aproverEmail, null, emailTitle);
+
+                    var emailTemplateForApprover = System.IO.File.ReadAllText(_env.WebRootPath + "/emailTemplate/leaveupdateforapprover.html");
+                    emailTemplateForApprover = emailTemplateForApprover.Replace("RECEIVER", approverName);
+                    emailTemplateForApprover = emailTemplateForApprover.Replace("SENDER", leave.User.UserName);
+
+                    var request = _contextAccessor.HttpContext.Request;
+                    var absoluteUri = string.Concat(request.Scheme, "://", request.Host.ToUriComponent(), "/Request/", leaveId);
+
+                    emailTemplateForApprover = emailTemplateForApprover.Replace("LINK", absoluteUri);
+
+                    mailForApprover.Body = await Setup_EmailBody_ReplaceKeyword(emailTemplateForApprover, leave);
+
+                    Send(mailForApprover);
+                }
 
                 return true;
             }

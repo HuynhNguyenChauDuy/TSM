@@ -66,6 +66,19 @@ namespace TSM.Controllers
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.Authentication.SignOutAsync(_externalCookieScheme);
 
+            // check if user already logged in
+            if (User.Identity.IsAuthenticated)
+            {
+                if (returnUrl != null)
+                {
+                    return RedirectToLocal(returnUrl);
+                }
+                else
+                {
+                    return RedirectToAction("GetTimesheet", "Manage");
+                }
+            }
+
             ViewData["ReturnUrl"] = returnUrl;
             return View();
         }
@@ -76,7 +89,6 @@ namespace TSM.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         public async Task<IActionResult> GetProfile()
         {
             var userId = (await GetCurrentUserAsync()).Id;
@@ -85,20 +97,18 @@ namespace TSM.Controllers
             return View(userDetail);
         }
 
-       
 
         [HttpPost]
-        [Authorize]
         public async Task<IActionResult> LoadImage(ProfileVM profile)
         {
-           if(profile.AvatarImage != null)
-            { 
+            if (profile.AvatarImage != null)
+            {
                 var uploads = Path.Combine(_environment.WebRootPath, "userImage");
-
                 var userId = (await GetCurrentUserAsync()).Id;
 
                 var fileName = userId + ".jpg";
                 var filePath = Path.Combine(uploads, fileName);
+
                 if (System.IO.File.Exists(filePath))
                 {
                     System.IO.File.Delete(filePath);
@@ -110,7 +120,7 @@ namespace TSM.Controllers
                 }
             }
 
-            return RedirectToAction("GetProfile","Account");
+            return RedirectToAction("GetProfile", "Account");
         }
 
         public async Task<IActionResult> EditProfile(ProfileVM submit)
@@ -123,7 +133,7 @@ namespace TSM.Controllers
             if (ModelState.IsValid)
             {
                 var userId = (await GetCurrentUserAsync()).Id;
-                bool result = await _exUserManager.EditProfile(submit, userId);
+                bool result = await _exUserManager.EditProfileAsync(submit, userId);
 
                 // assign toast message properties
                 if (result)
@@ -156,15 +166,21 @@ namespace TSM.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation(1, "User logged in.");
                     var user = await _userManager.FindByEmailAsync(model.Email);
 
-                    return RedirectToLocal(Url.Action("GetTimesheet", "Manage"));
+                    if (returnUrl != null)
+                    {
+                        return RedirectToLocal(returnUrl);
+                    }
+                    else
+                    {
+                        return RedirectToAction("GetTimesheet","Manage");
+                    }
+                    
                 }
                 if (result.RequiresTwoFactor)
                 {

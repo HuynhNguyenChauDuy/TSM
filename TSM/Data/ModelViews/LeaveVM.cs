@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using TSM.Data.Models;
 namespace TSM.Data.ModelViews
@@ -51,5 +52,8 @@ namespace TSM.Data.ModelViews
 
         [Display(Name = "Other Leaves")]
         public int NOtherLeave { get; set; }
+
+        [Display(Name = "CC")]
+        public List<CCVM> CC { get; set; }
     }
 }

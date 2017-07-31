@@ -20,8 +20,7 @@ namespace TSM.DataAccess
         public ExUserManager
             (ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IMapper mapper
-            )
+            IMapper mapper)
         {
             _context = context;
             _userManager = userManager;
@@ -36,14 +35,13 @@ namespace TSM.DataAccess
                     .Include(item => item.Team)
                     .Where(item => item.Id.CompareTo(userId) == 0).FirstOrDefaultAsync();
 
-                var nSickleave = await CountLeaveByUserId(userId, "Sick Leave");
-                var nAnnualLeave = await CountLeaveByUserId(userId, "Annual Leave");
-                var nOtherLeave = await CountLeaveByUserId(userId, "Other");
+                var nSickleave = await CountLeaveByUserIdAsync(userId, "Sick Leave");
+                var nAnnualLeave = await CountLeaveByUserIdAsync(userId, "Annual Leave");
+                var nOtherLeave = await CountLeaveByUserIdAsync(userId, "Other");
 
-                var nApprovedList = await CountLeavesByState(userId, 0);
-                var nRejectedList = await CountLeavesByState(userId, 1);
-                var nWaitingList = await CountLeavesByState(userId, 2);
-
+                var nApprovedList = await CountLeavesByStateAsync(userId, Leave.eState.Approved);
+                var nRejectedList = await CountLeavesByStateAsync(userId, Leave.eState.Rejected);
+                var nWaitingList = await CountLeavesByStateAsync(userId, Leave.eState.OnQueue);
 
                 var userRoles = await _userManager.GetRolesAsync(user);
 
@@ -68,19 +66,21 @@ namespace TSM.DataAccess
                 
                     return profileVM;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return null;
             }
         }
 
-        private async Task<int> CountLeaveByUserId(string userId, string LeaveType)
+        private async Task<int> CountLeaveByUserIdAsync(string userId, string LeaveType)
         {
             try
             {
                 int count = 0;
                 foreach(var item in _context.Leaves.Include(item => item.LeaveType)
-                    .Where(item => item.ApplicationUserID.CompareTo(userId) == 0 && item.LeaveType.LeaveName.CompareTo(LeaveType) == 0 && item.State == Leave.eState.Approved))
+                                            .Where(item => item.ApplicationUserID.CompareTo(userId) == 0
+                                                && item.LeaveType.LeaveName.CompareTo(LeaveType) == 0 
+                                                && item.State == Leave.eState.Approved))
                 {
                     int days = (item.ToDate - item.FromDate).Days;
                     count += days == 0 ?  1 : (days + 1); 
@@ -94,42 +94,12 @@ namespace TSM.DataAccess
             }
         }
 
-        private async Task<int> CountLeavesByState(string userId, int state)
+        private async Task<int> CountLeavesByStateAsync(string userId, Leave.eState state)
         {
-            int count = 0;
             try
             {
-                if(state == 0)
-                {
-                   
-                    foreach (var item in _context.Leaves
-                        .Where(item => item.ApplicationUserID.CompareTo(userId) == 0 && item.State == Leave.eState.Approved))
-                    {
-                        count++;
-                    }
-                    return  count;
-                }
-                if (state == 1)
-                {
-                    
-                    foreach (var item in _context.Leaves
-                        .Where(item => item.ApplicationUserID.CompareTo(userId) == 0 && item.State == Leave.eState.Rejected))
-                    {
-                        count++;
-                    }
-                    return count;
-                }
-                if (state == 2)
-                {
-                   
-                    foreach (var item in _context.Leaves
-                        .Where(item => item.ApplicationUserID.CompareTo(userId) == 0 && item.State == Leave.eState.OnQueue))
-                    {
-                        count++;
-                    }
-                    return count;
-                }
-                return count;
+                return await _context.Leaves
+                    .CountAsync(item => item.ApplicationUserID.CompareTo(userId) == 0 && item.State == state);
             }
             catch
             {
@@ -137,19 +107,21 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<bool> EditProfile(ProfileVM submit, string userId)
+        public async Task<bool> EditProfileAsync(ProfileVM submit, string userId)
         {
             try
             {
-               ApplicationUser curProfile = await _context.Users
-                    .Where(item => item.Id.CompareTo(userId) == 0).FirstOrDefaultAsync();
-                if(curProfile == null)
+                ApplicationUser user = await _context.Users.FindAsync(userId);
+
+                if(user == null)
                 {
                     return false;
                 }
-                curProfile.Email = submit.Email;
-                curProfile.PhoneNumber = submit.PhoneNumber;
-                _context.Entry(curProfile).State = EntityState.Modified;
+
+                user.Email = submit.Email;
+                user.PhoneNumber = submit.PhoneNumber;
+
+                _context.Entry(user).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
                 return true;

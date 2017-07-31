@@ -98,6 +98,11 @@ namespace TSM
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Account}/{action=LogIn}/{id?}");
+
+                routes.MapRoute(
+                    name: "QuickLeaveAccess",
+                    template: "Request/{*leaveId}",
+                    defaults: new { controller = "Manage", action = "GetTimesheetManager" });
             });
         }
     }

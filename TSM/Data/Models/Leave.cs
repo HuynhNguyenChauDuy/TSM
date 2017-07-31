@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using TSM.Models;
 
 namespace TSM.Data.Models
@@ -27,9 +28,8 @@ namespace TSM.Data.Models
         public DateTime ApprovedDate { get; set; }
         public eState State { get; set; }
         public string Note { get; set; }
-
         public string ApproverID { get; set; }
-
+        public string CCId { get; set; }
         public string ApplicationUserID { get; set; }
         public ApplicationUser User { get; set; }
 

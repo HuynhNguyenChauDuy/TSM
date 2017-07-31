@@ -245,6 +245,7 @@ namespace TSM.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = ("Project Manager,Team Leader"))]
         public async Task<IActionResult> GetLeaveDetailForManager(string leaveId)
         {
             return Json(await _leaveManager.GetLeaveDetailForManager(leaveId));
@@ -379,7 +380,6 @@ namespace TSM.Controllers
            messageTitle, message, messageType);
 
             return RedirectToAction(nameof(GetTimesheetManager), new { date = request.LeaveHandleVM_Multiple.CurDate });
-
         }
 
         // POST: /Manage/RemoveLogin

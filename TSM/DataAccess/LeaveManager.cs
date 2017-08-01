@@ -445,7 +445,7 @@ namespace TSM.DataAccess
 
                 // temporarily put this condition code snipps above, seperate it if possible
                 foreach(var item in _context.Leaves
-                        .Where(item => item.ApplicationUserID == userId && item.ID == leave.ID))
+                        .Where(item => item.ApplicationUserID == userId && item.ID != leave.ID))
                 {
                     if ((leave.FromDate >= item.FromDate && leave.FromDate <= item.ToDate) || (leave.ToDate >= item.FromDate && leave.ToDate <= item.ToDate))
                     {

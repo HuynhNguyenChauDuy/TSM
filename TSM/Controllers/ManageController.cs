@@ -233,7 +233,7 @@ namespace TSM.Controllers
                 else
                 {
                     messageTitle = "Error";
-                    message = "Unable to edit your request";
+                    message = "The range of dates already existed";
                     messageType = ToastEnums.ToastType.Error;
                 }
             }

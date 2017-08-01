@@ -174,6 +174,26 @@ namespace TSM.Data.Migrations
                     b.ToTable("LeaveTypes");
                 });
 
+            modelBuilder.Entity("TSM.Data.Models.Notification", b =>
+                {
+                    b.Property<string>("ID")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Content");
+
+                    b.Property<int>("NotiType");
+
+                    b.Property<string>("ReceiverId");
+
+                    b.Property<string>("UserId");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notification");
+                });
+
             modelBuilder.Entity("TSM.Data.Models.Team", b =>
                 {
                     b.Property<string>("ID")
@@ -292,6 +312,13 @@ namespace TSM.Data.Migrations
                     b.HasOne("TSM.Data.Models.LeaveType", "LeaveType")
                         .WithMany("Leaves")
                         .HasForeignKey("LeaveTypeID");
+                });
+
+            modelBuilder.Entity("TSM.Data.Models.Notification", b =>
+                {
+                    b.HasOne("TSM.Models.ApplicationUser", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("TSM.Models.ApplicationUser", b =>

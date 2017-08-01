@@ -59,6 +59,7 @@
     </style>
 }
 
+
 @section jvscript{
     <script src="~/DatePicker/js/bootstrap-datepicker.js"></script>
     <script src="~/jquery-validation/dist/jquery.validate.min.js"></script>
@@ -69,6 +70,13 @@
     <script src="~/toastr-master/toastr.min.js"></script>
     <script src="~/bootstrap-tagsinput-latest/dist/bootstrap-tagsinput.js"></script>
     <script src="~/Bootstrap-3-Typeahead-master/bootstrap3-typeahead.js"></script>
+
+<script src="~/lib/signalr/jquery.signalR.js"></script>
+<script src="~/Signalr/hubs"></script>
+    
+
+
+
     <!--DatePicker setup-->
     <script>
         var curDate = new Date();
@@ -202,12 +210,29 @@
                 }
             });
         });
+        $(document).ready(function () {
+            var myHubProxy = $.connection.hub.createHubProxy("myHub");
+            myHubProxy.on('notifyUpdates', function (msg) {
+                $('#results').append("<hr>");
+                $('#results').append(msg);
+            })
+
+            $.connection.hub.start().done(function () {
+                $('#ClickButton').click(function () {
+                    var connectedUser = "Enter your name ";
+                    myHubProxy.invoke("ServerListener", connectedUser);
+                });
+
+            });
+        });
     </script>
 }
 <section class="content-header" style="position:relative">
     <div class="row">
         <div class="col-sm-6">
             <h1>PERSONAL TIMESHEET</h1>
+            <button id="ClickButton">Hello</button>
+            <h4><span id="results"></span></h4>
         </div>
         <div class="col-sm-6">
             <h1>
@@ -356,7 +381,7 @@
                         <div class="row form-group">
                             <div class="col-sm-10"></div>
                             <div class="col-sm-2">
-                                <button type="submit" value="submit" class="btn btn-primary">Submit</button>
+                                <button id="SubmitButton" type="submit" value="submit" class="btn btn-primary">Submit</button>
                             </div>
                         </div>
                     </form>

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using TSM.Data;
 using TSM.Data.Models;
+using TSM.DataAccess;
 using TSM.Models;
 
 
@@ -21,13 +22,15 @@ namespace TSM.Services
         private readonly ApplicationDbContext _context;
         private readonly IHostingEnvironment _env;
         private readonly IHttpContextAccessor _contextAccessor;
+        private readonly ExUserManager _exUserManager; 
 
-        public MailKitService(ApplicationDbContext ctx, IHostingEnvironment env, UserManager<ApplicationUser> userManager, IHttpContextAccessor contextAccessor)
+        public MailKitService(ApplicationDbContext ctx, IHostingEnvironment env, UserManager<ApplicationUser> userManager, IHttpContextAccessor contextAccessor, ExUserManager exUserManager)
         {
             _context = ctx;
             _env = env;
             _userManager = userManager;
             _contextAccessor = contextAccessor;
+            _exUserManager = exUserManager;
         }
 
         public void Send(MimeMessage Email)
@@ -123,7 +126,6 @@ namespace TSM.Services
                 var user = await _context.Users.FindAsync(leave.ApplicationUserID);
                 var userRoles =  await _userManager.GetRolesAsync(user);
                 var ccEmailList = await CcIdToEmailAsync(leave.CCId);
-                var receiverName = "";
 
                 MimeMessage email = null;
                 if (userRoles.Contains("Project Manager"))
@@ -132,40 +134,23 @@ namespace TSM.Services
                 }
                 else if(userRoles.Contains("Team Leader"))
                 {
-                    var projectManagerRole = (await _context.Roles.Include(item => item.Users)
-                                             .Where(item => item.Name == "Project Manager")
-                                            .FirstOrDefaultAsync()).Users.FirstOrDefault();
-                
-                    var projectManager = await _context.Users.FindAsync(projectManagerRole.UserId);
-                    email = SetUpEmailInfo(projectManager.Email, null, "Team Leader Leave Request");
+                    var projectManagerId = await _exUserManager.GetSupervisorIdAsync(user.Id);
+                    var projectManager = await _context.Users.FindAsync(projectManagerId);
 
-                    receiverName = projectManager.UserName;
-                    email.Body = await SetUpEmailBody_LeaveSubmitAsync(leaveId, receiverName);
+                    email = SetUpEmailInfo(projectManager.Email, null, "Team Leader Leave Request");
+                    email.Body = await SetUpEmailBody_LeaveSubmitAsync(leaveId, projectManager.UserName);
 
                     Send(email);
                 }
-                else 
+                else
                 {
-                    ApplicationUser teamLeader = null;
-                    foreach(var item in _context.Users.Where(item => item.TeamID == user.TeamID))
-                    {
-                        var roles = await _userManager.GetRolesAsync(item);
-                        if(roles.Contains("Team Leader"))
-                        {
-                            teamLeader = item;
-                            break;
-                        }
-                    }
+                    var teamLeaderId = await _exUserManager.GetSupervisorIdAsync(user.Id);
+                    var teamLeader = await _context.Users.FindAsync(teamLeaderId);
 
-                    if (teamLeader != null)
-                    {
-                        email = SetUpEmailInfo(teamLeader.Email, null, "DEV Leave Request");
-                        receiverName = teamLeader.UserName;
-                       
-                        email.Body = await SetUpEmailBody_LeaveSubmitAsync(leaveId, receiverName);
+                    email = SetUpEmailInfo(teamLeader.Email, null, "DEV Leave Request");
+                    email.Body = await SetUpEmailBody_LeaveSubmitAsync(leaveId, teamLeader.UserName);
 
-                        Send(email);
-                    }
+                    Send(email);
                 }
 
                 return true;
@@ -310,35 +295,24 @@ namespace TSM.Services
                 var userRoles = await _userManager.GetRolesAsync(leave.User);
                 if (userRoles.Contains("Project Manager"))
                 {
+                    // project manager isn't able to delete their own request
                     Send(ownerEmail);
                     return true;
                 }
                 else if (userRoles.Contains("Team Leader"))
                 {
-                    var projectManagerID = (await _context.Roles.Include(item => item.Users)
-                                             .Where(item => item.Name == "Project Manager")
-                                            .FirstOrDefaultAsync()).Users.FirstOrDefault();
-
-                    var projectManager = await _context.Users.FindAsync(projectManagerID.UserId);
-
-                    approverName = projectManager.UserName;
-                    aproverEmail = projectManager.Email;
                     emailTitle = "Team Leader Leave Deleted";
                 }
                 else
                 {
-                    foreach (var item in _context.Users.Where(item => item.TeamID == leave.User.TeamID))
-                    {
-                        var roles = await _userManager.GetRolesAsync(item);
-                        if (roles.Contains("Team Leader"))
-                        {
-                            aproverEmail = item.Email;
-                            approverName = item.UserName;
-                            emailTitle = "DEV Leave Request Deleted";
-                            break;
-                        }
-                    }
+                    emailTitle = "DEV Leave Request Deleted";
                 }
+
+                var supervisorId = await _exUserManager.GetSupervisorIdAsync(leave.ApplicationUserID);
+                var supervisor = await _context.Users.FindAsync(supervisorId);
+
+                approverName = supervisor.UserName;
+                aproverEmail = supervisor.Email;
 
                 if (approverName != "" && aproverEmail != "")
                 {
@@ -382,35 +356,24 @@ namespace TSM.Services
                 var userRoles = await _userManager.GetRolesAsync(leave.User);
                 if (userRoles.Contains("Project Manager"))
                 {
+                    // project manager isn't able to update thier own request
                     Send(ownerEmail);
                     return true;
                 }
                 else if (userRoles.Contains("Team Leader"))
                 {
-                    var projectManagerID = (await _context.Roles.Include(item => item.Users)
-                                             .Where(item => item.Name == "Project Manager")
-                                            .FirstOrDefaultAsync()).Users.FirstOrDefault();
-
-                    var projectManager = await _context.Users.FindAsync(projectManagerID.UserId);
-
-                    approverName = projectManager.UserName;
-                    aproverEmail = projectManager.Email;
                     emailTitle = "Team Leader Leave Updated";
                 }
                 else
                 {
-                    foreach (var item in _context.Users.Where(item => item.TeamID == leave.User.TeamID))
-                    {
-                        var roles = await _userManager.GetRolesAsync(item);
-                        if (roles.Contains("Team Leader"))
-                        {
-                            aproverEmail = item.Email;
-                            approverName = item.UserName;
-                            emailTitle = "DEV Leave Request Updated";
-                            break;
-                        }
-                    }
+                    emailTitle = "DEV Leave Request Updated";
                 }
+
+                var supervisorId = await _exUserManager.GetSupervisorIdAsync(leave.ApplicationUserID);
+                var supervisor = await _context.Users.FindAsync(supervisorId);
+
+                approverName = supervisor.UserName;
+                aproverEmail = supervisor.Email;
 
                 if (approverName != "" && aproverEmail != "")
                 {

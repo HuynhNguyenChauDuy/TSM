@@ -17,7 +17,8 @@ namespace TSM.Models
         public string TeamID { get; set; }
         public Team Team { get; set; }
 
-        public ICollection<Leave> Leaves { get; set; } 
+        public ICollection<Leave> Leaves { get; set; }
+        public ICollection<Notification> Notifications { get; set; }
 
     }
 }

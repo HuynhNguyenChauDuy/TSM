@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
@@ -15,16 +14,13 @@ namespace TSM.DataAccess
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IMapper _mapper;
-
+        
         public ExUserManager
             (ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager,
-            IMapper mapper)
+            UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;
-            _mapper = mapper;
         }
 
         public async Task<ProfileVM> GetUserDetailById(string userId)
@@ -63,8 +59,8 @@ namespace TSM.DataAccess
                     NRejectedLeaves = nRejectedList
                 };
 
-                
-                    return profileVM;
+
+                return profileVM;
             }
             catch (Exception)
             {
@@ -77,13 +73,13 @@ namespace TSM.DataAccess
             try
             {
                 int count = 0;
-                foreach(var item in _context.Leaves.Include(item => item.LeaveType)
+                foreach (var item in _context.Leaves.Include(item => item.LeaveType)
                                             .Where(item => item.ApplicationUserID.CompareTo(userId) == 0
-                                                && item.LeaveType.LeaveName.CompareTo(LeaveType) == 0 
+                                                && item.LeaveType.LeaveName.CompareTo(LeaveType) == 0
                                                 && item.State == Leave.eState.Approved))
                 {
                     int days = (item.ToDate - item.FromDate).Days;
-                    count += days == 0 ?  1 : (days + 1); 
+                    count += days == 0 ? 1 : (days + 1);
                 }
 
                 return count;
@@ -113,7 +109,7 @@ namespace TSM.DataAccess
             {
                 ApplicationUser user = await _context.Users.FindAsync(userId);
 
-                if(user == null)
+                if (user == null)
                 {
                     return false;
                 }
@@ -132,6 +128,45 @@ namespace TSM.DataAccess
             }
         }
 
-       
+        public async Task<String> GetSupervisorIdAsync(string userId)
+        {
+            try
+            {
+                string supervisorID = null;
+                var user = await _context.Users.FindAsync(userId);
+
+                var userRoles = await _userManager.GetRolesAsync(user);
+                if (userRoles.Contains("Project Manager"))
+                {
+                    supervisorID = user.Id;
+                }
+                else if (userRoles.Contains("Team Leader"))
+                {
+                    var projectManagerRole = (await _context.Roles.Include(item => item.Users)
+                                             .Where(item => item.Name == "Project Manager")
+                                            .FirstOrDefaultAsync()).Users.FirstOrDefault();
+
+                    supervisorID = projectManagerRole.UserId;
+                }
+                else
+                {
+                    foreach (var item in _context.Users.Where(item => item.TeamID == user.TeamID))
+                    {
+                        var roles = await _userManager.GetRolesAsync(item);
+                        if (roles.Contains("Team Leader"))
+                        {
+                            supervisorID = item.Id;
+                            break;
+                        }
+                    }
+                }
+
+                return supervisorID;
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

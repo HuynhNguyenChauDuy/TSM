@@ -26,8 +26,17 @@
     <script src="~/toastr-master/toastr.js"></script>
 
     <script>
-        function getFilename() {
+        function getFilename()
+        {
+            var content = $("#InputFile").val();
+            var patt1 = /jpg/;
+            var patt2 = /png/;
+            if (!patt1.test(content) && !patt2.test(content)) {
+                alert("This isn't image. Please choose again !");
+                $("#InputFile").val('');
+                window.location = "@Url.Action("GetProfile", "Account")";
 
+            }
             $('#ChangeAvatarForm').submit();
         }
 
@@ -60,7 +69,7 @@
                                 }
                                 else
                                 {
-                                    <img id="Avatar" role="button" class="profile-user-img img-responsive img-circle" data-target="#ChangeAvatarPopup" data-toggle="modal" src="/userImage/default.jpg" />
+                                    <img id="Avatar" role="button" class="profile-user-img img-responsive img-circle" onclick="ChangeAvatar()" src="/userImage/default.jpg" />
                                 }
                             }
 
@@ -276,13 +285,13 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">x</span><span class="sr-only">Close</span></button>
-                    <h3 class="modal-title"  id="lineModalLabel">Sick Leave</h3>
+                    <h3 class="modal-title" id="lineModalLabel">Sick Leave</h3>
                 </div>
                 <div class="modal-body" style="text-align:left; ">
                     <!-- content goes here -->
-                    <p >Traditionally, sick leave is paid time off of work that an organization has voluntarily provided for employees as a benefit. Increasingly, however, in recent years, jurisdictions both state and local, are mandating that employers provide paid sick days. </p>
-                    <p>Number of days off : @Model.NSickLeave days</p> 
-                    <p>Default days of Sick Leave : @Model.DefaultSickLeave days</p> 
+                    <p>Traditionally, sick leave is paid time off of work that an organization has voluntarily provided for employees as a benefit. Increasingly, however, in recent years, jurisdictions both state and local, are mandating that employers provide paid sick days. </p>
+                    <p>The days you take : <span style="color:red">@Model.NSickLeave</span> days.</p>
+                    <p>You have  : <span style="color:red">@Model.DefaultSickLeave</span> days for leave.</p>
                 </div>
             </div>
         </div>
@@ -296,7 +305,8 @@
                 </div>
                 <div class="modal-body">
                     <!-- content goes here -->
-                    <p style="text-align:left">Annual leave (also known as holiday pay) allows an employee to be paid while having time off from work.
+                    <p style="text-align:left">
+                        Annual leave (also known as holiday pay) allows an employee to be paid while having time off from work.
 
                         The entitlement to annual leave comes from the National Employment Standards (NES).
 
@@ -309,9 +319,10 @@
                         How much annual leave does an employee get?
 
                         Full-time and part-time employees get 4 weeks of annual leave, based on their ordinary hours of work.
-                    </p>    
-                    <p>Number of days off : @Model.NAnnualLeave days</p>
-                    <p>Default days of Annual Leave : @Model.DefaultAnnualLeave days</p> 
+                    </p>
+                    <p>The days you take : <span style="color:red">@Model.NAnnualLeave</span> days.</p>
+                    <p>You have  : <span style="color:red">@Model.DefaultAnnualLeave</span> days for leave.</p>
+
                 </div>
             </div>
         </div>
@@ -346,11 +357,13 @@
         <div class="row form-group">
             <div class="col-sm-10"></div>
             <div class="col-sm-2" style="bottom:-12px">
-              <input type="submit" value="Save">  
+                <input type="submit" value="Save">
             </div>
         </div>
     </form>
 </section>
+
+
 
 
 

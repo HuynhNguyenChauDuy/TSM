@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -398,6 +399,7 @@ namespace TSM.DataAccess
                 {
                     leave.State = Leave.eState.OnQueue;
                     leave.ApproverID = null;
+                    
                 }
 
                 leave.ApplicationUserID = user.Id;

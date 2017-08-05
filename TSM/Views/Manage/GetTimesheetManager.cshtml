@@ -12,6 +12,10 @@
     Layout = "~/Views/Shared/CustomLayout.cshtml";
 }
 
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/lib/signalr/jquery.signalR.js"></script>
+<script src="~/Signalr/hubs"> </script>
+
 @section Customcss{
     <link href="~/DatePicker/css/bootstrap-datepicker.css" rel="stylesheet" />
     <link href="~/DataTables-1.10.15/media/css/jquery.dataTables.css" rel="stylesheet" />
@@ -319,8 +323,8 @@
                 var curDate = $('#lblCurDate').html();
              //   var formattedDate = moment(curDate, "DD/MM/YYYY");
                 $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
-
                 $('#HandleMultipleRequests').submit();
+
             });
         });
     </script>
@@ -330,6 +334,7 @@
     <div class="row">
         <div class="col-sm-6">
             <h1>TIMESHEET MANAGER</h1>
+            <h4><span id="results"></span></h4>
         </div>
         <div class="col-sm-6">
             <h1>
@@ -525,6 +530,7 @@
         </div>
     </div>
 </section>
+
 
 
 

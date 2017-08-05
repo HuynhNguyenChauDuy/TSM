@@ -60,12 +60,15 @@ namespace TSM
                 .AddFluentValidation(fvc =>
                 fvc.RegisterValidatorsFromAssemblyContaining<Startup>());
 
+            services.AddSignalR();
+
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<LeaveManager>();
             services.AddTransient<MailKitService>();
+
 
             services.AddAutoMapper(typeof(Startup));
         }
@@ -88,7 +91,7 @@ namespace TSM
             }
 
             app.UseStaticFiles();
-
+            app.UseSignalR();
             app.UseIdentity();
 
             // Add external authentication middleware below. To configure them please see https://go.microsoft.com/fwlink/?LinkID=532715

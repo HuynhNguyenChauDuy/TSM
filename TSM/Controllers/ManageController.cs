@@ -18,6 +18,8 @@ using TSM.DataAccess;
 using TSM.Models;
 using TSM.Models.ManageViewModels;
 using TSM.Services;
+using TSM.Hubs;
+
 namespace TSM.Controllers
 {
     [Authorize]
@@ -29,10 +31,12 @@ namespace TSM.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly string _externalCookieScheme;
         private readonly ILogger _logger;
-
+        
         private readonly LeaveManager _leaveManager;
         private readonly IMapper _mapper;
         private IToastNotification _toastNotification;
+
+        
 
         public ManageController(
           UserManager<ApplicationUser> userManager,
@@ -44,6 +48,7 @@ namespace TSM.Controllers
           IMapper mapper,
           IToastNotification toastNotification,
           MailKitService mailKit
+          
           )
         {
             _userManager = userManager;
@@ -55,6 +60,7 @@ namespace TSM.Controllers
             _mapper = mapper;
             _toastNotification = toastNotification;
             _mailKit = mailKit;
+           
         }
 
         //
@@ -189,7 +195,7 @@ namespace TSM.Controllers
                     messageTitle = "Sucessful";
                     message = "Your request submitted";
                     messageType = ToastEnums.ToastType.Success;
-
+                    
                     var ret = await _mailKit.SendEmail_LeaveSubmitAsync(result.ID);
                 }
                 else
@@ -203,6 +209,7 @@ namespace TSM.Controllers
             _toastNotification.AddToastMessage(
               messageTitle, message, messageType);
 
+             
             return RedirectToAction(nameof(GetTimesheet));
         }
 

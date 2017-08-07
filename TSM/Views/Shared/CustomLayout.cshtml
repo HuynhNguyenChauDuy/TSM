@@ -192,6 +192,7 @@
                                 if (userRoles.Contains("Project Manager") || userRoles.Contains("Team Leader"))
                                 {
                                     <li id="manager"><a asp-controller="Manage" asp-action="GetTimesheetManager"><i class="fa fa-circle-o"></i> Timesheet Manager</a></li>
+                                    <li id="summary"><a asp-controller="Manage" asp-action="GetSummaryTimesheet"><i class="fa fa-circle-o"></i>Summary Timesheet</a></li>
                                 }
                             }
                         </ul>
@@ -443,6 +444,9 @@
                     $('#manager').addClass('active');
                 } else if (currentPage == "Timesheet") {
                     $('#personal').addClass('active');
+                }
+                else {
+                    $('#summary').addClass('active');
                 }
             }
         });

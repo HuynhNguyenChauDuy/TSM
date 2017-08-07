@@ -44,7 +44,7 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<IEnumerable<LeaveVM>> GetAllLeavesAsync(DateTime? date = null)
+        public async Task<IEnumerable<LeaveVM>> GetAllLeavesByDateAsync(DateTime? date = null)
         {
             try
             {
@@ -94,7 +94,57 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<IEnumerable<LeaveVM>> GetLeavesByTeamIdAsync(string userId, string teamID, DateTime? date = null)
+        public async Task<IEnumerable<LeaveVM>> GetAllLeavesByMonthAsync(DateTime? date = null)
+        {
+            try
+            {
+                IEnumerable<Leave> leaves = null;
+
+                if (date != null)
+                {
+                    leaves = await _context.Leaves
+                                                 .Include(item => item.User)
+                                                 .Include(item => item.LeaveType)
+                                                 .Where(item => (item.FromDate.Month == date.Value.Month || date.Value.Month == item.ToDate.Month))
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)
+                                                 .ToListAsync();
+                }
+                else
+                {
+                    leaves = await _context.Leaves
+                                                 .Include(item => item.User)
+                                                 .Include(item => item.LeaveType)
+                                                 .Where(item => (item.FromDate.Month == DateTime.Now.Month || item.ToDate.Month == DateTime.Now.Month))
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)
+                                                 .ToListAsync();
+                }
+
+                var leavevms = from item in leaves
+                               select new LeaveVM()
+                               {
+                                   LeaveID = item.ID,
+                                   UserName = item.User.UserName,
+                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
+                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
+                                   SubmittedDate = null,
+                                   ApprovedDate = null,
+                                   WorkShift = item.WorkShift,
+                                   LeaveType = item.LeaveType.LeaveName,
+                                   State = item.State,
+                                   Note = null
+                               };
+
+                return leavevms;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<LeaveVM>> GetLeavesByTeamIdAndDateAsync(string userId, string teamID, DateTime? date = null)
         {
             try
             {
@@ -118,6 +168,59 @@ namespace TSM.DataAccess
                                                  .Include(item => item.LeaveType)
                                                  .Where(item => item.FromDate <= DateTime.Today && DateTime.Today <= item.ToDate
                                                                     && item.User.TeamID == teamID && item.User.Id != userId)
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)
+                                                 .ToListAsync();
+                }
+
+                var leavevms = from item in leaves
+                               select new LeaveVM()
+                               {
+                                   LeaveID = item.ID,
+                                   UserName = item.User.UserName,
+                                   FromDate = item.FromDate.ToString("dd/MM/yyyy"),
+                                   ToDate = item.ToDate.ToString("dd/MM/yyyy"),
+                                   SubmittedDate = null,
+                                   ApprovedDate = null,
+                                   WorkShift = item.WorkShift,
+                                   LeaveType = item.LeaveType.LeaveName,
+                                   State = item.State,
+                                   Note = null
+                               };
+
+                return leavevms;
+
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<LeaveVM>> GetLeavesByTeamIdAndByMonthAsync(string userId, string teamID, DateTime? date = null)
+        {
+            try
+            {
+                IEnumerable<Leave> leaves = null;
+
+                if (date != null)
+                {
+                    leaves = await _context.Leaves
+                                                 .Include(item => item.User)
+                                                 .Include(item => item.LeaveType)
+                                                 .Where(item => (item.FromDate.Month == date.Value.Month || date.Value.Month == item.ToDate.Month)
+                                                                                       && item.ApplicationUserID != userId)
+                                                 .OrderBy(item => item.FromDate)
+                                                 .ThenBy(item => item.ToDate)
+                                                 .ToListAsync();
+                }
+                else
+                {
+                    leaves = await _context.Leaves
+                                                 .Include(item => item.User)
+                                                 .Include(item => item.LeaveType)
+                                                 .Where(item => (item.FromDate.Month == DateTime.Now.Month ||  item.ToDate.Month == DateTime.Now.Month)
+                                                                                        && item.ApplicationUserID != userId)
                                                  .OrderBy(item => item.FromDate)
                                                  .ThenBy(item => item.ToDate)
                                                  .ToListAsync();

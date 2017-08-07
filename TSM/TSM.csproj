@@ -366,6 +366,7 @@
     <Content Include="wwwroot\jquery-validation\test\methods.js" />
     <Content Include="wwwroot\jquery-validation\test\rules.js" />
     <Content Include="wwwroot\jquery-validation\test\test.js" />
+    <Content Include="wwwroot\loadingbar\loadingbar.js" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="6.1.1" />

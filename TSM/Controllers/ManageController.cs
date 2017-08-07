@@ -128,6 +128,35 @@ namespace TSM.Controllers
 
         [HttpGet]
         [Authorize(Roles = ("Project Manager,Team Leader"))]
+        public async Task<ActionResult> GetSummaryTimesheet(DateTime? date = null)
+        {
+            var user = await GetCurrentUserAsync();
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            IEnumerable<LeaveVM> leaveVM = null;
+            if (userRoles.Contains("Project Manager"))
+            {
+                leaveVM = await _leaveManager.GetAllLeavesByMonthAsync(date);
+            }
+            else
+            {
+                leaveVM = await _leaveManager.GetLeavesByTeamIdAndByMonthAsync(user.Id, user.TeamID, date);
+            }
+
+            var viewContext = new LeaveWrapper
+            {
+                LeaveVM = leaveVM
+            };
+
+
+            ViewData["curMonth"] = date != null ? date.Value.ToString("MM/yyyy") : DateTime.Today.ToString("MM/yyyy");
+
+            return View(viewContext);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = ("Project Manager,Team Leader"))]
         public async Task<ActionResult> GetTimesheetManager(string leaveId, DateTime? date = null)
         {
             var user = await GetCurrentUserAsync();
@@ -137,11 +166,11 @@ namespace TSM.Controllers
             IEnumerable<LeaveVM> leaveVM = null;
             if (userRoles.Contains("Project Manager"))
             {
-                leaveVM = await _leaveManager.GetAllLeavesAsync(date);
+                leaveVM = await _leaveManager.GetAllLeavesByDateAsync(date);
             }
             else
             {
-                leaveVM = await _leaveManager.GetLeavesByTeamIdAsync(user.Id, user.TeamID, date);
+                leaveVM = await _leaveManager.GetLeavesByTeamIdAndDateAsync(user.Id, user.TeamID, date);
             }
 
             var viewContext = new LeaveWrapper

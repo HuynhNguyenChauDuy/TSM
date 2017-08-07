@@ -139,7 +139,7 @@ namespace TSM.Controllers
                 if (result)
                 {
                     messageTitle = "Sucessful";
-                    message = "Your request edited";
+                    message = "Your information edited";
                     messageType = ToastEnums.ToastType.Success;
                 }
                 else

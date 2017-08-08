@@ -209,7 +209,8 @@ namespace TSM.DataAccess
                                                  .Include(item => item.User)
                                                  .Include(item => item.LeaveType)
                                                  .Where(item => (item.FromDate.Month == date.Value.Month || date.Value.Month == item.ToDate.Month)
-                                                                                       && item.ApplicationUserID != userId)
+                                                                                         && item.User.TeamID == teamID
+                                                                                         && item.ApplicationUserID != userId)
                                                  .OrderBy(item => item.FromDate)
                                                  .ThenBy(item => item.ToDate)
                                                  .ToListAsync();
@@ -220,7 +221,8 @@ namespace TSM.DataAccess
                                                  .Include(item => item.User)
                                                  .Include(item => item.LeaveType)
                                                  .Where(item => (item.FromDate.Month == DateTime.Now.Month ||  item.ToDate.Month == DateTime.Now.Month)
-                                                                                        && item.ApplicationUserID != userId)
+                                                                                        && item.User.TeamID == teamID
+                                                                                         && item.ApplicationUserID != userId)
                                                  .OrderBy(item => item.FromDate)
                                                  .ThenBy(item => item.ToDate)
                                                  .ToListAsync();

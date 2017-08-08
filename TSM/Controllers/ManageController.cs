@@ -132,7 +132,7 @@ namespace TSM.Controllers
 
         [HttpGet]
         [Authorize(Roles = ("Project Manager,Team Leader"))]
-        public async Task<ActionResult> GetSummaryTimesheet(DateTime? date = null)
+        public async Task<ActionResult> GetWaitingTimesheet()
         {
             var user = await GetCurrentUserAsync();
 
@@ -141,20 +141,17 @@ namespace TSM.Controllers
             IEnumerable<LeaveVM> leaveVM = null;
             if (userRoles.Contains("Project Manager"))
             {
-                leaveVM = await _leaveManager.GetAllLeavesByMonthAsync(date);
+                leaveVM = await _leaveManager.GetWaitingLeaves(user.Id);
             }
             else
             {
-                leaveVM = await _leaveManager.GetLeavesByTeamIdAndByMonthAsync(user.Id, user.TeamID, date);
+                leaveVM = await _leaveManager.GetWaitingLeaveByTeam(user.Id, user.TeamID);
             }
 
             var viewContext = new LeaveWrapper
             {
                 LeaveVM = leaveVM
             };
-
-
-            ViewData["curMonth"] = date != null ? date.Value.ToString("MM/yyyy") : DateTime.Today.ToString("MM/yyyy");
 
             return View(viewContext);
         }
@@ -358,7 +355,7 @@ namespace TSM.Controllers
 
         [HttpPost]
         [Authorize(Roles = ("Project Manager,Team Leader"))]
-        public async Task<IActionResult> HandleSingleRequest(LeaveWrapper request)
+        public async Task<IActionResult> HandleSingleRequest(LeaveWrapper request, string returnUrl = null)
         {
             // toast message properties
             string messageTitle = "Error";
@@ -379,16 +376,21 @@ namespace TSM.Controllers
 
                await _mailKit.SendEmail_RequestHandledAsync(request.LeaveHandleVM.LeaveID);
             }
-        
+
             _toastNotification.AddToastMessage(
-            messageTitle, message, messageType);
+           messageTitle, message, messageType);
+
+            if (returnUrl != null)
+            {
+                return RedirectToAction(returnUrl);
+            }
 
             return RedirectToAction(nameof(GetTimesheetManager), new { date = request.LeaveHandleVM.CurDate });
         }
 
         [HttpPost]
         [Authorize(Roles = ("Project Manager,Team Leader"))]
-        public async Task<IActionResult> HandleMultipleRequests(LeaveWrapper request)
+        public async Task<IActionResult> HandleMultipleRequests(LeaveWrapper request, string returnUrl = null)
         {
             // toast message properties
             string messageTitle = "Error";
@@ -412,6 +414,11 @@ namespace TSM.Controllers
            
             _toastNotification.AddToastMessage(
            messageTitle, message, messageType);
+
+            if(returnUrl != null)
+            {
+                return RedirectToAction(returnUrl);
+            }
 
             return RedirectToAction(nameof(GetTimesheetManager), new { date = request.LeaveHandleVM_Multiple.CurDate });
         }

@@ -20,6 +20,7 @@
     <link href="~/DatePicker/css/bootstrap-datepicker.css" rel="stylesheet" />
     <link href="~/DataTables-1.10.15/media/css/jquery.dataTables.css" rel="stylesheet" />
     <link href="~/toastr-master/toastr.css" rel="stylesheet" />
+<link href="~/Ladda-master/dist/ladda.min.css" rel="stylesheet" />
 
     <style>
         .table {
@@ -59,8 +60,18 @@
     <script src="~/ckeditor/ckeditor.js"></script>
     <script src="~/toastr-master/toastr.min.js"></script>
     <script src="~/momentjs/moment.js"></script>
-    <script src="~/loadingbar/loadingbar.js"></script>
+    <script src="~/Ladda-master/dist/spin.min.js"></script>
+    <script src="~/Ladda-master/dist/ladda.min.js"></script>
 
+    <script>
+        $(document).ready(function () {
+            Ladda.bind('#btnApproveAll');
+            Ladda.bind('#btnApproveChecked');
+            Ladda.bind('#btnRejectChecked');
+            Ladda.bind('#DetailVM_approve');
+            Ladda.bind('#DetailVM_reject');
+        });
+    </script>
     <script>
         $(document).ready(function () {
             var leaveId = '@ViewData["leaveId"]';
@@ -360,23 +371,23 @@
     <script>
         $(document).ready(function () {
             $('#btnApproveAll').click(function () { 
-                waitingDialog.show('Please wait ...');
+               
             });
 
             $('#btnApproveChecked').click(function () {
-                waitingDialog.show('Please wait ...');
+                
             });
 
             $('#btnRejectChecked').click(function () {
-                waitingDialog.show('Please wait ...');
+                
             });
 
             $('#btnApproveAll').click(function () {
-                waitingDialog.show('Please wait ...');
+                
             });
 
             $('#btnApproveAll').click(function () {
-                waitingDialog.show('Please wait ...');
+                
             });
 
         });
@@ -392,9 +403,9 @@
         <div class="col-sm-6">
             <h1>
                 <span class="pull-right">
-                    <button id="btnApproveAll" data-toggle="modal" type="button" class="btn btn-success ion-android-done-all"> Approve All</button>
-                    <button id="btnApproveChecked" data-toggle="modal" type="button" class="btn btn-bitbucket ion-android-checkbox-outline"> Approve Checked</button>
-                    <button id="btnRejectChecked" data-toggle="modal" type="button" class="btn btn-danger ion-android-close"> Reject Checked</button>
+                    <button id="btnApproveAll" data-size="s" data-color="green" data-style="expand-right" data-toggle="modal" type="button" class="btn btn-success ion-android-done-all"> Approve All</button>
+                    <button id="btnApproveChecked" data-size="s" data-color="blue" data-style="expand-right" data-toggle="modal" type="button" class="btn btn-bitbucket ion-android-checkbox-outline"> Approve Checked</button>
+                    <button id="btnRejectChecked" data-size="s" data-color="red" data-style="expand-right" data-toggle="modal" type="button" class="btn btn-danger ion-android-close"> Reject Checked</button>
                 </span>
             </h1>
         </div>
@@ -569,8 +580,8 @@
                         <div class="modal-footer">
                             <div class="btn-group btn-group-justified" role="group" aria-label="group button">
                                 <div class="pull-right">
-                                    <button id="DetailVM_approve" onclick="HandleSingleRequest('Approved')" type="button" class="btn btn-success">&nbsp;Approve</button>
-                                    <button id="DetailVM_reject" onclick="HandleSingleRequest('Rejected')" type="button" class="btn btn-danger">&nbsp;Reject&nbsp;</button>
+                                    <button id="DetailVM_approve" data-size="s" data-color="green" data-style="expand-right" onclick="HandleSingleRequest('Approved')" type="button" class="btn btn-success">&nbsp;Approve</button>
+                                    <button id="DetailVM_reject" data-size="s" data-color="red" data-style="expand-right" onclick="HandleSingleRequest('Rejected')" type="button" class="btn btn-danger">&nbsp;Reject&nbsp;</button>
                                 </div>
                                 <div class="pull-left">
                                     <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>

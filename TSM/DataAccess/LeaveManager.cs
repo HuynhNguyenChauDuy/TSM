@@ -95,32 +95,18 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<IEnumerable<LeaveVM>> GetAllLeavesByMonthAsync(DateTime? date = null)
+        public async Task<IEnumerable<LeaveVM>> GetWaitingLeaves(string userId)
         {
             try
             {
                 IEnumerable<Leave> leaves = null;
-
-                if (date != null)
-                {
                     leaves = await _context.Leaves
                                                  .Include(item => item.User)
                                                  .Include(item => item.LeaveType)
-                                                 .Where(item => (item.FromDate.Month == date.Value.Month || date.Value.Month == item.ToDate.Month))
+                                                 .Where(item => item.State == Leave.eState.OnQueue && item.ApplicationUserID != userId)
                                                  .OrderBy(item => item.FromDate)
                                                  .ThenBy(item => item.ToDate)
                                                  .ToListAsync();
-                }
-                else
-                {
-                    leaves = await _context.Leaves
-                                                 .Include(item => item.User)
-                                                 .Include(item => item.LeaveType)
-                                                 .Where(item => (item.FromDate.Month == DateTime.Now.Month || item.ToDate.Month == DateTime.Now.Month))
-                                                 .OrderBy(item => item.FromDate)
-                                                 .ThenBy(item => item.ToDate)
-                                                 .ToListAsync();
-                }
 
                 var leavevms = from item in leaves
                                select new LeaveVM()
@@ -198,36 +184,21 @@ namespace TSM.DataAccess
             }
         }
 
-        public async Task<IEnumerable<LeaveVM>> GetLeavesByTeamIdAndByMonthAsync(string userId, string teamID, DateTime? date = null)
+        public async Task<IEnumerable<LeaveVM>> GetWaitingLeaveByTeam(string userId, string teamID)
         {
             try
             {
                 IEnumerable<Leave> leaves = null;
 
-                if (date != null)
-                {
-                    leaves = await _context.Leaves
-                                                 .Include(item => item.User)
-                                                 .Include(item => item.LeaveType)
-                                                 .Where(item => (item.FromDate.Month == date.Value.Month || date.Value.Month == item.ToDate.Month)
-                                                                                         && item.User.TeamID == teamID
-                                                                                         && item.ApplicationUserID != userId)
-                                                 .OrderBy(item => item.FromDate)
-                                                 .ThenBy(item => item.ToDate)
-                                                 .ToListAsync();
-                }
-                else
-                {
-                    leaves = await _context.Leaves
-                                                 .Include(item => item.User)
-                                                 .Include(item => item.LeaveType)
-                                                 .Where(item => (item.FromDate.Month == DateTime.Now.Month ||  item.ToDate.Month == DateTime.Now.Month)
-                                                                                        && item.User.TeamID == teamID
-                                                                                         && item.ApplicationUserID != userId)
-                                                 .OrderBy(item => item.FromDate)
-                                                 .ThenBy(item => item.ToDate)
-                                                 .ToListAsync();
-                }
+                leaves = await _context.Leaves
+                                             .Include(item => item.User)
+                                             .Include(item => item.LeaveType)
+                                             .Where(item => item.State == Leave.eState.OnQueue 
+                                                                            && item.User.TeamID == teamID
+                                                                            && item.ApplicationUserID != userId)
+                                             .OrderBy(item => item.FromDate)
+                                             .ThenBy(item => item.ToDate)
+                                             .ToListAsync();
 
                 var leavevms = from item in leaves
                                select new LeaveVM()
@@ -252,7 +223,6 @@ namespace TSM.DataAccess
                 return null;
             }
         }
-
 
         public async Task<IEnumerable<LeaveVM>> GetLeavebyUserIdsAsync(string userId)
         {

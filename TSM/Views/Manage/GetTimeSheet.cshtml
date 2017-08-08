@@ -18,7 +18,7 @@
     <link href="~/select2-master/dist/css/select2.css" rel="stylesheet" />
     <link href="~/toastr-master/toastr.css" rel="stylesheet" />
     <link href="~/bootstrap-tagsinput-latest/dist/bootstrap-tagsinput.css" rel="stylesheet" />
-    
+    <link href="~/Ladda-master/dist/ladda.min.css" rel="stylesheet" />
     <style>
         .table_align_center {
             text-align: center;
@@ -69,8 +69,15 @@
     <script src="~/toastr-master/toastr.min.js"></script>
     <script src="~/bootstrap-tagsinput-latest/dist/bootstrap-tagsinput.js"></script>
     <script src="~/Bootstrap-3-Typeahead-master/bootstrap3-typeahead.js"></script>
-    <script src="~/loadingbar/loadingbar.js"></script>
+    <script src="~/Ladda-master/dist/spin.min.js"></script>
+    <script src="~/Ladda-master/dist/ladda.min.js"></script>
 
+    <script>
+        $(document).ready(function () {
+            Ladda.bind('#btnAddNew');
+            Ladda.bind('#btnSubmit');
+        });
+    </script>
     <!--DatePicker setup-->
     <script>
         var curDate = new Date();
@@ -369,7 +376,7 @@
                         <div class="row form-group">
                             <div class="col-sm-10"></div>
                             <div class="col-sm-2">
-                                <button type="submit" value="submit" class="btn btn-primary">Submit</button>
+                                <button id="btnAddNew" data-size="s" data-color="blue" data-style="expand-right" type="submit" value="submit" class="btn btn-primary">Submit</button>
                             </div>
                         </div>
                     </form>
@@ -461,7 +468,7 @@
                             <div class="btn-group btn-group-justified" role="group" aria-label="group button">
                                 <div class="pull-right">
                                     <button type="button" id="btnEdit" class="btn btn-bitbucket ion-ios-compose-outline"> Edit</button>
-                                    <button type="submit" id="btnSubmit" class="btn btn-primary ion-android-done"> Submit</button>
+                                    <button type="submit" id="btnSubmit" data-size="s" data-color="blue" data-style="expand-right" class="btn btn-primary ion-android-done"> Submit</button>
                                     <button type="button" id="btnDelete" class="btn btn-danger ion-android-close"> Delete</button>
                                 </div>
                             </div>

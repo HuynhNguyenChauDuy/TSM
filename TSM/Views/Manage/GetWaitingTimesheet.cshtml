@@ -1,4 +1,4 @@
-﻿@using TSM.Data.ModelViews
+@using TSM.Data.ModelViews
 @using TSM.DataAccess
 @using TSM.Services
 
@@ -8,15 +8,20 @@
 @inject LeaveManager _leaveManager
 
 @{
-    ViewData["Title"] = "Summery Timesheet Mananger";
+    ViewData["Title"] = "Waiting Timesheet";
     Layout = "~/Views/Shared/CustomLayout.cshtml";
 }
 
+
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/lib/signalr/jquery.signalR.js"></script>
+<script src="~/Signalr/hubs"> </script>
 
 @section Customcss{
     <link href="~/DatePicker/css/bootstrap-datepicker.css" rel="stylesheet" />
     <link href="~/DataTables-1.10.15/media/css/jquery.dataTables.css" rel="stylesheet" />
     <link href="~/toastr-master/toastr.css" rel="stylesheet" />
+    <link href="~/Ladda-master/dist/ladda.min.css" rel="stylesheet" />
 
     <style>
         .table {
@@ -56,6 +61,18 @@
     <script src="~/ckeditor/ckeditor.js"></script>
     <script src="~/toastr-master/toastr.min.js"></script>
     <script src="~/momentjs/moment.js"></script>
+    <script src="~/Ladda-master/dist/spin.min.js"></script>
+    <script src="~/Ladda-master/dist/ladda.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            Ladda.bind('#btnApproveAll');
+            Ladda.bind('#btnApproveChecked');
+            Ladda.bind('#btnRejectChecked');
+            Ladda.bind('#DetailVM_approve');
+            Ladda.bind('#DetailVM_reject');
+        });
+    </script>
 
     <script>
         $(document).ready(function () {
@@ -170,66 +187,16 @@
     </script>
 
     <script>
-        $(document).ready(function () {
-            var curMonth = '@ViewData["curMonth"]';
-            $('#lblCurMonth').html(curMonth);
-        });
-
-        $(document).ready(function () {
-            $('#previousMonth').click(function () {
-                var curMonth = $('#lblCurMonth').html();
-                var previousMonth = moment(curMonth, "MM/YYYY");
-                previousMonth.add(-1, 'month');
-
-                GetTimeSheetManagerOfMonth(previousMonth.format('MM-DD-YYYY'));
-            });
-        });
-
-        $(document).ready(function () {
-            $('#nextMonth').click(function () {
-                var curMonth = $('#lblCurMonth').html();
-                var nextMonth = moment(curMonth, "MM/YYYY");
-                nextMonth.add(1, 'month');
-
-                GetTimeSheetManagerOfMonth(nextMonth.format('MM-DD-YYYY'));
-            });
-        });
-
-        function GetTimeSheetManagerOfDate(data) {
-            var targetUrl = '@Url.Action("GetTimesheetManager","Manage")?date=' + data;
-            window.location.href = targetUrl;
-        }
-
-         function GetTimeSheetManagerOfMonth(data) {
-            var targetUrl = '@Url.Action("GetSummaryTimesheet", "Manage")?date=' + data;
-            window.location.href = targetUrl;
-        }
-
-        $(document).ready(function () {
-            $('#btnThisMonth').click(function () {
-                GetTimeSheetManagerOfMonth("");
-            });
-        });
-    </script>
-
-    <script>
-        sessionStorage["curPage"] = "SummaryTimesheetManager";
+        sessionStorage["curPage"] = "WaitingTimesheet";
     </script>
 
     <!--DatePicker-->
     <script>
         $(document).ready(function () {
-            $('.datepickerMod').datepicker({
-                minViewMode: 1,
-                format: 'mm/yyyy'
+            $('.datepicker').datepicker({
+                format: 'dd-mm-yyyy'
             });
         });
-
-        $('#curDate').datepicker().on('changeDate', function (e) {
-            var curDate = e.format(0, "mm/dd/yyyy")
-            GetTimeSheetManagerOfMonth(curDate);
-        });
-
     </script>
 
     <!--DataTable-->
@@ -277,37 +244,106 @@
             });
         });
     </script>
+
+    <!--Handle Single Request-->
+    <script>
+        function HandleSingleRequest(result) {
+            $('input[id="LeaveHandleVM_Result"]').val(result);
+            $("#HandleSingleRequest").submit();
+        };
+    </script>
+
+    <!--Checkbox - Check All-->
+    <script>
+        $("#cbCheckAll").click(function () {
+            $('#MainTable tbody input[type="checkbox"]').prop('checked', this.checked);
+        });
+    </script>
+
+    <!--handle Multiple request  -->
+    <script>
+        $(document).ready(function () {
+            $('#btnApproveAll').click(function () {
+                $('#MainTable tbody tr').each(function () {
+                    var leaveId = $(this).closest('tr').find('td:last').html().toString();
+                    var str = '<input hidden type="text" name="LeaveHandleVM_Multiple.LeaveID" value="' + leaveId + '" />';
+
+                    $('#HandleMultipleRequests').append(str);
+                });
+
+                var result = 'Approved';
+                var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
+                $('#HandleMultipleRequests').append(str2);
+
+                var curDate = $('#lblCurDate').html();
+               // var formattedDate = moment(curDate, "DD/MM/YYYY");
+                $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
+
+                $('#HandleMultipleRequests').submit();
+            });
+
+
+            $('#btnApproveChecked').click(function () {
+                $('#MainTable tbody tr').find('input:checkbox:checked').each(function () {
+                    var leaveId = $(this).closest('tr').find('td:last').html().toString();
+
+                    var str = '<input hidden type="text" name="LeaveHandleVM_Multiple.LeaveID" value="' + leaveId + '" />';
+
+                    $('#HandleMultipleRequests').append(str);
+                });
+
+                var result = 'Approved';
+                var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
+                $('#HandleMultipleRequests').append(str2);
+
+                var curDate = $('#lblCurDate').html();
+                //var formattedDate = moment(curDate, "DD/MM/YYYY");
+                $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
+
+                $('#HandleMultipleRequests').submit();
+            });
+
+            $('#btnRejectChecked').click(function () {
+                $('#MainTable tbody tr').find('input:checkbox:checked').each(function () {
+                    var leaveId = $(this).closest('tr').find('td:last').html().toString();
+
+                    var str = '<input hidden type="text" name="LeaveHandleVM_Multiple.LeaveID" value="' + leaveId + '" />';
+
+                    $('#HandleMultipleRequests').append(str);
+                });
+
+                var result = 'Rejected';
+                var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
+                $('#HandleMultipleRequests').append(str2);
+
+                var curDate = $('#lblCurDate').html();
+             //   var formattedDate = moment(curDate, "DD/MM/YYYY");
+                $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
+                $('#HandleMultipleRequests').submit();
+
+            });
+        });
+    </script>
 }
 
 <section class="content-header">
     <div class="row">
         <div class="col-sm-6">
-            <h1>SUMMARY TIMESHEET MANAGER</h1>
+            <h1>WAITING TIMESHEET MANAGER</h1>
+            <h4><span id="results"></span></h4>
         </div>
         <div class="col-sm-6">
             <h1>
                 <span class="pull-right">
-                   
+                    <button id="btnApproveAll" data-size="s" data-color="green" data-style="expand-right" data-toggle="modal" type="button" class="btn btn-success ion-android-done-all ">Approve All</button>
+                    <button id="btnApproveChecked" data-size="s" data-color="blue" data-style="expand-right" data-toggle="modal" type="button" class="btn btn-bitbucket ion-android-checkbox-outline"> Approve Checked</button>
+                    <button id="btnRejectChecked" data-size="s" data-color="red" data-style="expand-right" data-toggle="modal" type="button" class="btn btn-danger ion-android-close"> Reject Checked</button>
                 </span>
             </h1>
         </div>
     </div>
-    <div>
-        <div class="col-sm-6">
-            <div class="row">
-                <div class="pull-left"><h3><label class="label label-info" id="lblCurMonth" style="text-align:center"></label></h3></div>
-                <div class="pull-left"><h3><button class="btn btn-primary ion-android-calendar datepicker" id="curDate" type="button" /></h3></div>
-            </div>
-        </div>
-        <div class="col-sm-6">
-            <div class="row">
-                <div class="pull-right"><h3><button id="nextMonth" title="Next day" class="btn btn-default ion-ios-arrow-forward"></button></h3></div>
-                <div class="pull-right"><h3><button id="btnThisMonth" class="btn btn-default">This month</button></h3></div>
-                <div class="pull-right"><h3><button id="previousMonth" title="Previous day" class="btn btn-default ion-ios-arrow-back"></button></h3></div>
-            </div>
-        </div>
-    </div>
-    <form hidden role="form" id="HandleMultipleRequests" method="post" asp-controller="Manage" asp-action="HandleMultipleRequests">
+
+    <form hidden role="form" id="HandleMultipleRequests" method="post" asp-route-returnurl="GetWaitingTimesheet" asp-controller="Manage" asp-action="HandleMultipleRequests">
         <input hidden asp-for="LeaveHandleVM_Multiple.CurDate" />
     </form>
 </section>
@@ -329,7 +365,7 @@
                                 <th>@Html.DisplayNameFor(Model => Model.LeaveVMForDisplay.FromDate)</th>
                                 <th>@Html.DisplayNameFor(Model => Model.LeaveVMForDisplay.ToDate)</th>
                                 <th class="table_align_center">@Html.DisplayNameFor(Model => Model.LeaveVMForDisplay.State)</th>
-                               
+                                <th class="nosort table_align_center"><input id="cbCheckAll" type="checkbox" /></th>
                                 <th name="LeaveID" hidden></th>
                             </tr>
                         </thead>
@@ -348,6 +384,7 @@
                                         @if (item.State == TSM.Data.Models.Leave.eState.OnQueue)
                                         {
                                             <td class="table_align_center"><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
+                                            <td align="center"><input type="checkbox" id="subCheckbox" name="subCheckbox"></td>
                                         }
                                         else
                                         {
@@ -359,6 +396,7 @@
                                             {
                                                 <td class="table_align_center"><label class="label label-danger">Rejected</label></td>
                                             }
+                                            <td></td>
                                         }
                                         <td hidden>@item.LeaveID</td>
                                     </tr>
@@ -384,7 +422,7 @@
                 </div>
                 <div class="modal-body">
                     <!-- content goes here -->
-                    <form role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest">
+                    <form role="form" id="HandleSingleRequest" method="post" asp-controller="Manage" asp-action="HandleSingleRequest" asp-route-returnurl="GetWaitingTimesheet">
                         <input hidden asp-for="LeaveHandleVM.LeaveID" />
                         <input hidden asp-for="LeaveHandleVM.Result" />
                         <input hidden asp-for="LeaveHandleVM.CurDate" />
@@ -459,6 +497,10 @@
 
                         <div class="modal-footer">
                             <div class="btn-group btn-group-justified" role="group" aria-label="group button">
+                                <div class="pull-right">
+                                    <button id="DetailVM_approve" data-size="s" data-color="green" data-style="expand-right" onclick="HandleSingleRequest('Approved')" type="button" class="btn btn-success">&nbsp;Approve</button>
+                                    <button id="DetailVM_reject" data-size="s" data-color="red" data-style="expand-right" onclick="HandleSingleRequest('Rejected')" type="button" class="btn btn-danger">&nbsp;Reject&nbsp;</button>
+                                </div>
                                 <div class="pull-left">
                                     <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
                                 </div>
@@ -470,4 +512,3 @@
         </div>
     </div>
 </section>
-

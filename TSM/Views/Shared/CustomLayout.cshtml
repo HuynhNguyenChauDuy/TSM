@@ -197,6 +197,7 @@
                             }
                         </ul>
                     </li>
+
                 </ul>
             </section>
             <!-- /.sidebar -->
@@ -228,7 +229,7 @@
             <div class="pull-right hidden-xs">
                 <b>Version</b> 1.0.
             </div>
-            <strong>Copyright &copy; 2017 <a href="https://github.com/C-Sharp-Interns/TSM">Groove-First-Internship-Ever</a>.</strong> All rights
+            <strong>Copyright &copy; 2017 <a href="https://github.com/C-Sharp-Interns/TSM">Groove-Internship</a>.</strong> All rights
             reserved.
         </footer>
 
@@ -442,10 +443,14 @@
             if (currentPage != null) {
                 if (currentPage == "TimesheetManager") {
                     $('#manager').addClass('active');
-                } else if (currentPage == "Timesheet") {
+                }
+
+                if (currentPage == "Timesheet") {
+
                     $('#personal').addClass('active');
                 }
-                else {
+
+                if (currentPage == "SummaryTimesheetManager") {
                     $('#summary').addClass('active');
                 }
             }

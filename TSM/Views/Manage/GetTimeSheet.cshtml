@@ -69,6 +69,7 @@
     <script src="~/toastr-master/toastr.min.js"></script>
     <script src="~/bootstrap-tagsinput-latest/dist/bootstrap-tagsinput.js"></script>
     <script src="~/Bootstrap-3-Typeahead-master/bootstrap3-typeahead.js"></script>
+    <script src="~/loadingbar/loadingbar.js"></script>
 
     <!--DatePicker setup-->
     <script>
@@ -133,18 +134,17 @@
                             if (state == '2') {
                                 $('#ApprovingInfo').hide();
                                 $('#btnEdit').show();
-                                $('#btnSubmit').hide();
                                 $('#btnDelete').show();
-
                             }
                             else {
                                 $('#EditLeaveFormMD').find('[name="ApproverDetail"]').val(result['approver']);
                                 $('#EditLeaveFormMD').find('[name="ResultDetail"]').val(result['approvedDate']);
                                 $('#ApprovingInfo').show();
                                 $('#btnEdit').hide();
-                                $('#btnSubmit').hide();
                                 $('#btnDelete').hide();
                             }
+
+                            $('#btnSubmit').hide();
 
                             // taginput handle
                             $('input[name="LeaveFormVM.CCId"]').tagsinput('removeAll');
@@ -369,7 +369,7 @@
                         <div class="row form-group">
                             <div class="col-sm-10"></div>
                             <div class="col-sm-2">
-                                <button id="btnSubmit" type="submit" value="submit" class="btn btn-primary">Submit</button>
+                                <button type="submit" value="submit" class="btn btn-primary">Submit</button>
                             </div>
                         </div>
                     </form>

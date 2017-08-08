@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MimeKit;
 using NToastNotify;
 using System;
 using System.Collections.Generic;
@@ -18,7 +17,6 @@ using TSM.DataAccess;
 using TSM.Models;
 using TSM.Models.ManageViewModels;
 using TSM.Services;
-using TSM.Hubs;
 
 namespace TSM.Controllers
 {

@@ -39,6 +39,11 @@ namespace TSM.DataAccess
                 var nRejectedList = await CountLeavesByStateAsync(userId, Leave.eState.Rejected);
                 var nWaitingList = await CountLeavesByStateAsync(userId, Leave.eState.OnQueue);
 
+                var nApprovedDates = nSickleave + nAnnualLeave + nOtherLeave;
+                var nRejectedDates = await CountRejectedDatesByUserIdAsync(userId);
+
+
+
                 var userRoles = await _userManager.GetRolesAsync(user);
 
                 var profileVM = new ProfileVM()
@@ -56,7 +61,10 @@ namespace TSM.DataAccess
 
                     NApprovedLeaves = nApprovedList,
                     NWaitingLeaves = nWaitingList,
-                    NRejectedLeaves = nRejectedList
+                    NRejectedLeaves = nRejectedList,
+
+                   NApprovedDates = nApprovedDates,
+                   NRejectedDates = nRejectedDates
                 };
 
 
@@ -77,6 +85,27 @@ namespace TSM.DataAccess
                                             .Where(item => item.ApplicationUserID.CompareTo(userId) == 0
                                                 && item.LeaveType.LeaveName.CompareTo(LeaveType) == 0
                                                 && item.State == Leave.eState.Approved))
+                {
+                    int days = (item.ToDate - item.FromDate).Days;
+                    count += days == 0 ? 1 : (days + 1);
+                }
+
+                return count;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        private async Task<int> CountRejectedDatesByUserIdAsync(string userId)
+        {
+            try
+            {
+                int count = 0;
+                foreach (var item in _context.Leaves
+                       .Where(item => item.ApplicationUserID.CompareTo(userId) == 0
+                       && item.State == Leave.eState.Rejected))
                 {
                     int days = (item.ToDate - item.FromDate).Days;
                     count += days == 0 ? 1 : (days + 1);

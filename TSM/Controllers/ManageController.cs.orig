@@ -1,56 +1,67 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MimeKit;
+using NToastNotify;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TSM.Data;
 using TSM.Data.Models;
-using TSM.Data.Models.ManageViewModels;
+using TSM.Data.ModelViews;
+using TSM.DataAccess;
 using TSM.Models;
 using TSM.Models.ManageViewModels;
 using TSM.Services;
-<<<<<<< HEAD
-=======
-using TSM.Data;
-using TSM.Data.Models.ManageViewModels;
-using TSM.Data.Models;
-using Microsoft.EntityFrameworkCore;
->>>>>>> Michael
+using TSM.Hubs;
 
 namespace TSM.Controllers
 {
     [Authorize]
     public class ManageController : Controller
     {
+        private readonly MailKitService _mailKit;
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly string _externalCookieScheme;
-        private readonly IEmailSender _emailSender;
-        private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
+        
+        private readonly LeaveManager _leaveManager;
+        private readonly IMapper _mapper;
+        private IToastNotification _toastNotification;
+
+        
 
         public ManageController(
           UserManager<ApplicationUser> userManager,
           SignInManager<ApplicationUser> signInManager,
           IOptions<IdentityCookieOptions> identityCookieOptions,
-          IEmailSender emailSender,
-          ISmsSender smsSender,
           ILoggerFactory loggerFactory,
-          ApplicationDbContext context)
+          ApplicationDbContext context,
+          LeaveManager leaveManager,
+          IMapper mapper,
+          IToastNotification toastNotification,
+          MailKitService mailKit
+          
+          )
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _externalCookieScheme = identityCookieOptions.Value.ExternalCookieAuthenticationScheme;
-            _emailSender = emailSender;
-            _smsSender = smsSender;
             _logger = loggerFactory.CreateLogger<ManageController>();
             _context = context;
+            _leaveManager = leaveManager;
+            _mapper = mapper;
+            _toastNotification = toastNotification;
+            _mailKit = mailKit;
+           
         }
-
 
         //
         // GET: /Manage/Index
@@ -84,115 +95,305 @@ namespace TSM.Controllers
 
         // Get: /Manage/TimeSheetManager
         [HttpGet]
-        public async Task<ActionResult> GetTimeSheet()
+        public async Task<ActionResult> GetTimesheet()
         {
-<<<<<<< HEAD
-            var LeaveContext = new LeaveWrapper()
+            var userID = (await GetCurrentUserAsync()).Id;
+            var viewContext = new LeaveWrapper
             {
-                LeaveVM = null
+                LeaveVM = await _leaveManager.GetLeavebyUserIdsAsync(userID)
             };
-            return View(LeaveContext);
-=======
-			var leavevm = _context.Leaves
-				.Include(item => item.User)
-				.Include(item => item.LeaveType)
-				.ToList();
-			
-			var vm = new List<LeaveVM>();
-			foreach (var item in leavevm)
-			{
-				var Temp = new LeaveVM();
-				Temp.UserName = item.User.UserName;
-				Temp.FromDate = item.FromDate.ToString("dd/MM/yyyy");
-				Temp.ToDate = item.ToDate.ToString("dd/MM/yyyy");
-				Temp.WorkShift = item.WorkShift;
-				Temp.LeaveType = item.LeaveType.LeaveName;
-				Temp.SubmitedDate = item.SubmitedDate.ToString();
-				Temp.State = item.State;
-				vm.Add(Temp);
-			}
 
-			return View(vm);
->>>>>>> Michael
+            var user = await _context.Users
+                .Include(item => item.Team)
+                .Where(item => item.Id.CompareTo(userID) == 0)
+                .FirstOrDefaultAsync();
+
+            ViewData["userTeam"] = user.Team != null ? user.Team.TeamName : "";
+
+            return View(viewContext);
         }
 
-		//public string LeaveID { get; set; }
-
-		//public string UserName { get; set; }
-
-		//public string FromDate { get; set; }
-
-		//public string ToDate { get; set; }
-
-		//public string WorkShift { get; set; }
-
-		//public string LeaveType { get; set; }
-
-		//public string Note { get; set; }
-		//public IActionResult LeaveVM(Leave GetTimeSheet)
-		//{
-		//	var vm = new LeaveVM();
-		//	vm.FromDate = GetTimeSheet.FromDate.ToString();
-		//	vm.ToDate = GetTimeSheet.ToDate.ToString();
-		//	vm.UserName = GetTimeSheet.User.UserName;
-		//	vm.LeaveID = GetTimeSheet.LeaveTypeID;
-		//	vm.LeaveType = GetTimeSheet.LeaveType.ToString();
-		//	vm.WorkShift = GetTimeSheet.WorkShift.ToString();
-		//	return View();
-		//}
-		[HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LeaveSubmit(LeaveWrapper _submit)
+        [HttpGet]
+        public async Task<ActionResult> GetTimesheetByState(Leave.eState state)
         {
-            var submit = _submit.LeaveFormVM;
+            var userID = (await GetCurrentUserAsync()).Id;
+            var viewContext = new LeaveWrapper
+            {
+                LeaveVM = await _leaveManager.GetLeavebyUserIdsAsync(userID, state)
+            };
+
+            var user = await _context.Users
+                .Include(item => item.Team)
+                .Where(item => item.Id.CompareTo(userID) == 0)
+                .FirstOrDefaultAsync();
+
+            ViewData["userTeam"] = user.Team != null ? user.Team.TeamName : "";
+
+            return View("GetTimesheet", viewContext);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = ("Project Manager,Team Leader"))]
+        public async Task<ActionResult> GetTimesheetManager(string leaveId, DateTime? date = null)
+        {
+            var user = await GetCurrentUserAsync();
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            IEnumerable<LeaveVM> leaveVM = null;
+            if (userRoles.Contains("Project Manager"))
+            {
+                leaveVM = await _leaveManager.GetAllLeavesAsync(date);
+            }
+            else
+            {
+                leaveVM = await _leaveManager.GetLeavesByTeamIdAsync(user.Id, user.TeamID, date);
+            }
+
+            var viewContext = new LeaveWrapper
+            {
+                LeaveVM = leaveVM
+            };
+             
+            if (leaveId != null)
+            {
+                if((await _context.Leaves.FindAsync(leaveId) != null))
+                {
+                    ViewData["leaveId"] = leaveId;
+                }
+                else
+                {
+                    ViewData["leaveId"] = "";
+                    _toastNotification.AddToastMessage(
+                 "Something went wrong", "This leave request doest not exist", ToastEnums.ToastType.Error);
+                }  
+            }
+         
+            ViewData["curDate"] = date != null ? date.Value.ToString("dd/MM/yyyy") : DateTime.Today.ToString("dd/MM/yyyy");
+
+            return View(viewContext);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LeaveSubmit(LeaveWrapper submit)
+        {
+            // toast message properties
+            string messageTitle = "Validation error";
+            string message = "Please check your leave form again";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
+
             if (ModelState.IsValid)
             {
-                var userid = (await GetCurrentUserAsync()).Id;
-                _context.Leaves.Add(new Leave
+                var user = await GetCurrentUserAsync();
+                Leave newLeave = _mapper.Map<LeaveFormVM, Leave>(submit.LeaveFormVM);
+
+                var result = await _leaveManager.SubmitLeaveAsync(newLeave, user);
+
+                // assign toast message properties
+                if (result != null)
                 {
-                    ApplicationUserID = userid,
-                    FromDate = submit.FromDate,
-                    ToDate = submit.ToDate,
-                    SubmittedDate = DateTime.Now,
-                    WorkShift = (Leave.eWorkShift)submit.WorkShift,
-                    LeaveTypeID = submit.LeaveTypeID,
-                    Note = submit.Note,
-                    State = Leave.eState.OnQueue,
-                    ApproverID = null,
-                    ApprovedDate = DateTime.Today
-                });
-                _context.SaveChanges();
-
-                return RedirectToAction(nameof(GetTimeSheet), new { Message = "Thành công" });
-            }
+                    messageTitle = "Sucessful";
+                    message = "Your request submitted";
+                    messageType = ToastEnums.ToastType.Success;
 <<<<<<< HEAD
-=======
-           
-            _context.Leaves.Add(new Data.Models.Leave
-            {
-                ApplicationUserID = submit.UserID,
-                FromDate = DateTime.ParseExact(submit.FromDate,"dd/MM/yyyy", null),
-                ToDate = DateTime.ParseExact(submit.ToDate,"dd/MM/yyyy",null),
-                WorkShift = WorkShift,
-                LeaveTypeID = submit.LeaveTypeID,
-                Note = submit.Note,
-                State = Leave.eState.OnQueue,
-                ApproverID = null,
-                ApprovedDate = null
-            });
-            _context.SaveChanges();
->>>>>>> Michael
 
-            return RedirectToAction(nameof(GetTimeSheet), new { Message = "Thất bại" });
+                    var ret = await _mailKit.SendEmail_LeaveSubmitAsync(result.ID);
+=======
+                    
+                    var ret = await _mailKit.SendEmail_LeaveSubmitAsync(result.ID, submit.LeaveFormVM.CCId);
+>>>>>>> 46e8d275015ec7c4699a3c6d1830a350a504461e
+                }
+                else
+                {
+                    messageTitle = "Error";
+                    message = "The range of dates already existed";
+                    messageType = ToastEnums.ToastType.Error;
+                }
+            }
+           
+            _toastNotification.AddToastMessage(
+              messageTitle, message, messageType);
+
+             
+            return RedirectToAction(nameof(GetTimesheet));
         }
 
+        [HttpPost]
+        public async Task<IActionResult> EditLeave(LeaveWrapper submit)
+        {
+            // toast message properties
+            string messageTitle = "Validation errors";
+            string message = "Please check your request again";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
+
+            if (ModelState.IsValid)
+            {
+                var user = await GetCurrentUserAsync();
+                Leave changes = _mapper.Map<LeaveFormVM, Leave>(submit.LeaveFormVM);
+
+                bool result = await _leaveManager.EditLeaveAsync(changes, user.Id);
+
+                // assign toast message properties
+                if (result)
+                {
+                    messageTitle = "Sucessful";
+                    message = "Your request edited";
+                    messageType = ToastEnums.ToastType.Success;
+
+                    await _mailKit.SendEmail_UpdateRequestAsync(changes.ID);
+                }
+                else
+                {
+                    messageTitle = "Error";
+                    message = "The range of dates already existed";
+                    messageType = ToastEnums.ToastType.Error;
+                }
+            }
+
+            _toastNotification.AddToastMessage(
+              messageTitle, message, messageType);
+
+            return RedirectToAction(nameof(GetTimesheet));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = ("Project Manager,Team Leader"))]
+        public async Task<IActionResult> GetLeaveDetailForManager(string leaveId)
+        {
+            return Json(await _leaveManager.GetLeaveDetailForManager(leaveId));
+        }
+
+        public async Task<IActionResult> GetLeaveDetail(string leaveId)
+        {
+            LeaveVM leaveVM = await _leaveManager.GetLeaveDetail(leaveId);
+           
+            return Json(leaveVM);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DeleteLeave(string leaveID)
+        {
+            string messageTitle = "Error";
+            string message = "Unable to delete your request";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
+
+            bool result = false;
+
+            if (leaveID != null && leaveID != "")
+            {
+                var user = await GetCurrentUserAsync();
+
+                var leave = await _context.Leaves.Include(item => item.User).Include(item => item.LeaveType)
+                    .Where(item => item.ID.CompareTo(leaveID) == 0).FirstOrDefaultAsync();
+
+                result = await _leaveManager.DeleteLeaveAsync(leaveID, user.Id);
+
+                if (result)
+                {
+                    messageTitle = "Successful";
+                    message = "Your request deleted";
+                    messageType = ToastEnums.ToastType.Success;
+
+                  await _mailKit.SendEmail_DeleteRequestAsync(leave);
+                }
+            }
+
+            _toastNotification.AddToastMessage(messageTitle, message, messageType);
+
+            return RedirectToAction(nameof(GetTimesheet));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetCCRecommend(string query)
+        {
+            var user = await GetCurrentUserAsync();
+            var userTeamId = user.TeamID;
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var emailList = new List<CCVM>();
+
+            if(userRoles.Contains("Project Manager"))
+            {
+                foreach (var item in _context.Users)
+                {
+                    emailList.Add(new CCVM { Email = item.Email, Id = item.Id });
+                }
+            }
+            else
+            {
+                foreach (var item in _context.Users.Where(item => item.TeamID == userTeamId))
+                {
+                    emailList.Add(new CCVM { Email = item.Email, Id = item.Id });
+                }
+            }
+
+            return Json(emailList);
+        }
 
         private Task<ApplicationUser> GetCurrentUserAsync()
         {
             return _userManager.GetUserAsync(HttpContext.User);
         }
 
-        //
+        [HttpPost]
+        [Authorize(Roles = ("Project Manager,Team Leader"))]
+        public async Task<IActionResult> HandleSingleRequest(LeaveWrapper request)
+        {
+            // toast message properties
+            string messageTitle = "Error";
+            string message = "Unable to handle this request";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
+
+            var approverId = (await GetCurrentUserAsync()).Id;
+            var result = await _leaveManager.HandleSingleRequestAysnc(request.LeaveHandleVM, approverId);
+
+            // assign message properties
+            if(result)
+            {
+                message = request.LeaveHandleVM.Result == Leave.eState.Approved ? 
+                    "Request approved" : "Request rejected";
+
+                messageTitle = "Successful";
+                messageType = ToastEnums.ToastType.Success;
+
+               await _mailKit.SendEmail_RequestHandledAsync(request.LeaveHandleVM.LeaveID);
+            }
+        
+            _toastNotification.AddToastMessage(
+            messageTitle, message, messageType);
+
+            return RedirectToAction(nameof(GetTimesheetManager), new { date = request.LeaveHandleVM.CurDate });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = ("Project Manager,Team Leader"))]
+        public async Task<IActionResult> HandleMultipleRequests(LeaveWrapper request)
+        {
+            // toast message properties
+            string messageTitle = "Error";
+            string message = "Unable to handle these requests";
+            ToastEnums.ToastType messageType = ToastEnums.ToastType.Error;
+
+            var userId = (await GetCurrentUserAsync()).Id;
+            List<string> result = await _leaveManager.HandleMultipleRequestsAsync(request.LeaveHandleVM_Multiple, userId);
+
+            // assign message properties
+            if(result != null)
+            {
+                message = request.LeaveHandleVM_Multiple.Result == Leave.eState.Approved ?
+                    "Requests approved" : "Requests rejected";
+
+                messageTitle = "Successful";
+                messageType = ToastEnums.ToastType.Success;
+
+                await _mailKit.SendEmail_MultippleRequestHandledAsync(result);
+            }
+           
+            _toastNotification.AddToastMessage(
+           messageTitle, message, messageType);
+
+            return RedirectToAction(nameof(GetTimesheetManager), new { date = request.LeaveHandleVM_Multiple.CurDate });
+        }
+
         // POST: /Manage/RemoveLogin
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -212,7 +413,7 @@ namespace TSM.Controllers
             return RedirectToAction(nameof(ManageLogins), new { Message = message });
         }
 
-        //
+        
         // GET: /Manage/AddPhoneNumber
         public IActionResult AddPhoneNumber()
         {
@@ -236,7 +437,7 @@ namespace TSM.Controllers
                 return View("Error");
             }
             var code = await _userManager.GenerateChangePhoneNumberTokenAsync(user, model.PhoneNumber);
-            await _smsSender.SendSmsAsync(model.PhoneNumber, "Your security code is: " + code);
+          //  await _smsSender.SendSmsAsync(model.PhoneNumber, "Your security code is: " + code);
             return RedirectToAction(nameof(VerifyPhoneNumber), new { PhoneNumber = model.PhoneNumber });
         }
 
@@ -486,7 +687,7 @@ namespace TSM.Controllers
             Error
         }
 
-        
+
         #endregion
     }
 }

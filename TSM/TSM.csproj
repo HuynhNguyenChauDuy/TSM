@@ -373,6 +373,7 @@
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="2.0.1" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="7.1.0" />
     <PackageReference Include="Google.Apis.Auth" Version="1.27.1" />
+    <PackageReference Include="Gray.Microsoft.AspNetCore.Signalr.Server" Version="0.2.0-alpha1" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore" Version="1.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="1.1.2" />

@@ -175,8 +175,8 @@
             <!-- small box -->
             <div class="small-box bg-fuchsia">
                 <div class="inner">
-                    <h3>@Model.NApprovedLeaves</h3>
-                    <p>Approve List</p>
+                    <h3>@Model.NApprovedDates</h3>
+                    <p>Approved Dates</p>
                 </div>
                 <div class="icon">
                     <i class="ion ion-checkmark"></i>
@@ -191,8 +191,8 @@
             <!-- small box -->
             <div class="small-box bg-red">
                 <div class="inner">
-                    <h3>@Model.NRejectedLeaves</h3>
-                    <p>Reject List</p>
+                    <h3>@Model.NRejectedDates</h3>
+                    <p>Rejected Dates</p>
                 </div>
                 <div class="icon">
                     <i class="ion ion-close"></i>
@@ -289,6 +289,7 @@
                 </div>
                 <div class="modal-body" style="text-align:left; ">
                     <!-- content goes here -->
+
                     <p>Traditionally, sick leave is paid time off of work that an organization has voluntarily provided for employees as a benefit. Increasingly, however, in recent years, jurisdictions both state and local, are mandating that employers provide paid sick days. </p>
                     <p>The days you take : <span style="color:red">@Model.NSickLeave</span> days.</p>
                     <p>You have  : <span style="color:red">@Model.DefaultSickLeave</span> days for leave.</p>
@@ -319,10 +320,10 @@
                         How much annual leave does an employee get?
 
                         Full-time and part-time employees get 4 weeks of annual leave, based on their ordinary hours of work.
+
                     </p>
                     <p>The days you take : <span style="color:red">@Model.NAnnualLeave</span> days.</p>
                     <p>You have  : <span style="color:red">@Model.DefaultAnnualLeave</span> days for leave.</p>
-
                 </div>
             </div>
         </div>
@@ -338,12 +339,7 @@
                     <!-- content goes here -->
                     <p style="text-align:center; color:blue">
                         <ul style="color:blue">
-                            <li>
-                                Eceptlly 2 cases above, you can absenece another day if you report to HR 1 week before you leave.
-                            </li>
-                            <li>
-                                <span style="color:red">Mindfully</span>, If you have "Another Leave", your salary will be decrease according to the law.
-                            </li>
+                            Other Leave that means you have another leave not in above 2 cases.
                         </ul>
                     </p>
                 </div>
@@ -361,7 +357,9 @@
             </div>
         </div>
     </form>
-</section>
+</section> 
+
+
 
 
 

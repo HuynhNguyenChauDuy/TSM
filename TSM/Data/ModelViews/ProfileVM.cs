@@ -28,6 +28,10 @@ namespace TSM.Data.ModelViews
         public int NRejectedLeaves { get; set; }
         public int NWaitingLeaves { get; set; }
 
+        public int NApprovedDates { get; set; }
+        public int NRejectedDates { get; set; }
+        public int NAwaitingDates { get; set; }
+
         public static implicit operator ProfileVM(ApplicationUser v)
         {
             throw new NotImplementedException();

@@ -41,7 +41,7 @@ namespace TSM.DataAccess
 
                 var nApprovedDates = nSickleave + nAnnualLeave + nOtherLeave;
                 var nRejectedDates = await CountRejectedDatesByUserIdAsync(userId);
-
+                var nAwaitingDates = await CountAwaitingDatesByUserIdAsync(userId);
 
 
                 var userRoles = await _userManager.GetRolesAsync(user);
@@ -64,7 +64,8 @@ namespace TSM.DataAccess
                     NRejectedLeaves = nRejectedList,
 
                    NApprovedDates = nApprovedDates,
-                   NRejectedDates = nRejectedDates
+                   NRejectedDates = nRejectedDates,
+                   NAwaitingDates = nAwaitingDates
                 };
 
 
@@ -106,6 +107,27 @@ namespace TSM.DataAccess
                 foreach (var item in _context.Leaves
                        .Where(item => item.ApplicationUserID.CompareTo(userId) == 0
                        && item.State == Leave.eState.Rejected))
+                {
+                    int days = (item.ToDate - item.FromDate).Days;
+                    count += days == 0 ? 1 : (days + 1);
+                }
+
+                return count;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        private async Task<int> CountAwaitingDatesByUserIdAsync(string userId)
+        {
+            try
+            {
+                int count = 0;
+                foreach (var item in _context.Leaves
+                       .Where(item => item.ApplicationUserID.CompareTo(userId) == 0
+                       && item.State == Leave.eState.OnQueue))
                 {
                     int days = (item.ToDate - item.FromDate).Days;
                     count += days == 0 ? 1 : (days + 1);

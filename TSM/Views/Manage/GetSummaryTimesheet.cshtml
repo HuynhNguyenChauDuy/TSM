@@ -1,4 +1,4 @@
-@using TSM.Data.ModelViews
+﻿@using TSM.Data.ModelViews
 @using TSM.DataAccess
 @using TSM.Services
 
@@ -8,13 +8,10 @@
 @inject LeaveManager _leaveManager
 
 @{
-    ViewData["Title"] = "Timesheet Manager";
+    ViewData["Title"] = "Summery Timesheet Mananger";
     Layout = "~/Views/Shared/CustomLayout.cshtml";
 }
 
-<script src="~/lib/jquery/dist/jquery.js"></script>
-<script src="~/lib/signalr/jquery.signalR.js"></script>
-<script src="~/Signalr/hubs"> </script>
 
 @section Customcss{
     <link href="~/DatePicker/css/bootstrap-datepicker.css" rel="stylesheet" />
@@ -26,8 +23,8 @@
             text-align: left;
         }
 
-        .table_align_center{
-            text-align : center;
+        .table_align_center {
+            text-align: center;
         }
 
         .boxsizingBorder {
@@ -47,8 +44,8 @@
             box-sizing: border-box;
         }
 
-        .text_align_center{
-            text-align:center;
+        .text_align_center {
+            text-align: center;
         }
     </style>
 }
@@ -59,13 +56,13 @@
     <script src="~/ckeditor/ckeditor.js"></script>
     <script src="~/toastr-master/toastr.min.js"></script>
     <script src="~/momentjs/moment.js"></script>
-    <script src="~/loadingbar/loadingbar.js"></script>
+
     <script>
         $(document).ready(function () {
             var leaveId = '@ViewData["leaveId"]';
             if (leaveId != "") {
                 GetLeaveDetail(leaveId);
-            } 
+            }
         });
 
         function GetLeaveDetail(leaveId) {
@@ -174,28 +171,27 @@
 
     <script>
         $(document).ready(function () {
-            var curDate = '@ViewData["curDate"]';
-            $('#lblCurDate').html(curDate);
+            var curMonth = '@ViewData["curMonth"]';
+            $('#lblCurMonth').html(curMonth);
         });
 
         $(document).ready(function () {
-            $('#previousDate').click(function () {
-                var curDate = $('#lblCurDate').html();
-                var previousDate = moment(curDate, "DD/MM/YYYY");
-                previousDate.add(-1, 'day');
+            $('#previousMonth').click(function () {
+                var curMonth = $('#lblCurMonth').html();
+                var previousMonth = moment(curMonth, "MM/YYYY");
+                previousMonth.add(-1, 'month');
 
-                GetTimeSheetManagerOfDate(previousDate.format('MM-DD-YYYY'));
+                GetTimeSheetManagerOfMonth(previousMonth.format('MM-DD-YYYY'));
             });
         });
-        
 
         $(document).ready(function () {
-            $('#nextDate').click(function () {
-                var curDate = $('#lblCurDate').html();
-                var nextDate = moment(curDate, "DD/MM/YYYY");
-                nextDate.add(1, 'day');
+            $('#nextMonth').click(function () {
+                var curMonth = $('#lblCurMonth').html();
+                var nextMonth = moment(curMonth, "MM/YYYY");
+                nextMonth.add(1, 'month');
 
-                GetTimeSheetManagerOfDate(nextDate.format('MM-DD-YYYY'));
+                GetTimeSheetManagerOfMonth(nextMonth.format('MM-DD-YYYY'));
             });
         });
 
@@ -204,30 +200,37 @@
             window.location.href = targetUrl;
         }
 
+         function GetTimeSheetManagerOfMonth(data) {
+            var targetUrl = '@Url.Action("GetSummaryTimesheet", "Manage")?date=' + data;
+            window.location.href = targetUrl;
+        }
+
         $(document).ready(function () {
-            $('#btnToDay').click(function () {
-                GetTimeSheetManagerOfDate("");
+            $('#btnThisMonth').click(function () {
+                GetTimeSheetManagerOfMonth("");
             });
         });
     </script>
 
     <script>
-        sessionStorage["curPage"] = "TimesheetManager";
+        sessionStorage["curPage"] = "SummaryTimesheetManager";
     </script>
 
     <!--DatePicker-->
     <script>
         $(document).ready(function () {
             $('.datepicker').datepicker({
-                format: 'dd-mm-yyyy'
+                format: "mm-yyyy",
+                viewMode: "months",
+                minViewMode: "months"
             });
         });
 
         $('#curDate').datepicker().on('changeDate', function (e) {
             var curDate = e.format(0, "mm/dd/yyyy")
-            GetTimeSheetManagerOfDate(curDate);
+            GetTimeSheetManagerOfMonth(curDate);
         });
-       
+
     </script>
 
     <!--DataTable-->
@@ -275,125 +278,17 @@
             });
         });
     </script>
-
-    <!--Handle Single Request-->
-    <script>
-        function HandleSingleRequest(result) {
-            $('input[id="LeaveHandleVM_Result"]').val(result);
-            $("#HandleSingleRequest").submit();
-        };
-    </script>
-
-    <!--Checkbox - Check All-->
-    <script>
-        $("#cbCheckAll").click(function () {
-            $('#MainTable tbody input[type="checkbox"]').prop('checked', this.checked);
-        });
-    </script>
-
-    <!--handle Multiple request  -->
-    <script>
-        $(document).ready(function () {
-            $('#btnApproveAll').click(function () {
-                $('#MainTable tbody tr').each(function () {
-                    var leaveId = $(this).closest('tr').find('td:last').html().toString();
-                    var str = '<input hidden type="text" name="LeaveHandleVM_Multiple.LeaveID" value="' + leaveId + '" />';
-
-                    $('#HandleMultipleRequests').append(str);
-                });
-
-                var result = 'Approved';
-                var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
-                $('#HandleMultipleRequests').append(str2);
-
-                var curDate = $('#lblCurDate').html();
-               // var formattedDate = moment(curDate, "DD/MM/YYYY");
-                $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
-               
-                $('#HandleMultipleRequests').submit();
-            });
-
-
-            $('#btnApproveChecked').click(function () {
-                $('#MainTable tbody tr').find('input:checkbox:checked').each(function () {
-                    var leaveId = $(this).closest('tr').find('td:last').html().toString();
-
-                    var str = '<input hidden type="text" name="LeaveHandleVM_Multiple.LeaveID" value="' + leaveId + '" />';
-
-                    $('#HandleMultipleRequests').append(str);
-                });
-
-                var result = 'Approved';
-                var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
-                $('#HandleMultipleRequests').append(str2);
-
-                var curDate = $('#lblCurDate').html();
-                //var formattedDate = moment(curDate, "DD/MM/YYYY");
-                $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
-
-                $('#HandleMultipleRequests').submit();
-            });
-
-            $('#btnRejectChecked').click(function () {
-                $('#MainTable tbody tr').find('input:checkbox:checked').each(function () {
-                    var leaveId = $(this).closest('tr').find('td:last').html().toString();
-
-                    var str = '<input hidden type="text" name="LeaveHandleVM_Multiple.LeaveID" value="' + leaveId + '" />';
-
-                    $('#HandleMultipleRequests').append(str);
-                });
-
-                var result = 'Rejected';
-                var str2 = '<input hidden type="text" name="LeaveHandleVM_Multiple.Result" value="' + result + '" />';
-                $('#HandleMultipleRequests').append(str2);
-
-                var curDate = $('#lblCurDate').html();
-             //   var formattedDate = moment(curDate, "DD/MM/YYYY");
-                $('#LeaveHandleVM_Multiple_CurDate').val(curDate);
-                $('#HandleMultipleRequests').submit();
-
-            });
-        });
-    </script>
-    
-    <script>
-        $(document).ready(function () {
-            $('#btnApproveAll').click(function () { 
-                waitingDialog.show('Please wait ...');
-            });
-
-            $('#btnApproveChecked').click(function () {
-                waitingDialog.show('Please wait ...');
-            });
-
-            $('#btnRejectChecked').click(function () {
-                waitingDialog.show('Please wait ...');
-            });
-
-            $('#btnApproveAll').click(function () {
-                waitingDialog.show('Please wait ...');
-            });
-
-            $('#btnApproveAll').click(function () {
-                waitingDialog.show('Please wait ...');
-            });
-
-        });
-    </script>
 }
 
 <section class="content-header">
     <div class="row">
         <div class="col-sm-6">
-            <h1>TIMESHEET MANAGER</h1>
-            <h4><span id="results"></span></h4>
+            <h1>SUMMARY TIMESHEET MANAGER</h1>
         </div>
         <div class="col-sm-6">
             <h1>
                 <span class="pull-right">
-                    <button id="btnApproveAll" data-toggle="modal" type="button" class="btn btn-success ion-android-done-all"> Approve All</button>
-                    <button id="btnApproveChecked" data-toggle="modal" type="button" class="btn btn-bitbucket ion-android-checkbox-outline"> Approve Checked</button>
-                    <button id="btnRejectChecked" data-toggle="modal" type="button" class="btn btn-danger ion-android-close"> Reject Checked</button>
+                   
                 </span>
             </h1>
         </div>
@@ -401,15 +296,15 @@
     <div>
         <div class="col-sm-6">
             <div class="row">
-                <div class="pull-left"><h3><label class="label label-info" id="lblCurDate" style="text-align:center"></label></h3></div>
+                <div class="pull-left"><h3><label class="label label-info" id="lblCurMonth" style="text-align:center"></label></h3></div>
                 <div class="pull-left"><h3><button class="btn btn-primary ion-android-calendar datepicker" id="curDate" type="button" /></h3></div>
             </div>
         </div>
         <div class="col-sm-6">
             <div class="row">
-                <div class="pull-right"><h3><button id="nextDate" title="Next day" class="btn btn-default ion-ios-arrow-forward"></button></h3></div>
-                <div class="pull-right"><h3><button id="btnToDay" class="btn btn-default">Today</button></h3></div>
-                <div class="pull-right"><h3><button id="previousDate" title="Previous day" class="btn btn-default ion-ios-arrow-back"></button></h3></div>
+                <div class="pull-right"><h3><button id="nextMonth" title="Next day" class="btn btn-default ion-ios-arrow-forward"></button></h3></div>
+                <div class="pull-right"><h3><button id="btnThisMonth" class="btn btn-default">This month</button></h3></div>
+                <div class="pull-right"><h3><button id="previousMonth" title="Previous day" class="btn btn-default ion-ios-arrow-back"></button></h3></div>
             </div>
         </div>
     </div>
@@ -435,7 +330,7 @@
                                 <th>@Html.DisplayNameFor(Model => Model.LeaveVMForDisplay.FromDate)</th>
                                 <th>@Html.DisplayNameFor(Model => Model.LeaveVMForDisplay.ToDate)</th>
                                 <th class="table_align_center">@Html.DisplayNameFor(Model => Model.LeaveVMForDisplay.State)</th>
-                                <th class="nosort table_align_center"><input id="cbCheckAll" type="checkbox" /></th>
+                               
                                 <th name="LeaveID" hidden></th>
                             </tr>
                         </thead>
@@ -454,7 +349,6 @@
                                         @if (item.State == TSM.Data.Models.Leave.eState.OnQueue)
                                         {
                                             <td class="table_align_center"><label class="label label-warning">&nbsp;&nbsp;Waiting&nbsp;</label></td>
-                                            <td align="center"><input type="checkbox" id="subCheckbox" name="subCheckbox"></td>
                                         }
                                         else
                                         {
@@ -466,7 +360,6 @@
                                             {
                                                 <td class="table_align_center"><label class="label label-danger">Rejected</label></td>
                                             }
-                                            <td></td>
                                         }
                                         <td hidden>@item.LeaveID</td>
                                     </tr>
@@ -539,7 +432,7 @@
                             </div>
                             <div class="col-sm-6">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.ApprovedDate)
-                                <div><input disabled  class="form-control text_align_center" type="text" id="DetailVM_approvedDate"></div>
+                                <div><input disabled class="form-control text_align_center" type="text" id="DetailVM_approvedDate"></div>
                             </div>
                         </div>
 
@@ -554,7 +447,7 @@
                             </div>
                             <div class="col-sm-4">
                                 @Html.LabelFor(Model => Model.LeaveVMForDisplay.NOtherLeave)
-                                <div><input disabled  class="form-control text_align_center" type="text" id="DetailVM_OtherLeave"></div>
+                                <div><input disabled class="form-control text_align_center" type="text" id="DetailVM_OtherLeave"></div>
                             </div>
                         </div>
 
@@ -582,8 +475,4 @@
         </div>
     </div>
 </section>
-
-
-
-
 

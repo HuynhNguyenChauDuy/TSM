@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TSM.Data;
 using TSM.Data.Models;
@@ -166,8 +167,12 @@ namespace TSM.DataAccess
                 }
 
                 user.Email = submit.Email;
+                
                 user.PhoneNumber = submit.PhoneNumber;
-
+                if(!IsNumber(submit.PhoneNumber) || !isValidEmail(submit.Email))
+                {
+                    return false;
+                }
                 _context.Entry(user).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
@@ -177,6 +182,28 @@ namespace TSM.DataAccess
             {
                 return false;
             }
+        }
+
+        public bool IsNumber(string pValue)
+        {
+            foreach (Char c in pValue)
+            {
+                if (!Char.IsDigit(c))
+                    return false;
+            }
+            return true;
+        }
+
+        public static bool isValidEmail(string inputEmail)
+        {
+            string strRegex = @"^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}" +
+                  @"\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\" +
+                  @".)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$";
+            Regex re = new Regex(strRegex);
+            if (re.IsMatch(inputEmail))
+                return (true);
+            else
+                return (false);
         }
 
         public async Task<String> GetSupervisorIdAsync(string userId)
